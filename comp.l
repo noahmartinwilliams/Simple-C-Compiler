@@ -6,6 +6,7 @@ void count(char *s);
 
 %%
 [0-9]+	{ count(yytext); yylval.l=atoi(yytext); return CONST_INT; }
+"+"	{ count(yytext); return '+'; }
 %%
 
 void count(char *s)

@@ -1,7 +1,7 @@
 CC=gcc -I ./include
 CMP=$(CC) -c $^ -o $@
 CMB=$(CC) $^ -o $@
-YACC=bison -d
+YACC=bison -d --verbose --debug
 LEX=flex
 
 main: comp.tab.c print-expr.o print-tree.o globals.o lex.yy.o

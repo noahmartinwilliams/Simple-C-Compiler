@@ -8,6 +8,7 @@ struct expr_t {
 	struct type_t* type;
 	union {
 		long int cint_val;
+		char *bin_op;
 	} attrs;
 };
 

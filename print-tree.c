@@ -4,15 +4,17 @@
 void print_tree(char* (*printer) (char*, void*), void *tree, char *str, off_t a, off_t b)
 {
 	char *s=NULL;
-	printf("%s_", str);
+	printf("%s|_", str);
 	printer(str, tree);
 	printf("\n");
 	asprintf(&s, "%s |", str);
 	if (*((void**) (tree+a))!=NULL) {
 		print_tree(printer, *((void**) (tree+a)), s, a, b);
 	}
-
+	free(s);
+	asprintf(&s, "%s ", str);
 	if (*((void**) (tree+b))!=NULL) {
 		print_tree(printer, *((void**) (tree+b)), s, a, b);
 	}
+	free(s);
 }
