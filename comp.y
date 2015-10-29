@@ -4,6 +4,7 @@
 #include "types.h"
 #include "printer.h"
 #include "handle-types.h"
+#include "free-stuff.h"
 #include "globals.h"
 #include "generator.h"
 
@@ -19,6 +20,7 @@ extern int yydebug;
 %%
 file: expression {
 	print_e($1);
+	free_expression($1);
 };
 expression: CONST_INT {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
@@ -28,7 +30,9 @@ expression: CONST_INT {
 	e->right=NULL;
 	e->attrs.cint_val=$1;
 	$$=e;
-}  | binary_expr ;
+}  | binary_expr | '(' expression ')' {
+	$$=$2;
+};
 binary_expr:  expression '+' expression {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	/*TODO: handle type stuff */
@@ -43,6 +47,8 @@ binary_expr:  expression '+' expression {
 		e->left=NULL;
 		e->right=NULL;
 		e->attrs.cint_val=$1->attrs.cint_val+$3->attrs.cint_val;
+		free_expression($1);
+		free_expression($3);
 	} else {
 		e->kind=bin_op;
 		e->left=$1;
@@ -61,5 +67,6 @@ int main()
 {
 	setup_types();
 	yyparse();
+	free_all_types();
 	return 0;
 }

@@ -11,3 +11,16 @@ struct type_t* get_type_by_name(char *name)
 	}
 	return NULL;
 }
+
+void free_all_types()
+{
+	int x;
+	for (x=0; x<num_types; x++) {
+		free(types[x]->name);
+		free(types[x]->body);
+		free(types[x]);
+	}
+	free(types);
+	types=NULL;
+	num_types=0;
+}
