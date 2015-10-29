@@ -13,14 +13,22 @@ extern int yydebug;
 %union {
 	long int l;
 	struct expr_t *expr;
+	struct statem_t *statem;
 }
 %token <l> CONST_INT
 %type <expr> expression
 %type <expr> binary_expr
+%type <statem> statement
 %%
-file: expression {
-	print_e($1);
-	free_expression($1);
+file: statement {
+	print_s($1);
+};
+
+statement: expression ';' {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=expr;
+	s->attrs.expr=$1;
+	$$=s;
 };
 expression: CONST_INT {
 	struct expr_t *e=malloc(sizeof(struct expr_t));

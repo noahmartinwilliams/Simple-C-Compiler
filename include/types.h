@@ -21,4 +21,11 @@ struct expr_t {
 	} attrs;
 };
 
+struct statem_t {
+	enum { expr } kind;
+	union {
+		struct expr_t *expr;
+	} attrs;
+};
+
 #endif
