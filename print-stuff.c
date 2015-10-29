@@ -15,7 +15,21 @@ void print_expr(char *pre, struct expr_t *e)
 void print_statem(char *pre, struct statem_t *s)
 {
 	if (s->kind==expr) {
-		printf("kind: expression\n");
+		printf("%s|_kind: expression\n", pre);
 		print_tree(print_expr, s->attrs.expr, pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+	} else if (s->kind==list) {
+		printf("%s|_kind: list\n", pre);
+		char *new_pre=calloc(2*s->attrs.list.num, sizeof(char));
+		int x;
+		for (x=0; x<2*s->attrs.list.num; x+=2) {
+			new_pre[x]=' ';
+			new_pre[x+1]='|';
+		}
+		for (x=0; x<s->attrs.list.num; x++) {
+			new_pre[2*s->attrs.list.num-2*x-1]='\0';
+			print_statem(new_pre, s->attrs.list.statements[x]);
+		}
+
+		free(new_pre);
 	}
 }

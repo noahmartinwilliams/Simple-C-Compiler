@@ -22,9 +22,13 @@ struct expr_t {
 };
 
 struct statem_t {
-	enum { expr } kind;
+	enum { expr, list } kind;
 	union {
 		struct expr_t *expr;
+		struct {
+			struct statem_t **statements;
+			int num;
+		} list;
 	} attrs;
 };
 

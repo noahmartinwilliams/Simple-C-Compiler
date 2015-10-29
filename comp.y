@@ -7,6 +7,7 @@
 #include "free-stuff.h"
 #include "globals.h"
 #include "generator.h"
+#include <string.h>
 
 extern int yydebug;
 %}
@@ -19,9 +20,11 @@ extern int yydebug;
 %type <expr> expression
 %type <expr> binary_expr
 %type <statem> statement
+%type <statem> statement_list
 %%
 file: statement {
 	print_s($1);
+	free_statem($1);
 };
 
 statement: expression ';' {
@@ -29,6 +32,22 @@ statement: expression ';' {
 	s->kind=expr;
 	s->attrs.expr=$1;
 	$$=s;
+} | '{' statement_list '}' {
+	$$=$2;
+};
+
+statement_list: statement { 
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=list;
+	s->attrs.list.statements=calloc(1, sizeof(struct statem_t));
+	s->attrs.list.statements[0]=$1;
+	s->attrs.list.num=1;
+	$$=s;
+} | statement_list statement {
+	$1->attrs.list.num++;
+	$1->attrs.list.statements=realloc($1->attrs.list.statements, $1->attrs.list.num*sizeof(struct statem_t*));
+	$1->attrs.list.statements[$1->attrs.list.num-1]=$2;
+	$$=$1;
 };
 expression: CONST_INT {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
@@ -55,8 +74,8 @@ binary_expr:  expression '+' expression {
 		e->left=NULL;
 		e->right=NULL;
 		e->attrs.cint_val=$1->attrs.cint_val+$3->attrs.cint_val;
-		free_expression($1);
-		free_expression($3);
+		free_expr($1);
+		free_expr($3);
 	} else {
 		e->kind=bin_op;
 		e->left=$1;
