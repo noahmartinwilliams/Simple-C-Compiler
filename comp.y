@@ -36,11 +36,19 @@ binary_expr:  expression '+' expression {
 		fprintf(stderr, "Type mismatch at line: %d character: %d\n", current_line, current_char);
 		exit(1);
 	}
+
 	e->type=$1->type;
-	e->kind=bin_op;
-	e->left=$1;
-	e->right=$3;
-	e->attrs.bin_op=strdup("+");
+	if ($1->kind==const_int && $3->kind==const_int && evaluate_constants ) {
+		e->kind=const_int;
+		e->left=NULL;
+		e->right=NULL;
+		e->attrs.cint_val=$1->attrs.cint_val+$3->attrs.cint_val;
+	} else {
+		e->kind=bin_op;
+		e->left=$1;
+		e->right=$3;
+		e->attrs.bin_op=strdup("+");
+	}
 	$$=e;
 };
 %%
