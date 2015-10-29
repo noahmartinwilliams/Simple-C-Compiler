@@ -4,7 +4,7 @@ CMB=$(CC) $^ -o $@
 YACC=bison -d --verbose --debug
 LEX=flex
 
-main: comp.tab.c print-expr.o print-tree.o globals.o lex.yy.o
+main: comp.tab.c print-expr.o print-tree.o globals.o lex.yy.o handle-types.o generator.o
 	$(CMB)
 
 %.o: %.c

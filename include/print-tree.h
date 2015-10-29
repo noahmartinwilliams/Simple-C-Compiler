@@ -4,5 +4,5 @@
 #include <stdlib.h>
 
 
-extern void print_tree(char* (*printer) (char*, void*), void *tree, char *str, off_t a, off_t b);
+extern void print_tree(void (*printer) (char*, void*), void *tree, char *str, off_t a, off_t b);
 #endif

@@ -3,6 +3,9 @@
 #include <stddef.h>
 #include "types.h"
 #include "printer.h"
+#include "handle-types.h"
+#include "globals.h"
+#include "generator.h"
 
 extern int yydebug;
 %}
@@ -19,6 +22,7 @@ file: expression {
 };
 expression: CONST_INT {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->type=get_type_by_name("int");
 	e->kind=const_int;
 	e->left=NULL;
 	e->right=NULL;
@@ -28,6 +32,11 @@ expression: CONST_INT {
 binary_expr:  expression '+' expression {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	/*TODO: handle type stuff */
+	if ($1->type!=$3->type) {
+		fprintf(stderr, "Type mismatch at line: %d character: %d\n", current_line, current_char);
+		exit(1);
+	}
+	e->type=$1->type;
 	e->kind=bin_op;
 	e->left=$1;
 	e->right=$3;
@@ -42,6 +51,7 @@ void yyerror(char *s)
 
 int main()
 {
+	setup_types();
 	yyparse();
 	return 0;
 }

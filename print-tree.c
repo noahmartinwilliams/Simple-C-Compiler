@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stddef.h>
 
-void print_tree(char* (*printer) (char*, void*), void *tree, char *str, off_t a, off_t b)
+void print_tree(void (*printer) (char*, void*), void *tree, char *str, off_t a, off_t b)
 {
 	char *s=NULL;
 	printf("%s|_", str);
