@@ -78,6 +78,18 @@ expression: CONST_INT {
 	$$=e;
 }  | binary_expr | '(' expression ')' {
 	$$=$2;
+} | IDENTIFIER {
+	struct var_t *v=get_var_by_name($1);
+	if (v==NULL) {
+		fprintf(stderr, "Unknown var on line: %d, char: %d\n", current_line, current_char);
+		exit(1);
+	}
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=var;
+	e->attrs.var=v;
+	e->type=v->type;
+	free($1);
+	$$=e;
 };
 binary_expr:  expression '+' expression {
 	struct expr_t *e=malloc(sizeof(struct expr_t));

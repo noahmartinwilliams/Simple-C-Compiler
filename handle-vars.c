@@ -28,3 +28,13 @@ void free_all_vars()
 	}
 	free(vars);
 }
+
+struct var_t* get_var_by_name(char *name)
+{
+	int x;
+	for (x=0; x<num_vars; x++) {
+		if (!strcmp(name, vars[x]->name))
+			return vars[x];
+	}
+	return NULL;
+}
