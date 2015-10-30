@@ -11,4 +11,6 @@ extern char *current_file;
 extern struct type_t **types;
 extern int num_types;
 extern bool evaluate_constants;
+extern struct var_t **vars;
+extern int num_vars;
 #endif

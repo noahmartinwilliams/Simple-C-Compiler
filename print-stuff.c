@@ -31,5 +31,7 @@ void print_statem(char *pre, struct statem_t *s)
 		}
 
 		free(new_pre);
+	} else if (s->kind==declare) {
+		printf("%s|_kind: declare, var: %s, type: %s\n", pre, s->attrs.var->name, s->attrs.var->type->name);
 	}
 }

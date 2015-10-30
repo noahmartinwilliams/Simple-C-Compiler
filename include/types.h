@@ -21,10 +21,15 @@ struct expr_t {
 	} attrs;
 };
 
+struct var_t {
+	struct type_t *type;
+	char *name;
+};
 struct statem_t {
-	enum { expr, list } kind;
+	enum { expr, list, declare } kind;
 	union {
 		struct expr_t *expr;
+		struct var_t *var;
 		struct {
 			struct statem_t **statements;
 			int num;

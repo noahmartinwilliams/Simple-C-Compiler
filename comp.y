@@ -4,10 +4,12 @@
 #include "types.h"
 #include "printer.h"
 #include "handle-types.h"
-#include "free-stuff.h"
+#include "handle-exprs.h"
+#include "handle-statems.h"
 #include "globals.h"
 #include "generator.h"
 #include <string.h>
+#include "handle-vars.h"
 
 extern int yydebug;
 %}
@@ -15,16 +17,23 @@ extern int yydebug;
 	long int l;
 	struct expr_t *expr;
 	struct statem_t *statem;
+	struct type_t *type;
+	char *str;
 }
 %token <l> CONST_INT
+%token <str> IDENTIFIER
 %type <expr> expression
 %type <expr> binary_expr
 %type <statem> statement
 %type <statem> statement_list
+%type <statem> var_declaration
+%type <type> type
 %%
 file: statement {
 	print_s($1);
 	free_statem($1);
+	free_all_vars();
+	free_all_types();
 };
 
 statement: expression ';' {
@@ -34,7 +43,7 @@ statement: expression ';' {
 	$$=s;
 } | '{' statement_list '}' {
 	$$=$2;
-};
+} | var_declaration ;
 
 statement_list: statement { 
 	struct statem_t *s=malloc(sizeof(struct statem_t));
@@ -48,6 +57,16 @@ statement_list: statement {
 	$1->attrs.list.statements=realloc($1->attrs.list.statements, $1->attrs.list.num*sizeof(struct statem_t*));
 	$1->attrs.list.statements[$1->attrs.list.num-1]=$2;
 	$$=$1;
+};
+
+type: IDENTIFIER {
+	struct type_t *t=get_type_by_name($1);
+	free($1);
+	if (t==NULL) {
+		fprintf(stderr, "Error: line %d, char %d, type not known\n", current_line, current_char);
+		exit(1);
+	}
+	$$=t;
 };
 expression: CONST_INT {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
@@ -83,6 +102,17 @@ binary_expr:  expression '+' expression {
 		e->attrs.bin_op=strdup("+");
 	}
 	$$=e;
+};
+
+var_declaration: type IDENTIFIER ';' {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=declare;
+	s->attrs.var=malloc(sizeof(struct var_t));
+	struct var_t *v=s->attrs.var;
+	v->name=$2;
+	v->type=$1;
+	add_var(v);
+	$$=s;
 };
 %%
 void yyerror(char *s)
