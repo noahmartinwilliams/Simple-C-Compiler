@@ -27,7 +27,7 @@ struct var_t {
 	char *name;
 };
 struct statem_t {
-	enum { expr, list, declare } kind;
+	enum { expr, list, declare, _while } kind;
 	union {
 		struct expr_t *expr;
 		struct var_t *var;
@@ -35,6 +35,11 @@ struct statem_t {
 			struct statem_t **statements;
 			int num;
 		} list;
+
+		struct {
+			struct expr_t *condition;
+			struct statem_t *block;
+		} _while;
 	} attrs;
 };
 

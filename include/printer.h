@@ -12,7 +12,7 @@ inline void print_e(struct expr_t *e)
 
 inline void print_s(struct statem_t *s)
 {
-	print_statem("", s);
+	print_statem(" ", s);
 }
 
 #endif

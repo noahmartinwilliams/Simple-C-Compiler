@@ -1,11 +1,12 @@
 %{
 #include "comp.tab.h"
 #include "globals.h"
+#include <stdlib.h>
 void count(char *s);
-
 %}
 
 %%
+"while"	{ count(yytext); return WHILE; }
 [0-9]+	{ count(yytext); yylval.l=atoi(yytext); return CONST_INT; }
 "("	{ count(yytext); return '('; }
 ")"	{ count(yytext); return ')'; }

@@ -20,6 +20,7 @@ extern int yydebug;
 	struct type_t *type;
 	char *str;
 }
+%token WHILE
 %token <l> CONST_INT
 %token <str> IDENTIFIER
 %type <expr> expression
@@ -43,7 +44,13 @@ statement: expression ';' {
 	$$=s;
 } | '{' statement_list '}' {
 	$$=$2;
-} | var_declaration ;
+} | var_declaration | WHILE '(' expression ')' statement {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=_while;
+	s->attrs._while.condition=$3;
+	s->attrs._while.block=$5;
+	$$=s;
+};
 
 statement_list: statement { 
 	struct statem_t *s=malloc(sizeof(struct statem_t));
@@ -68,6 +75,7 @@ type: IDENTIFIER {
 	}
 	$$=t;
 };
+
 expression: CONST_INT {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->type=get_type_by_name("int");
