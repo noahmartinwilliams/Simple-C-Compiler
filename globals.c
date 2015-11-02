@@ -7,7 +7,7 @@ int current_char=0;
 char *current_file=NULL;
 int yydebug=0;
 
-bool evaluate_constants=false;
+bool evaluate_constants=true;
 
 struct type_t **types=NULL;
 int num_types=0;

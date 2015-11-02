@@ -2,9 +2,13 @@
 #include <stdlib.h>
 #include "globals.h"
 #include <string.h>
+#include <stdio.h>
+#include "handle-registers.h"
+
 
 size_t word_size=4;
 size_t int_size=4;
+
 void setup_types()
 {
 	num_types++;
@@ -14,4 +18,11 @@ void setup_types()
 	i->name=strdup("int");
 	i->body=malloc(sizeof(struct tbody_t));
 	i->body->size=int_size;
+}
+
+
+void setup_generator()
+{
+	setup_types();
+	setup_registers();
 }

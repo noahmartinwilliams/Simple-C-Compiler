@@ -10,6 +10,7 @@
 #include "generator.h"
 #include <string.h>
 #include "handle-vars.h"
+#include "handle-registers.h"
 
 extern int yydebug;
 %}
@@ -35,6 +36,7 @@ file: statement {
 	free_statem($1);
 	free_all_vars();
 	free_all_types();
+	free_all_registers();
 };
 
 statement: expression ';' {
@@ -142,7 +144,7 @@ void yyerror(char *s)
 
 int main()
 {
-	setup_types();
+	setup_generator();
 	yyparse();
 	free_all_types();
 	return 0;
