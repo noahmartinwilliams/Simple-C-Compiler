@@ -24,6 +24,7 @@ struct expr_t {
 
 struct var_t {
 	struct type_t *type;
+	off_t offset;
 	char *name;
 };
 struct statem_t {

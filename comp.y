@@ -13,6 +13,7 @@
 #include "handle-registers.h"
 
 extern int yydebug;
+FILE *output;
 %}
 %union {
 	long int l;
@@ -44,6 +45,7 @@ statement: expression ';' {
 	s->kind=expr;
 	s->attrs.expr=$1;
 	$$=s;
+	generate_expression(output, $1);
 } | '{' statement_list '}' {
 	$$=$2;
 } | var_declaration | WHILE '(' expression ')' statement {
@@ -144,8 +146,11 @@ void yyerror(char *s)
 
 int main()
 {
+	output=fopen("output.s", "w+");
+	/* TODO: finish testing addition expression. */
 	setup_generator();
 	yyparse();
 	free_all_types();
+	fclose(output);
 	return 0;
 }
