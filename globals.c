@@ -13,3 +13,6 @@ struct type_t **types=NULL;
 int num_types=0;
 struct var_t **vars=NULL;
 int num_vars=0;
+
+struct func_t **funcs=NULL;
+int num_funcs=0;

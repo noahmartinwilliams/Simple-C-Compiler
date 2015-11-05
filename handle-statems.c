@@ -7,7 +7,7 @@
 
 void free_statem(struct statem_t *s)
 {
-	if (s->kind==expr) {
+	if (s->kind==expr || s->kind==ret) {
 		free_expr(s->attrs.expr);
 	} else if (s->kind==list) {
 		int x;
@@ -57,6 +57,11 @@ void print_statem(char *pre, struct statem_t *s)
 		free(new_pre);
 		asprintf(&new_pre, "%s ", pre);
 		print_statem(new_pre, s->attrs._while.block);
+		free(new_pre);
+	} else if (s->kind==ret) {
+		printf("%s|_statement kind: return\n", pre);
+		asprintf(&new_pre, "%s ", pre);
+		print_tree(print_expr, s->attrs.expr, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
 		free(new_pre);
 	}
 }

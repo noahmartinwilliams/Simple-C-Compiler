@@ -13,4 +13,6 @@ extern int num_types;
 extern bool evaluate_constants;
 extern struct var_t **vars;
 extern int num_vars;
+extern struct func_t **funcs;
+extern int num_funcs;
 #endif

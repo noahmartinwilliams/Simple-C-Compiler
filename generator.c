@@ -5,8 +5,10 @@
 #include <stdio.h>
 #include "handle-registers.h"
 #include "generator-types.h"
+#include "handle-funcs.h"
 
 
+bool in_main=false;
 size_t word_size=4;
 size_t int_size=4;
 
@@ -26,6 +28,7 @@ void setup_generator()
 	setup_types();
 	setup_registers();
 }
+
 void generate_binary_expression(FILE *fd, struct expr_t *e);
 
 void generate_expression(FILE *fd, struct expr_t *e)
@@ -54,3 +57,37 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 	}
 }
 
+void generate_statement(FILE *fd, struct statem_t *s)
+{
+	if (s->kind==expr) {
+		generate_expression(fd, s->attrs.expr);
+	} else if (s->kind==list) {
+		int x;
+		for (x=0; x<s->attrs.list.num; x++) {
+			generate_statement(fd, s->attrs.list.statements[x]);
+		}
+	} else if (s->kind==ret) {
+		generate_expression(fd, s->attrs.expr);
+		if (!in_main)
+			fprintf(fd, "\tret\n");
+		else
+			fprintf(fd, "\tmovq %%rax, %%rdi\n\tmovq $60, %%rax\n\tsyscall\n");
+	}
+}
+
+void generate_function(FILE *fd, struct func_t *f)
+{
+	if (!strcmp(f->name, "main")) {
+		in_main=true;
+		fprintf(fd, ".global _start\n.type _start, @function\n_start:\n");
+	} else {
+		fprintf(fd, ".globl %s\n.type %s, @function\n%s:\n", f->name, f->name, f->name);
+	}
+	/* TODO: test this more */
+	generate_statement(fd, f->statement_list);
+	if (strcmp(f->name, "main")) {
+		fprintf(fd, "\tmovq $0, %%rax\n\tret\n");
+	} else {
+		fprintf(fd, "\tmovq %%rax, %%rdi\n\tmovq $60, %%rax\n\tsyscall\n");
+	}
+}

@@ -1,11 +1,19 @@
 CC=gcc -I ./include
+AR=ar cr $@ $^
 CMP=$(CC) -c $^ -o $@
 CMB=$(CC) $^ -o $@
 YACC=bison -d --verbose --debug
 LEX=flex
 
-main: comp.tab.c print-stuff.o print-tree.o globals.o lex.yy.o handle-types.o generator.o handle-vars.o handle-exprs.o handle-statems.o handle-registers.o
+main: comp.tab.c print-stuff.o print-tree.o globals.o lex.yy.o generator.o handle.a
 	$(CMB)
+
+handle.a: handle-types.o handle-exprs.o handle-statems.o handle-registers.o handle-funcs.o handle-vars.o
+	$(AR)
+
+test: main
+	cp main tests/cc
+	$(MAKE) -C tests/ test
 
 %.o: %.c
 	$(CMP)
@@ -23,3 +31,5 @@ clean:
 	rm include/comp.tab.h || true
 	rm *.o || true
 	rm main || true
+	rm *.a || true
+	$(MAKE) -C tests/ clean

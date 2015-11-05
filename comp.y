@@ -6,6 +6,7 @@
 #include "handle-types.h"
 #include "handle-exprs.h"
 #include "handle-statems.h"
+#include "handle-funcs.h"
 #include "globals.h"
 #include "generator.h"
 #include <string.h>
@@ -21,8 +22,10 @@ FILE *output;
 	struct statem_t *statem;
 	struct type_t *type;
 	char *str;
+	struct func_t *func;
 }
 %token WHILE
+%token RET
 %token <l> CONST_INT
 %token <str> IDENTIFIER
 %type <expr> expression
@@ -31,21 +34,32 @@ FILE *output;
 %type <statem> statement_list
 %type <statem> var_declaration
 %type <type> type
+%type <func> function
 %%
-file: statement {
-	print_s($1);
-	free_statem($1);
+file:  function {
+	print_s($1->statement_list);
+	generate_function(output, $1);
+	free_statem($1->statement_list);
 	free_all_vars();
 	free_all_types();
 	free_all_registers();
 };
 
+function: type IDENTIFIER '(' ')' '{' statement_list '}' {
+	struct func_t *f=malloc(sizeof(struct func_t));
+	f->name=strdup($2);
+	f->statement_list=$6;
+	f->ret_type=$1;
+	f->num_arguments=0;
+	f->arguments=NULL;
+	add_func(f);
+	$$=f;
+}
 statement: expression ';' {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=expr;
 	s->attrs.expr=$1;
 	$$=s;
-	generate_expression(output, $1);
 } | '{' statement_list '}' {
 	$$=$2;
 } | var_declaration | WHILE '(' expression ')' statement {
@@ -53,6 +67,11 @@ statement: expression ';' {
 	s->kind=_while;
 	s->attrs._while.condition=$3;
 	s->attrs._while.block=$5;
+	$$=s;
+} | RET expression ';' {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=ret;
+	s->attrs.expr=$2;
 	$$=s;
 };
 

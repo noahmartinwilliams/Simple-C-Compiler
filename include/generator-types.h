@@ -1,5 +1,5 @@
-#ifndef __GENERATOR-TYPES_H__
-#define __GENERATOR-TYPES_H__
+#ifndef __GENERATOR_TYPES_H__
+#define __GENERATOR_TYPES_H__
 #include "types.h"
 #include <stdbool.h>
 
