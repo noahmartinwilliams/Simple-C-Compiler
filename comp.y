@@ -2,17 +2,17 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-#include "types.h"
-#include "printer.h"
-#include "handle-types.h"
-#include "handle-exprs.h"
-#include "handle-statems.h"
-#include "print-tree.h"
-#include "handle-funcs.h"
-#include "globals.h"
 #include "generator.h"
-#include "handle-vars.h"
+#include "globals.h"
+#include "handle-exprs.h"
+#include "handle-funcs.h"
 #include "handle-registers.h"
+#include "handle-statems.h"
+#include "handle-types.h"
+#include "handle-vars.h"
+#include "printer.h"
+#include "print-tree.h"
+#include "types.h"
 
 extern int yydebug;
 FILE *output;
@@ -129,23 +129,14 @@ assignable_expr:  IDENTIFIER {
 
 binary_expr:  expression '+' expression {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
-	if ($1->type!=$3->type) {
-		fprintf(stderr, "Type mismatch at line: %d character: %d\n", current_line, current_char);
-		exit(1);
-	}
+	struct expr_t *a=$1, *b=$3;
+	parser_type_cmp(&a, &b);
 
-	e->type=$1->type;
-	if ($1->kind==const_int && $3->kind==const_int && evaluate_constants ) {
-		e->kind=const_int;
-		e->left=NULL;
-		e->right=NULL;
-		e->attrs.cint_val=$1->attrs.cint_val+$3->attrs.cint_val;
-		free_expr($1);
-		free_expr($3);
-	} else {
+	e->type=a->type;
+	if (!evaluate_constant_expr("+", a, b, e)) {
 		e->kind=bin_op;
-		e->left=$1;
-		e->right=$3;
+		e->left=a;
+		e->right=b;
 		e->attrs.bin_op=strdup("+");
 	}
 	$$=e;

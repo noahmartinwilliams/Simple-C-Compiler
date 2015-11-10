@@ -1,6 +1,7 @@
-#include "types.h"
-#include "globals.h"
+#include <stdio.h>
 #include <string.h>
+#include "globals.h"
+#include "types.h"
 
 struct type_t* get_type_by_name(char *name)
 {
@@ -45,4 +46,12 @@ void free_all_types()
 	free(types);
 	types=NULL;
 	num_types=0;
+}
+
+void parser_type_cmp(struct expr_t **a, struct expr_t **b)
+{
+	if ((*a)->type!=(*b)->type) {
+		fprintf(stderr, "Type mismatch at line: %d character: %d\n", current_line, current_char);
+		exit(1);
+	}
 }
