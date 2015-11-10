@@ -59,7 +59,7 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		fprintf(fd, "\tmovl %s, %s\n", lhs->name, tmp);
 		free(tmp);
 	}
-	lhs->in_use=false;
+	free_register(lhs);
 }
 
 void generate_statement(FILE *fd, struct statem_t *s)

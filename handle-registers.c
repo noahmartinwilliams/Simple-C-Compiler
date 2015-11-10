@@ -97,3 +97,8 @@ void assign_constant(FILE *fd, struct expr_t *e)
 {
 	fprintf(fd, "\tmovl $%ld, %%eax\n", e->attrs.cint_val);
 }
+
+void free_register(struct reg_t *r)
+{
+	r->in_use=false;
+}
