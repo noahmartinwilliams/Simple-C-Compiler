@@ -3,6 +3,7 @@
 
 #include "print-tree.h"
 #include "handle-exprs.h"
+#include "handle-statems.h"
 #include <stddef.h>
 
 inline void print_e(struct expr_t *e)
@@ -13,6 +14,12 @@ inline void print_e(struct expr_t *e)
 inline void print_s(struct statem_t *s)
 {
 	print_statem(" ", s);
+}
+
+inline void print_f(struct func_t *f)
+{
+	printf("function: %s\n", f->name);
+	print_s(f->statement_list);
 }
 
 #endif

@@ -16,6 +16,21 @@
 
 extern int yydebug;
 FILE *output;
+
+static inline struct expr_t* make_bin_op(char *X, struct expr_t *Y, struct expr_t *Z)
+{
+	struct expr_t *e=malloc(sizeof(struct expr_t)); 
+	struct expr_t *a=Y, *b=Z;
+	parser_type_cmp(&a, &b);
+	e->type=a->type;
+	if (!evaluate_constant_expr(X, a, b, e)) {
+		e->kind=bin_op;
+		e->left=a;
+		e->right=b;
+		e->attrs.bin_op=strdup(X);
+	}
+	return e;
+}
 %}
 %union {
 	long int l;
@@ -39,7 +54,7 @@ FILE *output;
 %type <func> function
 %%
 file:  function {
-	print_s($1);
+	print_f($1);
 	generate_function(output, $1);
 	free_statem($1->statement_list);
 	free_all_vars();
@@ -128,31 +143,19 @@ assignable_expr:  IDENTIFIER {
 };
 
 binary_expr:  expression '+' expression {
+	$$=make_bin_op("+", $1, $3);
+} | assignable_expr '=' expression {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	struct expr_t *a=$1, *b=$3;
 	parser_type_cmp(&a, &b);
-
-	e->type=a->type;
-	if (!evaluate_constant_expr("+", a, b, e)) {
-		e->kind=bin_op;
-		e->left=a;
-		e->right=b;
-		e->attrs.bin_op=strdup("+");
-	}
-	$$=e;
-} | assignable_expr '=' expression {
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	if ($1->type!=$3->type) {
-		fprintf(stderr, "Type mismatch at line: %d character: %d\n", current_line, current_char);
-		exit(1);
-	}
-	e->type=$3->type;
+	e->type=b->type;
 	e->kind=bin_op;
-	e->left=$1;
-	e->right=$3;
+	e->left=a;
+	e->right=b;
 	e->attrs.bin_op=strdup("=");
 	$$=e;
-
+} | expression '-' expression {
+	$$=make_bin_op("-", $1, $3);
 };
 
 var_declaration: type IDENTIFIER ';' {
@@ -175,7 +178,6 @@ void yyerror(char *s)
 int main()
 {
 	output=fopen("output.s", "w+");
-	/* TODO: finish testing addition expression. */
 	setup_generator();
 	yyparse();
 	free_all_types();

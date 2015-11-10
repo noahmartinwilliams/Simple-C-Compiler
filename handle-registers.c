@@ -80,7 +80,7 @@ void add(FILE *fd, struct reg_t *a, struct reg_t *b)
 
 void sub(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
-	fprintf(fd, "\tsubq %s, %s\n", a->name, b->name);
+	fprintf(fd, "\tsubl %s, %s\n", a->name, b->name);
 }
 
 void expand_stack_space(FILE *fd, off_t off)

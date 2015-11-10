@@ -13,4 +13,5 @@ extern void read_var(FILE *fd, struct var_t *v);
 extern void expand_stack_space(FILE *fd, off_t off);
 extern void free_register(struct reg_t *r);
 
+extern void sub(FILE *fd, struct reg_t *a, struct reg_t *b);
 #endif

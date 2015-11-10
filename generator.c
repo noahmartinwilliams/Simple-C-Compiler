@@ -58,6 +58,11 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		char *tmp=assign(fd, e->left);
 		fprintf(fd, "\tmovl %s, %s\n", lhs->name, tmp);
 		free(tmp);
+	} else if (!strcmp(e->attrs.bin_op, "-")) {
+		generate_expression(fd, e->left);
+		assign_reg(fd, ret, lhs);
+		generate_expression(fd, e->right);
+		sub(fd, lhs, ret);
 	}
 	free_register(lhs);
 }
