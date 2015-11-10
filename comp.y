@@ -1,15 +1,16 @@
 %{
-#include <stdio.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <string.h>
 #include "types.h"
 #include "printer.h"
 #include "handle-types.h"
 #include "handle-exprs.h"
 #include "handle-statems.h"
+#include "print-tree.h"
 #include "handle-funcs.h"
 #include "globals.h"
 #include "generator.h"
-#include <string.h>
 #include "handle-vars.h"
 #include "handle-registers.h"
 
@@ -30,6 +31,7 @@ FILE *output;
 %token <str> IDENTIFIER
 %type <expr> expression
 %type <expr> binary_expr
+%type <expr> assignable_expr
 %type <statem> statement
 %type <statem> statement_list
 %type <statem> var_declaration
@@ -37,7 +39,7 @@ FILE *output;
 %type <func> function
 %%
 file:  function {
-	print_s($1->statement_list);
+	print_s($1);
 	generate_function(output, $1);
 	free_statem($1->statement_list);
 	free_all_vars();
@@ -109,7 +111,9 @@ expression: CONST_INT {
 	$$=e;
 }  | binary_expr | '(' expression ')' {
 	$$=$2;
-} | IDENTIFIER {
+} | assignable_expr ;
+
+assignable_expr:  IDENTIFIER {
 	struct var_t *v=get_var_by_name($1);
 	if (v==NULL) {
 		fprintf(stderr, "Unknown var on line: %d, char: %d\n", current_line, current_char);
@@ -122,9 +126,9 @@ expression: CONST_INT {
 	free($1);
 	$$=e;
 };
+
 binary_expr:  expression '+' expression {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
-	/*TODO: handle type stuff */
 	if ($1->type!=$3->type) {
 		fprintf(stderr, "Type mismatch at line: %d character: %d\n", current_line, current_char);
 		exit(1);
@@ -145,6 +149,19 @@ binary_expr:  expression '+' expression {
 		e->attrs.bin_op=strdup("+");
 	}
 	$$=e;
+} | assignable_expr '=' expression {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	if ($1->type!=$3->type) {
+		fprintf(stderr, "Type mismatch at line: %d character: %d\n", current_line, current_char);
+		exit(1);
+	}
+	e->type=$3->type;
+	e->kind=bin_op;
+	e->left=$1;
+	e->right=$3;
+	e->attrs.bin_op=strdup("=");
+	$$=e;
+
 };
 
 var_declaration: type IDENTIFIER ';' {
@@ -152,6 +169,7 @@ var_declaration: type IDENTIFIER ';' {
 	s->kind=declare;
 	s->attrs.var=malloc(sizeof(struct var_t));
 	struct var_t *v=s->attrs.var;
+	v->scope=1; /* TODO: get this working better later */
 	v->name=$2;
 	v->type=$1;
 	add_var(v);

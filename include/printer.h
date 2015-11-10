@@ -2,7 +2,7 @@
 #define __PRINTER_H__
 
 #include "print-tree.h"
-#include "print-stuff.h"
+#include "handle-exprs.h"
 #include <stddef.h>
 
 inline void print_e(struct expr_t *e)

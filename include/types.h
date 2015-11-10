@@ -25,8 +25,10 @@ struct expr_t {
 struct var_t {
 	struct type_t *type;
 	off_t offset;
+	int scope;
 	char *name;
 };
+
 struct statem_t {
 	enum { expr, list, declare, _while, ret } kind;
 	union {

@@ -9,6 +9,7 @@ void count(char *s);
 "return"	{ count(yytext); return RET; }
 "while"	{ count(yytext); return WHILE; }
 [0-9]+	{ count(yytext); yylval.l=atoi(yytext); return CONST_INT; }
+"="	{ count(yytext); return '='; }
 "("	{ count(yytext); return '('; }
 ")"	{ count(yytext); return ')'; }
 "+"	{ count(yytext); return '+'; }

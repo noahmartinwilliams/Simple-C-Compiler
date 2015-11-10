@@ -68,7 +68,7 @@ struct reg_t* get_free_register(size_t s)
 	return NULL;
 }
 
-void assign(FILE *fd, struct reg_t *src, struct reg_t *dest)
+void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest)
 {
 	fprintf(fd, "\tmovl %s, %s\n", src->name, dest->name);
 }
@@ -76,6 +76,16 @@ void assign(FILE *fd, struct reg_t *src, struct reg_t *dest)
 void add(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
 	fprintf(fd, "\taddl %s, %s\n", a->name, b->name);
+}
+
+void sub(FILE *fd, struct reg_t *a, struct reg_t *b)
+{
+	fprintf(fd, "\tsubq %s, %s\n", a->name, b->name);
+}
+
+void expand_stack_space(FILE *fd, off_t off)
+{
+	fprintf(fd, "\tsubq $%ld, %%rsp\n", off);
 }
 
 void read_var(FILE *fd, struct var_t *v)

@@ -1,9 +1,10 @@
+#include <stdlib.h>
+#include <stddef.h>
+#include "print-tree.h"
 #include "handle-types.h"
 #include "globals.h"
-#include <stdlib.h>
 #include "handle-exprs.h"
-#include "print-stuff.h"
-#include <stddef.h>
+#include "handle-exprs.h"
 
 void free_statem(struct statem_t *s)
 {
