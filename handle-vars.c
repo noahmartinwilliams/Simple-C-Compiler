@@ -13,9 +13,11 @@ void add_var(struct var_t *v)
 void free_var(struct var_t *v)
 {
 	int i=get_type_index_by_name(v->type->name);
-	if (i!=-1)
+	if (i!=-1) {
 		types[i]=NULL;
-	free_type(v->type);
+		free_type(v->type);
+	}
+
 	free(v->name);
 	free(v);
 }

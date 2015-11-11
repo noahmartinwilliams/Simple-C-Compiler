@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdio.h>
 #include "print-tree.h"
 #include "handle-types.h"
 #include "globals.h"
@@ -29,7 +30,7 @@ void print_statem(char *pre, struct statem_t *s)
 	if (s->kind==expr) {
 		printf("%s|_statement kind: expression\n", pre);
 		asprintf(&new_pre, "%s ", pre);
-		print_tree(print_expr, s->attrs.expr, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+		print_tree((__printer_function_t) &print_expr, s->attrs.expr, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
 		free(new_pre);
 	} else if (s->kind==list) {
 		printf("%s|_statement kind: list\n", pre);
@@ -54,7 +55,7 @@ void print_statem(char *pre, struct statem_t *s)
 		printf("%s|_statement kind: while loop\n", pre);
 		char *new_pre;
 		asprintf(&new_pre, "%s |", pre);
-		print_tree(print_expr, s->attrs._while.condition, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+		print_tree((__printer_function_t) &print_expr, s->attrs._while.condition, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
 		free(new_pre);
 		asprintf(&new_pre, "%s ", pre);
 		print_statem(new_pre, s->attrs._while.block);
@@ -62,7 +63,7 @@ void print_statem(char *pre, struct statem_t *s)
 	} else if (s->kind==ret) {
 		printf("%s|_statement kind: return\n", pre);
 		asprintf(&new_pre, "%s ", pre);
-		print_tree(print_expr, s->attrs.expr, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+		print_tree((__printer_function_t) &print_expr, s->attrs.expr, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
 		free(new_pre);
 	}
 }

@@ -1,18 +1,18 @@
 CC=./cc
 
-test: test01 test02
+test: test01 test02 test03
 	echo "done"
-	$(MAKE) clean
 
 test%: test%.c
 	$(CC) output.s <$^
 	as output.s -o output.o
 	ld output.o -o $@
-	./$@-wrapper
+	./$@-wrapper && (tput setaf 2; echo "[$@ passed]";  tput sgr0; ) || (tput setaf 2; echo "[$@ failed]"; tput sgr0; )
 
 clean:
-	rm test01 || true
-	rm test02 || true
-	rm *.o || true
-	rm *.s || true
-	rm cc || true
+	rm test01 2>/dev/null || true
+	rm test02 2>/dev/null || true
+	rm test03 2>/dev/null || true
+	rm *.o 2>/dev/null || true
+	rm *.s 2>/dev/null || true
+	rm cc 2>/dev/null || true

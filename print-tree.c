@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stddef.h>
 
 void print_tree(void (*printer) (char*, void*), void *tree, char *str, off_t a, off_t b)

@@ -51,6 +51,8 @@ static inline struct expr_t* make_bin_op(char *X, struct expr_t *Y, struct expr_
 %type <statem> var_declaration
 %type <type> type
 %type <func> function
+
+%left '+' '-'
 %%
 file:  function {
 	print_f($1);

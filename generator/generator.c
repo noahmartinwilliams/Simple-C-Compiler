@@ -9,7 +9,6 @@
 #include "handle-funcs.h"
 
 
-
 char* assign(FILE *fd, struct expr_t *e);
 void setup_types()
 {
@@ -60,9 +59,9 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		fprintf(fd, "\tmovl %s, %s\n", lhs->name, tmp);
 		free(tmp);
 	} else if (!strcmp(e->attrs.bin_op, "-")) {
-		generate_expression(fd, e->left);
-		assign_reg(fd, ret, lhs);
 		generate_expression(fd, e->right);
+		assign_reg(fd, ret, lhs);
+		generate_expression(fd, e->left);
 		sub(fd, lhs, ret);
 	}
 	free_register(fd, lhs);
@@ -89,16 +88,17 @@ void generate_statement(FILE *fd, struct statem_t *s)
 	}
 }
 
-off_t get_var_offset(struct statem_t *s)
+off_t get_var_offset(struct statem_t *s, off_t o)
 {
-	off_t o=0;
 	if (s->kind==list) {
 		int x;
 		for (x=0; x<s->attrs.list.num; x++)
-			o+=get_var_offset(s->attrs.list.statements[x]);
+			o+=get_var_offset(s->attrs.list.statements[x], o);
 	} else if (s->kind==declare) {
 		o+=s->attrs.var->type->body->size;
 		s->attrs.var->offset=-o;
+	} else {
+		o=0;
 	}
 
 	return o;
@@ -113,7 +113,7 @@ void generate_function(FILE *fd, struct func_t *f)
 		fprintf(fd, ".globl %s\n.type %s, @function\n%s:\n", f->name, f->name, f->name);
 	}
 	fprintf(fd, "\tmovq %%rsp, %%rbp\n");
-	off_t o=get_var_offset(f->statement_list);
+	off_t o=get_var_offset(f->statement_list, 0);
 	expand_stack_space(fd, o);
 
 	generate_statement(fd, f->statement_list);

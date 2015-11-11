@@ -1,22 +1,18 @@
-CC=gcc -I ./include
-AR=ar cr $@ $^
-CMP=$(CC) -c $^ -o $@
-CMB=$(CC) $^ -o $@
-YACC=bison -d --verbose 
-LEX=flex
+INCLUDE=./include
+include include/config.mk
 
-main: comp.tab.c globals.o lex.yy.o generator.o handle.a generator-globals.o
+main: comp.tab.c globals.o lex.yy.o handle.a generator/generator.a
 	$(CMB)
 
-handle.a: handle-types.o handle-exprs.o handle-statems.o handle-registers.o handle-funcs.o handle-vars.o print-tree.o
+generator/generator.a:
+	$(MAKE) -C generator/ generator.a
+handle.a: handle-types.o handle-exprs.o handle-statems.o  handle-funcs.o handle-vars.o print-tree.o
 	$(AR)
 
 test: main
 	cp main tests/cc
 	$(MAKE) -C tests/ test
 
-%.o: %.c
-	$(CMP)
 
 comp.tab.c include/comp.tab.h: comp.y
 	$(YACC) $^
@@ -26,10 +22,11 @@ lex.yy.c: comp.l
 	$(LEX) $^
 
 clean:
-	rm lex.yy.c || true
-	rm comp.tab.c || true
-	rm include/comp.tab.h || true
-	rm *.o || true
-	rm main || true
-	rm *.a || true
+	rm lex.yy.c 2>/dev/null || true
+	rm comp.tab.c 2>/dev/null || true
+	rm include/comp.tab.h 2>/dev/null || true
+	rm *.o 2>/dev/null || true
+	rm main 2>/dev/null || true
+	rm *.a 2>/dev/null || true
 	$(MAKE) -C tests/ clean
+	$(MAKE) -C generator/ clean

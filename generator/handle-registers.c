@@ -11,8 +11,6 @@ struct reg_t **regs=NULL;
 int num_regs=0;
 
 
-/* TODO: setup register stack */
-
 void setup_registers()
 {
 	num_regs+=4;

@@ -3,6 +3,10 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+typedef void (*__printer_function_t) (char*, void*); /* For type conversion for
+the print_tree function so I don't get annoying warnings because I never pass it
+a function pointer that has void* as the second argument type. */
+
 struct tbody_t {
 	size_t size;
 };

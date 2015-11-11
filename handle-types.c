@@ -17,8 +17,9 @@ int get_type_index_by_name(char *name)
 {
 	int x;
 	for (x=0; x<num_types; x++) {
-		if (!strcmp(name, types[x]->name))
-			return x;
+		if (types[x]!=NULL)
+			if (!strcmp(name, types[x]->name))
+				return x;
 	}
 	return -1;
 }
