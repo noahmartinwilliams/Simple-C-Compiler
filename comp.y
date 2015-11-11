@@ -6,7 +6,6 @@
 #include "globals.h"
 #include "handle-exprs.h"
 #include "handle-funcs.h"
-#include "handle-registers.h"
 #include "handle-statems.h"
 #include "handle-types.h"
 #include "handle-vars.h"

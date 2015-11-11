@@ -5,7 +5,7 @@ CMB=$(CC) $^ -o $@
 YACC=bison -d --verbose 
 LEX=flex
 
-main: comp.tab.c globals.o lex.yy.o generator.o handle.a
+main: comp.tab.c globals.o lex.yy.o generator.o handle.a generator-globals.o
 	$(CMB)
 
 handle.a: handle-types.o handle-exprs.o handle-statems.o handle-registers.o handle-funcs.o handle-vars.o print-tree.o

@@ -1,16 +1,14 @@
-#include "types.h"
 #include <stdlib.h>
-#include "globals.h"
 #include <string.h>
 #include <stdio.h>
+#include "types.h"
+#include "generator-globals.h"
+#include "globals.h"
 #include "handle-registers.h"
 #include "generator-types.h"
 #include "handle-funcs.h"
 
 
-bool in_main=false;
-size_t word_size=4;
-size_t int_size=4;
 
 char* assign(FILE *fd, struct expr_t *e);
 void setup_types()
@@ -45,8 +43,9 @@ void generate_expression(FILE *fd, struct expr_t *e)
 
 void generate_binary_expression(FILE *fd, struct expr_t *e)
 {
+	depth++;
 	struct reg_t *ret=get_ret_register(e->type->body->size);
-	struct reg_t *lhs=get_free_register(e->type->body->size);
+	struct reg_t *lhs=get_free_register(fd, e->type->body->size);
 	if (!strcmp(e->attrs.bin_op, "+")) {
 		generate_expression(fd, e->left);
 		assign_reg(fd, ret, lhs);
@@ -56,6 +55,8 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		generate_expression(fd, e->right);
 		assign_reg(fd, ret, lhs);
 		char *tmp=assign(fd, e->left);
+		/* TODO: figure out a good way to abstract away the direct use
+		 * of the mov command here. Printint opcodes is for handle-registers.c */
 		fprintf(fd, "\tmovl %s, %s\n", lhs->name, tmp);
 		free(tmp);
 	} else if (!strcmp(e->attrs.bin_op, "-")) {
@@ -64,7 +65,8 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		generate_expression(fd, e->right);
 		sub(fd, lhs, ret);
 	}
-	free_register(lhs);
+	free_register(fd, lhs);
+	depth--;
 }
 
 void generate_statement(FILE *fd, struct statem_t *s)
