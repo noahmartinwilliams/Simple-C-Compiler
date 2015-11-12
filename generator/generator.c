@@ -9,7 +9,7 @@
 #include "handle-funcs.h"
 
 
-char* assign(FILE *fd, struct expr_t *e);
+char* prepare_var_assignment(FILE *fd, struct expr_t *dest);
 void setup_types()
 {
 	num_types++;
@@ -52,11 +52,15 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		add(fd, lhs, ret);
 	} else if (!strcmp(e->attrs.bin_op, "=")) {
 		generate_expression(fd, e->right);
-		assign_reg(fd, ret, lhs);
-		char *tmp=assign(fd, e->left);
+		if (e->left->kind!=var)
+			assign_reg(fd, ret, lhs);
+		char *tmp=prepare_var_assignment(fd, e->left);
 		/* TODO: figure out a good way to abstract away the direct use
 		 * of the mov command here. Printint opcodes is for handle-registers.c */
-		fprintf(fd, "\tmovl %s, %s\n", lhs->name, tmp);
+		if (e->left->kind!=var)
+			fprintf(fd, "\tmovl %s, %s\n", lhs->name, tmp);
+		else 
+			fprintf(fd, "\tmovl %s, %s\n", ret->name, tmp);
 		free(tmp);
 	} else if (!strcmp(e->attrs.bin_op, "-")) {
 		generate_expression(fd, e->right);
@@ -124,7 +128,7 @@ void generate_function(FILE *fd, struct func_t *f)
 	}
 }
 
-char* assign(FILE *fd, struct expr_t *dest)
+char* prepare_var_assignment(FILE *fd, struct expr_t *dest)
 {
 	char *ret=NULL;
 	if (dest->kind==var) {

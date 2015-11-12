@@ -7,7 +7,7 @@ test%: test%.c
 	$(CC) output.s <$^
 	as output.s -o output.o
 	ld output.o -o $@
-	./$@-wrapper && (tput setaf 2; echo "[$@ passed]";  tput sgr0; ) || (tput setaf 2; echo "[$@ failed]"; tput sgr0; )
+	./$@-wrapper && (tput setaf 2; echo "[$@ passed]";  tput sgr0; ) || (tput setaf 1; echo "[$@ failed]"; tput sgr0; )
 
 clean:
 	rm test01 2>/dev/null || true

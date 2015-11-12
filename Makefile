@@ -11,7 +11,7 @@ handle.a: handle-types.o handle-exprs.o handle-statems.o  handle-funcs.o handle-
 
 test: main
 	cp main tests/cc
-	$(MAKE) -C tests/ test
+	$(MAKE) -C tests/ -s test
 
 
 comp.tab.c include/comp.tab.h: comp.y
