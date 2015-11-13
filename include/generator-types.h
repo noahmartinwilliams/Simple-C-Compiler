@@ -7,9 +7,14 @@
  * has registers that each can have multiple sizes 
  * possibly give each register a list of "other" registers that it is mutually
  * exclusive with. */
-struct reg_t {
+
+struct reg_size {
 	char *name;
-	char *pushable_name;
+	size_t size;
+};
+struct reg_t {
+	struct reg_size *sizes;
+	int num_sizes;
 	size_t size;
 	bool in_use;
 	int depth;

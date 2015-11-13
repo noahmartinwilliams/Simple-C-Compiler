@@ -8,6 +8,7 @@
 #include "generator-types.h"
 #include "handle-funcs.h"
 
+/* TODO: make all of this more efficient */
 
 char* prepare_var_assignment(FILE *fd, struct expr_t *dest);
 void setup_types()
@@ -45,30 +46,56 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 	depth++;
 	struct reg_t *ret=get_ret_register(e->type->body->size);
 	struct reg_t *lhs=get_free_register(fd, e->type->body->size);
+	struct reg_t *rhs=get_free_register(fd, e->type->body->size);
 	if (!strcmp(e->attrs.bin_op, "+")) {
+		fprintf(fd, "\t#(\n\t#(\n");
 		generate_expression(fd, e->left);
 		assign_reg(fd, ret, lhs);
+		fprintf(fd, "\t#)\n\t#+\n\t#(\n");
 		generate_expression(fd, e->right);
-		add(fd, lhs, ret);
+		assign_reg(fd, ret, rhs);
+		fprintf(fd, "\t#)\n");
+		int_add(fd, lhs, rhs);
+		fprintf(fd, "\t#)\n");
 	} else if (!strcmp(e->attrs.bin_op, "=")) {
+		fprintf(fd, "\t#(\n\t#(\n");
 		generate_expression(fd, e->right);
 		if (e->left->kind!=var)
 			assign_reg(fd, ret, lhs);
 		char *tmp=prepare_var_assignment(fd, e->left);
+		fprintf(fd, "\t#)\n\t#=\n\t#(\n");
 		/* TODO: figure out a good way to abstract away the direct use
 		 * of the mov command here. Printint opcodes is for handle-registers.c */
 		if (e->left->kind!=var)
-			fprintf(fd, "\tmovl %s, %s\n", lhs->name, tmp);
+			fprintf(fd, "\tmovl %s, %s\n", get_reg_name(lhs), tmp);
 		else 
-			fprintf(fd, "\tmovl %s, %s\n", ret->name, tmp);
+			fprintf(fd, "\tmovl %s, %s\n", get_reg_name(ret), tmp);
+		fprintf(fd, "\t#)\n\t#)\n");
 		free(tmp);
 	} else if (!strcmp(e->attrs.bin_op, "-")) {
+		fprintf(fd, "\t#(\n\t#(\n");
 		generate_expression(fd, e->right);
-		assign_reg(fd, ret, lhs);
+		assign_reg(fd, ret, rhs);
+		fprintf(fd, "\t#)\n\t#-\n\t#(\n");
 		generate_expression(fd, e->left);
-		sub(fd, lhs, ret);
+		assign_reg(fd, ret, lhs);
+		fprintf(fd, "\t#)\n");
+		int_sub(fd, lhs, rhs);
+		fprintf(fd, "\t#)\n");
+	} else if (!strcmp(e->attrs.bin_op, "/")) {
+		fprintf(fd, "\t#(\n\t#(\n");
+		generate_expression(fd, e->left);
+		assign_reg(fd, ret, lhs);
+		fprintf(fd, "\t#)\n\t#/\n\t#(\n");
+		generate_expression(fd, e->right);
+		assign_reg(fd, ret, rhs);
+		fprintf(fd, "\t#)\n");
+		int_div(fd, lhs, rhs);
+		fprintf(fd, "\t#)\n");
+
 	}
 	free_register(fd, lhs);
+	free_register(fd, rhs);
 	depth--;
 }
 
@@ -92,17 +119,16 @@ void generate_statement(FILE *fd, struct statem_t *s)
 	}
 }
 
-off_t get_var_offset(struct statem_t *s, off_t o)
+off_t get_var_offset(struct statem_t *s, off_t current_off)
 {
+	off_t o=0;
 	if (s->kind==list) {
 		int x;
 		for (x=0; x<s->attrs.list.num; x++)
-			o+=get_var_offset(s->attrs.list.statements[x], o);
+			o+=get_var_offset(s->attrs.list.statements[x], current_off+o);
 	} else if (s->kind==declare) {
-		o+=s->attrs.var->type->body->size;
-		s->attrs.var->offset=-o;
-	} else {
-		o=0;
+		o=s->attrs.var->type->body->size;
+		s->attrs.var->offset=-(o+current_off);
 	}
 
 	return o;

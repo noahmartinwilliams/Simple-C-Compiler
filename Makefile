@@ -1,17 +1,18 @@
 INCLUDE=./include
 include include/config.mk
 
-main: comp.tab.c globals.o lex.yy.o handle.a generator/generator.a
+main: comp.tab.c globals.o lex.yy.o handle.a generator.a
 	$(CMB)
 
-generator/generator.a:
-	$(MAKE) -C generator/ generator.a
+generator.a: generator/*
+	$(MAKE) -C generator/ ../generator.a
+
 handle.a: handle-types.o handle-exprs.o handle-statems.o  handle-funcs.o handle-vars.o print-tree.o
 	$(AR)
 
 test: main
 	cp main tests/cc
-	$(MAKE) -C tests/ -s test
+	$(MAKE) -C tests/ test
 
 
 comp.tab.c include/comp.tab.h: comp.y

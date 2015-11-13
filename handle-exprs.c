@@ -31,15 +31,23 @@ void free_expr(struct expr_t *e)
 bool evaluate_constant_expr(char *op, struct expr_t *a, struct expr_t *b, struct expr_t *e)
 {
 	if (a->kind==const_int && b->kind==const_int && evaluate_constants) {
+		e->kind=const_int;
+		e->left=NULL;
+		e->right=NULL;
 		if (!strcmp(op, "+")) {
-			e->kind=const_int;
-			e->left=NULL;
-			e->right=NULL;
 			e->attrs.cint_val=a->attrs.cint_val+b->attrs.cint_val;
-			free_expr(a);
-			free_expr(b);
-			return true;
+		} else if (!strcmp(op, "-")) {
+			e->attrs.cint_val=a->attrs.cint_val-b->attrs.cint_val;
+		} else if (!strcmp(op, "/")) {
+			printf("here\n");
+			e->attrs.cint_val=a->attrs.cint_val/b->attrs.cint_val;
+			/* NOTE: This might cause problems in the future if
+			it's cross-compiling, and the target architecture
+			handles integer rounding differently */
 		}
+		free_expr(a);
+		free_expr(b);
+		return true;
 	}
 	return false;
 }

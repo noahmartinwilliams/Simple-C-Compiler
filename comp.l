@@ -14,6 +14,7 @@ void count(char *s);
 ")"	{ count(yytext); return ')'; }
 "+"	{ count(yytext); return '+'; }
 "-"	{ count(yytext); return '-'; }
+"/"	{ count(yytext); return '/'; }
 ";"	{ count(yytext); return ';'; }
 "{"	{ count(yytext); return '{'; }
 "}"	{ count(yytext); return '}'; }

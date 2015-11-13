@@ -157,6 +157,8 @@ binary_expr:  expression '+' expression {
 	$$=e;
 } | expression '-' expression {
 	$$=make_bin_op("-", $1, $3);
+} | expression '/' expression {
+	$$=make_bin_op("/", $1, $3);
 };
 
 var_declaration: type IDENTIFIER ';' {
@@ -176,9 +178,9 @@ void yyerror(char *s)
 	printf("%s\n", s);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-	output=fopen("output.s", "w+");
+	output=fopen(argv[1], "w+");
 	setup_generator();
 	yyparse();
 	free_all_types();

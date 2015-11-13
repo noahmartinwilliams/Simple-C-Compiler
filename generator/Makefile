@@ -1,7 +1,7 @@
 INCLUDE=../include
 include ../include/config.mk
 
-generator.a: generator.o generator-globals.o handle-registers.o 
+../generator.a: generator.o generator-globals.o handle-registers.o 
 	$(AR) 
 
 clean:
