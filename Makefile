@@ -29,5 +29,6 @@ clean:
 	rm *.o 2>/dev/null || true
 	rm main 2>/dev/null || true
 	rm *.a 2>/dev/null || true
+	rm comp.output || true
 	$(MAKE) -C tests/ clean
 	$(MAKE) -C generator/ clean

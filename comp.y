@@ -41,6 +41,7 @@ static inline struct expr_t* make_bin_op(char *X, struct expr_t *Y, struct expr_
 }
 %token WHILE
 %token RET
+%token IF
 %token <l> CONST_INT
 %token <str> IDENTIFIER
 %type <expr> expression
@@ -90,6 +91,12 @@ statement: expression ';' {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=ret;
 	s->attrs.expr=$2;
+	$$=s;
+} | IF '(' expression ')' statement {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=_if;
+	s->attrs._if.condition=$3;
+	s->attrs._if.block=$5;
 	$$=s;
 };
 
@@ -175,7 +182,7 @@ var_declaration: type IDENTIFIER ';' {
 %%
 void yyerror(char *s)
 {
-	printf("%s\n", s);
+	printf("%s on line: %d, char: %d\n", s, current_line, current_char);
 }
 
 int main(int argc, char *argv[])

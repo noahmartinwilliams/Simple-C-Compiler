@@ -148,6 +148,31 @@ void assign_constant(FILE *fd, struct expr_t *e)
 	fprintf(fd, "\tmovl $%ld, %%eax\n", e->attrs.cint_val);
 }
 
+void compare_registers(FILE *fd, struct reg_t *a, struct reg_t *b)
+{
+	fprintf(fd, "\tcmpl %s, %s\n", get_reg_name(a), get_reg_name(b));
+}
+
+void compare_register_to_int(FILE *fd, struct reg_t *a, int i)
+{
+	fprintf(fd, "\tcmpl $%d, %s\n", i, get_reg_name(a));
+}
+
+void jmp_eq(FILE *fd, char *name)
+{
+	fprintf(fd, "\tje %s\n", name);
+}
+
+void jmp_neq(FILE *fd, char *name)
+{
+	fprintf(fd, "\tjne %s\n", name);
+}
+
+void place_label(FILE *fd, char *name)
+{
+	fprintf(fd, "\t%s:\n", name);
+}
+
 void free_register(FILE *fd, struct reg_t *r)
 {
 	if (r->depth==0)

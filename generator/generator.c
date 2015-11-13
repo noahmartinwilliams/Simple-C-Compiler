@@ -116,6 +116,23 @@ void generate_statement(FILE *fd, struct statem_t *s)
 			fprintf(fd, "\tmovq %%rax, %%rdi\n\tmovq $60, %%rax\n\tsyscall\n");
 	} else if (s->kind==declare) {
 		return;
+	} else if (s->kind==_if) {
+		fprintf(fd, "\t#if (\n");
+		generate_expression(fd, s->attrs._if.condition);
+		struct reg_t *ret=get_ret_register(word_size);
+		compare_register_to_int(fd, ret, 1);
+
+		unique_num++;
+		char *unique_name;
+		asprintf(&unique_name, "if$not$true$%d", unique_num);
+		fprintf(fd, "\t#)\n");
+
+		jmp_neq(fd, unique_name);
+		fprintf(fd, "\t#{\n");
+		generate_statement(fd, s->attrs._if.block);
+		fprintf(fd, "\t#}\n");
+		place_label(fd, unique_name);
+		free(unique_name);
 	}
 }
 
@@ -129,6 +146,8 @@ off_t get_var_offset(struct statem_t *s, off_t current_off)
 	} else if (s->kind==declare) {
 		o=s->attrs.var->type->body->size;
 		s->attrs.var->offset=-(o+current_off);
+	} else if (s->kind==_if) {
+		o+=get_var_offset(s->attrs._if.block, current_off+o);
 	}
 
 	return o;

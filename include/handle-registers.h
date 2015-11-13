@@ -15,4 +15,9 @@ extern void free_register(FILE *fd, struct reg_t *r);
 
 extern void int_sub(FILE *fd, struct reg_t *a, struct reg_t *b);
 extern struct reg_t* get_free_register(FILE *fd, size_t s);
+extern void place_label(FILE *fd, char *name);
+extern void jmp_neq(FILE *fd, char *name);
+extern void jmp_eq(FILE *fd, char *name);
+extern void compare_registers(FILE *fd, struct reg_t *a, struct reg_t *b);
+extern void compare_register_to_int(FILE *fd, struct reg_t *a, int i);
 #endif

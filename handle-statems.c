@@ -65,5 +65,14 @@ void print_statem(char *pre, struct statem_t *s)
 		asprintf(&new_pre, "%s ", pre);
 		print_tree((__printer_function_t) &print_expr, s->attrs.expr, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
 		free(new_pre);
+	} else if (s->kind==_if) {
+		printf("%s|_statement kind: if statement\n", pre);
+		char *new_pre;
+		asprintf(&new_pre, "%s |", pre);
+		print_tree((__printer_function_t) &print_expr, s->attrs._if.condition, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+		free(new_pre);
+		asprintf(&new_pre, "%s ", pre);
+		print_statem(new_pre, s->attrs._if.block);
+		free(new_pre);
 	}
 }
