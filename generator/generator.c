@@ -4,7 +4,7 @@
 #include "types.h"
 #include "generator-globals.h"
 #include "globals.h"
-#include "handle-registers.h"
+#include "backend.h"
 #include "generator-types.h"
 #include "handle-funcs.h"
 
@@ -131,14 +131,14 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		fprintf(fd, "\t#if (\n");
 		generate_expression(fd, s->attrs._if.condition);
 		struct reg_t *ret=get_ret_register(word_size);
-		compare_register_to_int(fd, ret, 1);
+		compare_register_to_int(fd, ret, 0);
 
 		unique_num++;
 		char *unique_name;
 		asprintf(&unique_name, "if$not$true$%d", unique_num);
 		fprintf(fd, "\t#)\n");
 
-		jmp_neq(fd, unique_name);
+		jmp_eq(fd, unique_name);
 		fprintf(fd, "\t#{\n");
 		generate_statement(fd, s->attrs._if.block);
 		fprintf(fd, "\t#}\n");
