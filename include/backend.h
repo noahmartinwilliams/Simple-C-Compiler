@@ -1,5 +1,5 @@
-#ifndef __HANDLE_REGISTERS_H__
-#define __HANDLE_REGISTERS_H__
+#ifndef __BACKEND_H__
+#define __BACKEND_H__
 #include <stdlib.h>
 #include "types.h"
 #include "generator-types.h"

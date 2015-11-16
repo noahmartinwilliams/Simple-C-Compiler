@@ -20,6 +20,9 @@ void free_statem(struct statem_t *s)
 	} else if (s->kind==_while) {
 		free_expr(s->attrs._while.condition);
 		free_statem(s->attrs._while.block);
+	} else if (s->kind==_if) {
+		free_expr(s->attrs._if.condition);
+		free_statem(s->attrs._if.block);
 	}
 	free(s);
 }

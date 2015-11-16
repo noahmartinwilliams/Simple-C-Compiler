@@ -30,6 +30,8 @@ static inline struct expr_t* make_bin_op(char *X, struct expr_t *Y, struct expr_
 	}
 	return e;
 }
+
+static struct type_t *current_type=NULL;
 %}
 %union {
 	long int l;
@@ -50,6 +52,7 @@ static inline struct expr_t* make_bin_op(char *X, struct expr_t *Y, struct expr_
 %type <statem> statement
 %type <statem> statement_list
 %type <statem> var_declaration
+%type <statem> var_declaration_list
 %type <type> type
 %type <func> function
 
@@ -73,6 +76,7 @@ function: type IDENTIFIER '(' ')' '{' statement_list '}' {
 	f->arguments=NULL;
 	add_func(f);
 	$$=f;
+	free($2);
 }
 statement: expression ';' {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
@@ -121,6 +125,7 @@ type: IDENTIFIER {
 		fprintf(stderr, "Error: line %d, char %d, type not known\n", current_line, current_char);
 		exit(1);
 	}
+	current_type=t;
 	$$=t;
 };
 
@@ -170,16 +175,43 @@ binary_expr:  expression '+' expression {
 	$$=make_bin_op("*", $1, $3);
 };
 
-var_declaration: type IDENTIFIER ';' {
+var_declaration_list: IDENTIFIER {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=declare;
 	s->attrs.var=malloc(sizeof(struct var_t));
 	struct var_t *v=s->attrs.var;
 	v->scope=1; /* TODO: get this working better later */
-	v->name=$2;
-	v->type=$1;
+	v->name=$1;
+	v->type=current_type;
 	add_var(v);
 	$$=s;
+} | var_declaration_list ',' IDENTIFIER {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=declare;
+	s->attrs.var=malloc(sizeof(struct var_t));
+	struct var_t *v=s->attrs.var;
+	v->scope=1; /* TODO: get this working better later */
+	v->name=$3;
+	v->type=current_type;
+	add_var(v);
+
+	if ($1->kind==declare) {
+		struct statem_t *l=malloc(sizeof(struct statem_t));
+		l->kind=list;
+		l->attrs.list.num=2;
+		l->attrs.list.statements=calloc(2, sizeof(struct statem_t*));
+		l->attrs.list.statements[0]=$1;
+		l->attrs.list.statements[1]=s;
+		$$=l;
+	} else {
+		$1->attrs.list.num++;
+		$1->attrs.list.statements=realloc($1->attrs.list.statements, $1->attrs.list.num*sizeof(struct statem_t*));
+		$1->attrs.list.statements[$1->attrs.list.num-1]=s;
+		$$=$1;
+	}
+};
+var_declaration: type var_declaration_list ';' {
+	$$=$2;
 };
 %%
 void yyerror(char *s)
