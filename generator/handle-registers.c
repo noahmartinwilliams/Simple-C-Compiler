@@ -129,8 +129,14 @@ void int_div(FILE *fd, struct reg_t *a, struct reg_t *b)
 	fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(a));
 	fprintf(fd, "\tcltd\n");
 	fprintf(fd, "\tidivl %s\n", get_reg_name(b));
-	//fprintf(fd, "\tmovx 
 
+}
+
+void int_mul(FILE *fd, struct reg_t *a, struct reg_t *b)
+{
+	if (strcmp(a->sizes[0].name, "%al"))
+		fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(a));
+	fprintf(fd, "\tmull %s\n", get_reg_name(b));
 }
 
 void expand_stack_space(FILE *fd, off_t off)

@@ -166,6 +166,8 @@ binary_expr:  expression '+' expression {
 	$$=make_bin_op("-", $1, $3);
 } | expression '/' expression {
 	$$=make_bin_op("/", $1, $3);
+} | expression '*' expression {
+	$$=make_bin_op("*", $1, $3);
 };
 
 var_declaration: type IDENTIFIER ';' {

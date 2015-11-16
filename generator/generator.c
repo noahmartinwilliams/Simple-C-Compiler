@@ -58,6 +58,7 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		int_add(fd, lhs, rhs);
 		fprintf(fd, "\t#)\n");
 	} else if (!strcmp(e->attrs.bin_op, "=")) {
+		fprintf(fd, "\t#Note: lhs, and rhs of assignment is swapped\n");
 		fprintf(fd, "\t#(\n\t#(\n");
 		generate_expression(fd, e->right);
 		if (e->left->kind!=var)
@@ -93,9 +94,19 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		int_div(fd, lhs, rhs);
 		fprintf(fd, "\t#)\n");
 
+	} else if (!strcmp(e->attrs.bin_op, "*")) {
+		fprintf(fd, "\t#(\n\t#(\n");
+		generate_expression(fd, e->left);
+		assign_reg(fd, ret, lhs);
+		fprintf(fd, "\t#)\n\t#*\n\t#(\n");
+		generate_expression(fd, e->right);
+		fprintf(fd, "\t#)\n");
+		int_mul(fd, ret, lhs);
+		fprintf(fd, "\t#)\n");
+
 	}
-	free_register(fd, lhs);
 	free_register(fd, rhs);
+	free_register(fd, lhs);
 	depth--;
 }
 
