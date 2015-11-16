@@ -40,6 +40,7 @@ static struct type_t *current_type=NULL;
 	struct type_t *type;
 	char *str;
 	struct func_t *func;
+	struct var_v *var;
 }
 %token WHILE
 %token RET
@@ -55,6 +56,7 @@ static struct type_t *current_type=NULL;
 %type <statem> var_declaration_list
 %type <type> type
 %type <func> function
+%type <statem> var_declaration_ident
 
 %left '+' '-'
 %%
@@ -175,40 +177,56 @@ binary_expr:  expression '+' expression {
 	$$=make_bin_op("*", $1, $3);
 };
 
-var_declaration_list: IDENTIFIER {
+var_declaration_ident: IDENTIFIER { 
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=declare;
-	s->attrs.var=malloc(sizeof(struct var_t));
-	struct var_t *v=s->attrs.var;
+	struct var_t *v=malloc(sizeof(struct var_t));
 	v->scope=1; /* TODO: get this working better later */
 	v->name=$1;
 	v->type=current_type;
 	add_var(v);
-	$$=s;
-} | var_declaration_list ',' IDENTIFIER {
-	struct statem_t *s=malloc(sizeof(struct statem_t));
-	s->kind=declare;
-	s->attrs.var=malloc(sizeof(struct var_t));
-	struct var_t *v=s->attrs.var;
+	s->attrs.var=v;
+
+	struct statem_t *l=malloc(sizeof(struct statem_t));
+	l->kind=list;
+	l->attrs.list.num=1;
+	l->attrs.list.statements=malloc(sizeof(struct statem_t*));
+	l->attrs.list.statements[0]=s;
+
+	$$=l;
+} | IDENTIFIER '=' expression {
+	struct var_t *v=malloc(sizeof(struct var_t));
 	v->scope=1; /* TODO: get this working better later */
-	v->name=$3;
+	v->name=$1;
 	v->type=current_type;
 	add_var(v);
 
-	if ($1->kind==declare) {
-		struct statem_t *l=malloc(sizeof(struct statem_t));
-		l->kind=list;
-		l->attrs.list.num=2;
-		l->attrs.list.statements=calloc(2, sizeof(struct statem_t*));
-		l->attrs.list.statements[0]=$1;
-		l->attrs.list.statements[1]=s;
-		$$=l;
-	} else {
-		$1->attrs.list.num++;
-		$1->attrs.list.statements=realloc($1->attrs.list.statements, $1->attrs.list.num*sizeof(struct statem_t*));
-		$1->attrs.list.statements[$1->attrs.list.num-1]=s;
-		$$=$1;
-	}
+	struct statem_t *declaration=malloc(sizeof(struct statem_t));
+	declaration->kind=declare;
+	declaration->attrs.var=v;
+
+	struct statem_t *expression=malloc(sizeof(struct statem_t));
+	expression->kind=expr;
+	expression->attrs.expr=$3;
+
+	struct statem_t *l=malloc(sizeof(struct statem_t));
+	l->kind=list;
+	l->attrs.list.num=2;
+	l->attrs.list.statements=calloc(2, sizeof(struct statem_t*));
+	l->attrs.list.statements[0]=declaration;
+	l->attrs.list.statements[1]=expression;
+
+	$$=l;
+};
+
+
+var_declaration_list: var_declaration_ident | var_declaration_list ',' var_declaration_ident {
+	struct statem_t *s=$3;
+
+	$1->attrs.list.num++;
+	$1->attrs.list.statements=realloc($1->attrs.list.statements, $1->attrs.list.num*sizeof(struct statem_t*));
+	$1->attrs.list.statements[$1->attrs.list.num-1]=s;
+	$$=$1;
 };
 var_declaration: type var_declaration_list ';' {
 	$$=$2;
