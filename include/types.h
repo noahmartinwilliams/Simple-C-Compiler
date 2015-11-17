@@ -51,6 +51,8 @@ struct statem_t {
 		struct {
 			struct expr_t *condition;
 			struct statem_t *block;
+
+			struct statem_t *else_block;
 		} _if;
 	} attrs;
 };

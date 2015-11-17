@@ -134,16 +134,26 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		compare_register_to_int(fd, ret, 0);
 
 		unique_num++;
-		char *unique_name;
-		asprintf(&unique_name, "if$not$true$%d", unique_num);
+		char *unique_name_else, *unique_name_true;
+		asprintf(&unique_name_else, "if$not$true$%d", unique_num);
+		asprintf(&unique_name_true, "if$true$%d", unique_num);
 		fprintf(fd, "\t#)\n");
 
-		jmp_eq(fd, unique_name);
+		jmp_eq(fd, unique_name_else);
 		fprintf(fd, "\t#{\n");
 		generate_statement(fd, s->attrs._if.block);
-		fprintf(fd, "\t#}\n");
-		place_label(fd, unique_name);
-		free(unique_name);
+		jmp(fd, unique_name_true);
+		if (s->attrs._if.else_block==NULL) {
+			fprintf(fd, "\t#}\n");
+			place_label(fd, unique_name_else);
+		} else {
+			place_label(fd, unique_name_else);
+			fprintf(fd, "\t#} else {\n");
+			generate_statement(fd, s->attrs._if.else_block);
+		}
+		place_label(fd, unique_name_true);
+		free(unique_name_else);
+		free(unique_name_true);
 	}
 }
 

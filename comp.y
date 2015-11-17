@@ -45,6 +45,7 @@ static struct type_t *current_type=NULL;
 %token WHILE
 %token RET
 %token IF
+%token ELSE
 %token <l> CONST_INT
 %token <str> IDENTIFIER
 %type <expr> expression
@@ -106,6 +107,14 @@ statement: expression ';' {
 	s->kind=_if;
 	s->attrs._if.condition=$3;
 	s->attrs._if.block=$5;
+	s->attrs._if.else_block=NULL;
+	$$=s;
+} | IF '(' expression ')' statement ELSE statement {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=_if;
+	s->attrs._if.condition=$3;
+	s->attrs._if.block=$5;
+	s->attrs._if.else_block=$7;
 	$$=s;
 };
 
@@ -184,7 +193,7 @@ var_declaration_ident: IDENTIFIER {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=declare;
 	struct var_t *v=malloc(sizeof(struct var_t));
-	v->scope=1; /* TODO: get this working better later */
+	v->scope=scope; /* TODO: get this working better later */
 	v->name=$1;
 	v->type=current_type;
 	add_var(v);
@@ -199,7 +208,7 @@ var_declaration_ident: IDENTIFIER {
 	$$=l;
 } | IDENTIFIER '=' expression {
 	struct var_t *v=malloc(sizeof(struct var_t));
-	v->scope=1; /* TODO: get this working better later */
+	v->scope=scope; /* TODO: get this working better later */
 	v->name=$1;
 	v->type=current_type;
 	add_var(v);

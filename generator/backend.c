@@ -164,6 +164,11 @@ void compare_register_to_int(FILE *fd, struct reg_t *a, int i)
 	fprintf(fd, "\tcmpl $%d, %s\n", i, get_reg_name(a));
 }
 
+void jmp(FILE *fd, char *name)
+{
+	fprintf(fd, "\tjmp %s\n", name);
+}
+
 void jmp_eq(FILE *fd, char *name)
 {
 	fprintf(fd, "\tje %s\n", name);
