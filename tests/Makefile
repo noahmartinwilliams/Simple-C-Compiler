@@ -17,6 +17,7 @@ clean:
 	rm test05 2>/dev/null || true
 	rm test06 2>/dev/null || true
 	rm test07 2>/dev/null || true
+	rm test08 2>/dev/null || true
 	rm test*-output.s 2>/dev/null || true
 	rm comp.output || true
 	rm *.o 2>/dev/null || true

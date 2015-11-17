@@ -265,6 +265,10 @@ void yyerror(char *s)
 
 int main(int argc, char *argv[])
 {
+	if (argc<2) {
+		fprintf(stderr, "Usage: %s output_file.s\n", argv[0]);
+		exit(1);
+	}
 	output=fopen(argv[1], "w+");
 	setup_generator();
 	yyparse();

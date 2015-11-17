@@ -23,6 +23,8 @@ void free_statem(struct statem_t *s)
 	} else if (s->kind==_if) {
 		free_expr(s->attrs._if.condition);
 		free_statem(s->attrs._if.block);
+		if (s->attrs._if.else_block!=NULL)
+			free_statem(s->attrs._if.else_block);
 	}
 	free(s);
 }
@@ -71,11 +73,26 @@ void print_statem(char *pre, struct statem_t *s)
 	} else if (s->kind==_if) {
 		printf("%s|_statement kind: if statement\n", pre);
 		char *new_pre;
-		asprintf(&new_pre, "%s |", pre);
-		print_tree((__printer_function_t) &print_expr, s->attrs._if.condition, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
-		free(new_pre);
-		asprintf(&new_pre, "%s ", pre);
-		print_statem(new_pre, s->attrs._if.block);
-		free(new_pre);
+		if (s->attrs._if.else_block==NULL) {
+			asprintf(&new_pre, "%s |", pre);
+			print_tree((__printer_function_t) &print_expr, s->attrs._if.condition, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+			free(new_pre);
+			asprintf(&new_pre, "%s ", pre);
+			print_statem(new_pre, s->attrs._if.block);
+			free(new_pre);
+		} else {
+			asprintf(&new_pre, "%s | | ", pre);
+			print_tree((__printer_function_t) &print_expr, s->attrs._if.condition, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+			free(new_pre);
+
+			asprintf(&new_pre, "%s | ", pre);
+			print_statem(new_pre, s->attrs._if.block);
+			free(new_pre);
+
+			printf("%s |_ else\n", pre);
+			asprintf(&new_pre, "%s  ", pre);
+			print_statem(new_pre, s->attrs._if.else_block);
+			free(new_pre);
+		}
 	}
 }
