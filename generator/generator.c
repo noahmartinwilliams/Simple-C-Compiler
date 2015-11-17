@@ -104,6 +104,29 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		int_mul(fd, ret, lhs);
 		fprintf(fd, "\t#)\n");
 
+	} else if (!strcmp(e->attrs.bin_op, "==")) {
+		fprintf(fd, "\t#(\n\t#(\n");
+		generate_expression(fd, e->left);
+		assign_reg(fd, ret, lhs);
+		fprintf(fd, "\t#)\n\t#==\n\t#(\n");
+		generate_expression(fd, e->right);
+		fprintf(fd, "\t#)\n");
+		compare_registers(fd, ret, lhs);
+
+		unique_num++;
+		char *are_eq, *are_not_eq;
+		asprintf(&are_eq, "is$equal$%d", unique_num);
+		asprintf(&are_not_eq, "is$not$equal$%d", unique_num);
+
+		jmp_eq(fd, are_eq);
+		assign_constant_int(fd, 0);
+		jmp(fd, are_not_eq);
+		place_label(fd, are_eq);
+		assign_constant_int(fd, 1);
+		place_label(fd, are_not_eq);
+
+		free(are_eq);
+		free(are_not_eq);
 	}
 	free_register(fd, rhs);
 	free_register(fd, lhs);

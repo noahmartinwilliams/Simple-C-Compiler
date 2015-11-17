@@ -154,6 +154,11 @@ void assign_constant(FILE *fd, struct expr_t *e)
 	fprintf(fd, "\tmovl $%ld, %%eax\n", e->attrs.cint_val);
 }
 
+void assign_constant_int(FILE *fd, int e)
+{
+	fprintf(fd, "\tmovl $%d, %%eax\n", e);
+}
+
 void compare_registers(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
 	fprintf(fd, "\tcmpl %s, %s\n", get_reg_name(a), get_reg_name(b));

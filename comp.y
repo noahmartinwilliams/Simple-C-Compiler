@@ -46,6 +46,7 @@ static struct type_t *current_type=NULL;
 %token RET
 %token IF
 %token ELSE
+%token EQ_TEST
 %token <l> CONST_INT
 %token <str> IDENTIFIER
 %type <expr> expression
@@ -187,6 +188,8 @@ binary_expr:  expression '*' expression {
 	e->right=b;
 	e->attrs.bin_op=strdup("=");
 	$$=e;
+} | expression EQ_TEST expression {
+	$$=make_bin_op("==", $1, $3);
 };
 
 var_declaration_ident: IDENTIFIER { 
