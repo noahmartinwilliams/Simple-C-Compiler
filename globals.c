@@ -17,3 +17,5 @@ int num_vars=0;
 
 struct func_t **funcs=NULL;
 int num_funcs=0;
+
+int scope=0;

@@ -54,11 +54,14 @@ static struct type_t *current_type=NULL;
 %type <statem> statement_list
 %type <statem> var_declaration
 %type <statem> var_declaration_list
+%type <statem> var_declaration_ident
 %type <type> type
 %type <func> function
-%type <statem> var_declaration_ident
 
 %left '+' '-'
+%left '*' '/'
+
+%right '='
 %%
 file:  function {
 	print_f($1);
@@ -157,8 +160,14 @@ assignable_expr:  IDENTIFIER {
 	$$=e;
 };
 
-binary_expr:  expression '+' expression {
+binary_expr:  expression '*' expression {
+	$$=make_bin_op("*", $1, $3);
+} | expression '/' expression {
+	$$=make_bin_op("/", $1, $3);
+} | expression '+' expression {
 	$$=make_bin_op("+", $1, $3);
+} | expression '-' expression {
+	$$=make_bin_op("-", $1, $3);
 } | assignable_expr '=' expression {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	struct expr_t *a=$1, *b=$3;
@@ -169,12 +178,6 @@ binary_expr:  expression '+' expression {
 	e->right=b;
 	e->attrs.bin_op=strdup("=");
 	$$=e;
-} | expression '-' expression {
-	$$=make_bin_op("-", $1, $3);
-} | expression '/' expression {
-	$$=make_bin_op("/", $1, $3);
-} | expression '*' expression {
-	$$=make_bin_op("*", $1, $3);
 };
 
 var_declaration_ident: IDENTIFIER { 
@@ -207,7 +210,21 @@ var_declaration_ident: IDENTIFIER {
 
 	struct statem_t *expression=malloc(sizeof(struct statem_t));
 	expression->kind=expr;
-	expression->attrs.expr=$3;
+	expression->attrs.expr=malloc(sizeof(struct expr_t));
+
+	struct expr_t *e=expression->attrs.expr;
+	e->kind=bin_op;
+	e->attrs.bin_op=strdup("=");
+	e->type=current_type;
+
+	e->left=malloc(sizeof(struct expr_t));
+	e->left->kind=var;
+	e->left->attrs.var=v;
+	e->left->left=NULL;
+	e->left->right=NULL;
+	e->left->type=current_type;
+
+	e->right=$3;
 
 	struct statem_t *l=malloc(sizeof(struct statem_t));
 	l->kind=list;

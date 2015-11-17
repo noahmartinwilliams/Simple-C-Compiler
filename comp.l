@@ -18,8 +18,8 @@ void count(char *s);
 "/"	{ count(yytext); return '/'; }
 "*"	{ count(yytext); return '*'; }
 ";"	{ count(yytext); return ';'; }
-"{"	{ count(yytext); return '{'; }
-"}"	{ count(yytext); return '}'; }
+"{"	{ scope++; count(yytext); return '{'; }
+"}"	{ scope--; count(yytext); return '}'; }
 ","	{ count(yytext); return ','; }
 [ \t\n]	{ count(yytext); }
 [_a-zA-Z][_a-zA-Z0-9]*	{ count(yytext); yylval.str=strdup(yytext); return IDENTIFIER ; }
