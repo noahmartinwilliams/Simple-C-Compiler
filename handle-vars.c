@@ -34,9 +34,13 @@ void free_all_vars()
 struct var_t* get_var_by_name(char *name)
 {
 	int x;
+	struct var_t *highest_scope=NULL;
+	int max_scope=0;
 	for (x=0; x<num_vars; x++) {
-		if (!strcmp(name, vars[x]->name))
-			return vars[x];
+		if (!strcmp(name, vars[x]->name) && vars[x]->scope<=scope && vars[x]->scope > max_scope) {
+			highest_scope=vars[x];
+			max_scope=highest_scope->scope;
+		}
 	}
-	return NULL;
+	return highest_scope;
 }
