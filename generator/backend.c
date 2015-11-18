@@ -184,6 +184,11 @@ void jmp_neq(FILE *fd, char *name)
 	fprintf(fd, "\tjne %s\n", name);
 }
 
+void jmp_lt(FILE *fd, char *name)
+{
+	fprintf(fd, "\tjl %s\n", name);
+}
+
 void place_label(FILE *fd, char *name)
 {
 	fprintf(fd, "\t%s:\n", name);

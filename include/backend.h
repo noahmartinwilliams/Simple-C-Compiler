@@ -23,4 +23,5 @@ extern void compare_register_to_int(FILE *fd, struct reg_t *a, int i);
 extern void int_mul(FILE *fd, struct reg_t *a, struct reg_t *b);
 extern void jmp(FILE *fd, char *name);
 extern void assign_constant_int(FILE *fd, int e);
+extern void jmp_lt(FILE *fd, char *name);
 #endif

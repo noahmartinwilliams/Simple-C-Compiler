@@ -125,8 +125,35 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		assign_constant_int(fd, 1);
 		place_label(fd, are_not_eq);
 
+		fprintf(fd, "\t#)\n");
+
 		free(are_eq);
 		free(are_not_eq);
+	} else if (!strcmp(e->attrs.bin_op, "<")) {
+		fprintf(fd, "\t#(\n\t#(\n");
+		generate_expression(fd, e->left);
+		assign_reg(fd, ret, lhs);
+		fprintf(fd, "\t#)\n\t#<\n\t#(\n");
+		generate_expression(fd, e->right);
+		fprintf(fd, "\t#)\n");
+		compare_registers(fd, ret, lhs);
+
+		unique_num++;
+		char *is_lt, *is_not_lt;
+		asprintf(&is_lt, "is$lt$%d", unique_num);
+		asprintf(&is_not_lt, "is$not$lt$%d", unique_num);
+
+		jmp_lt(fd, is_lt);
+		assign_constant_int(fd, 0);
+		jmp(fd, is_not_lt);
+		place_label(fd, is_lt);
+		assign_constant_int(fd, 1);
+		place_label(fd, is_not_lt);
+
+		fprintf(fd, "\t#)\n");
+
+		free(is_lt);
+		free(is_not_lt);
 	}
 	free_register(fd, rhs);
 	free_register(fd, lhs);
