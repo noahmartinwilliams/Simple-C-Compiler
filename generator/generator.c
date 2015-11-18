@@ -140,7 +140,9 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 	} else if (!strcmp(e->attrs.bin_op, "==")) {
 		generate_comparison_expression(fd, e, jmp_eq, "is$eq$%d", "is$not$eq$%d", lhs);
 	} else if (!strcmp(e->attrs.bin_op, "<")) {
-		generate_comparison_expression(fd, e, jmp_lt, "is$lt$%d", "is$not$lt%d", lhs);
+		generate_comparison_expression(fd, e, jmp_lt, "is$lt$%d", "is$not$lt$%d", lhs);
+	} else if (!strcmp(e->attrs.bin_op, ">")) {
+		generate_comparison_expression(fd, e, jmp_gt, "is$gt$%d", "is$not$gt$%d", lhs);
 	}
 	free_register(fd, rhs);
 	free_register(fd, lhs);
