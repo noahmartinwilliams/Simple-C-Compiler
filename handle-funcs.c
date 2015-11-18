@@ -19,3 +19,11 @@ struct func_t* get_func_by_name(char *name)
 	}
 	return NULL;
 }
+
+void free_func(struct func_t *f)
+{
+	free(f->name);
+	free_statem(f->statement_list);
+	free(f->arguments);
+	free(f);
+}

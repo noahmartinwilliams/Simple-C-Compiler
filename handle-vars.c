@@ -12,6 +12,8 @@ void add_var(struct var_t *v)
 
 void free_var(struct var_t *v)
 {
+	if (v==NULL)
+		return;
 	int i=get_type_index_by_name(v->type->name);
 	if (i!=-1) {
 		types[i]=NULL;
@@ -37,10 +39,20 @@ struct var_t* get_var_by_name(char *name)
 	struct var_t *highest_scope=NULL;
 	int max_scope=0;
 	for (x=0; x<num_vars; x++) {
-		if (!strcmp(name, vars[x]->name) && vars[x]->scope<=scope && vars[x]->scope > max_scope) {
+		if (vars[x]!=NULL && !strcmp(name, vars[x]->name) && vars[x]->scope<=scope && vars[x]->scope > max_scope) {
 			highest_scope=vars[x];
 			max_scope=highest_scope->scope;
 		}
 	}
 	return highest_scope;
+}
+
+void hide_current_scope()
+{
+	int x;
+	for (x=0; x<num_vars; x++) {
+		if (vars[x]!=NULL && vars[x]->scope==scope) {
+			vars[x]=NULL;
+		}
+	}
 }

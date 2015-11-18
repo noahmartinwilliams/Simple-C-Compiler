@@ -41,6 +41,39 @@ void generate_expression(FILE *fd, struct expr_t *e)
 	}
 }
 
+static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*comparitor)(FILE*, char*), char *true_string, char *false_string, struct reg_t *lhs)
+{
+	struct reg_t *ret=get_ret_register(e->type->body->size);
+
+	fprintf(fd, "\t#(\n\t#(\n");
+	generate_expression(fd, e->left);
+	assign_reg(fd, ret, lhs);
+
+	fprintf(fd, "\t#)\n\t#%s\n\t#(\n", e->attrs.bin_op);
+
+	generate_expression(fd, e->right);
+	fprintf(fd, "\t#)\n");
+	compare_registers(fd, ret, lhs);
+
+	unique_num++;
+	char *is_true, *is_false;
+	asprintf(&is_true, true_string, unique_num);
+	asprintf(&is_false, false_string, unique_num);
+
+	comparitor(fd, is_true);
+	assign_constant_int(fd, 0);
+	jmp(fd, is_false);
+
+	place_label(fd, is_true);
+	assign_constant_int(fd, 1);
+	place_label(fd, is_false);
+
+	fprintf(fd, "\t#)\n");
+
+	free(is_true);
+	free(is_false);
+
+}
 void generate_binary_expression(FILE *fd, struct expr_t *e)
 {
 	depth++;
@@ -105,55 +138,9 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		fprintf(fd, "\t#)\n");
 
 	} else if (!strcmp(e->attrs.bin_op, "==")) {
-		fprintf(fd, "\t#(\n\t#(\n");
-		generate_expression(fd, e->left);
-		assign_reg(fd, ret, lhs);
-		fprintf(fd, "\t#)\n\t#==\n\t#(\n");
-		generate_expression(fd, e->right);
-		fprintf(fd, "\t#)\n");
-		compare_registers(fd, ret, lhs);
-
-		unique_num++;
-		char *are_eq, *are_not_eq;
-		asprintf(&are_eq, "is$equal$%d", unique_num);
-		asprintf(&are_not_eq, "is$not$equal$%d", unique_num);
-
-		jmp_eq(fd, are_eq);
-		assign_constant_int(fd, 0);
-		jmp(fd, are_not_eq);
-		place_label(fd, are_eq);
-		assign_constant_int(fd, 1);
-		place_label(fd, are_not_eq);
-
-		fprintf(fd, "\t#)\n");
-
-		free(are_eq);
-		free(are_not_eq);
+		generate_comparison_expression(fd, e, jmp_eq, "is$eq$%d", "is$not$eq$%d", lhs);
 	} else if (!strcmp(e->attrs.bin_op, "<")) {
-		fprintf(fd, "\t#(\n\t#(\n");
-		generate_expression(fd, e->left);
-		assign_reg(fd, ret, lhs);
-		fprintf(fd, "\t#)\n\t#<\n\t#(\n");
-		generate_expression(fd, e->right);
-		fprintf(fd, "\t#)\n");
-		compare_registers(fd, ret, lhs);
-
-		unique_num++;
-		char *is_lt, *is_not_lt;
-		asprintf(&is_lt, "is$lt$%d", unique_num);
-		asprintf(&is_not_lt, "is$not$lt$%d", unique_num);
-
-		jmp_lt(fd, is_lt);
-		assign_constant_int(fd, 0);
-		jmp(fd, is_not_lt);
-		place_label(fd, is_lt);
-		assign_constant_int(fd, 1);
-		place_label(fd, is_not_lt);
-
-		fprintf(fd, "\t#)\n");
-
-		free(is_lt);
-		free(is_not_lt);
+		generate_comparison_expression(fd, e, jmp_lt, "is$lt$%d", "is$not$lt%d", lhs);
 	}
 	free_register(fd, rhs);
 	free_register(fd, lhs);
