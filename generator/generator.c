@@ -99,7 +99,7 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		char *tmp=prepare_var_assignment(fd, e->left);
 		fprintf(fd, "\t#)\n\t#=\n\t#(\n");
 		/* TODO: figure out a good way to abstract away the direct use
-		 * of the mov command here. Printint opcodes is for handle-registers.c */
+		 * of the mov command here. Printing opcodes is for handle-registers.c */
 		if (e->left->kind!=var)
 			fprintf(fd, "\tmovl %s, %s\n", get_reg_name(lhs), tmp);
 		else 

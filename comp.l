@@ -12,8 +12,8 @@ void count(char *s);
 "while"	{ count(yytext); return WHILE; }
 [0-9]+	{ count(yytext); yylval.l=atoi(yytext); return CONST_INT; }
 "=="	{ count(yytext); return EQ_TEST; }
-">"	{ count(yytext); return GT_TEST; }
-"<"	{ count(yytext); return LT_TEST; }
+">"	{ count(yytext); return '>'; }
+"<"	{ count(yytext); return '<'; }
 "="	{ count(yytext); return '='; }
 "("	{ count(yytext); return '('; }
 ")"	{ count(yytext); return ')'; }

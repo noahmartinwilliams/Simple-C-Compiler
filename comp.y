@@ -47,8 +47,6 @@ static struct type_t *current_type=NULL;
 %token IF
 %token ELSE
 %token EQ_TEST
-%token LT_TEST
-%token GT_TEST
 %token <l> CONST_INT
 %token <str> IDENTIFIER
 %type <expr> expression
@@ -62,13 +60,15 @@ static struct type_t *current_type=NULL;
 %type <type> type
 %type <func> function
 
-%left '+' '-'
+%right '<' '>' '=' EQ_TEST
 %left '*' '/'
+%left '+' '-'
+%nonassoc IFX
+%nonassoc ELSE
 
-%right '='
 %%
 file:  function {
-	print_f($1);
+	//print_f($1);
 	generate_function(output, $1);
 	free_statem($1->statement_list);
 	free_all_vars();
@@ -105,13 +105,6 @@ statement: expression ';' {
 	s->kind=ret;
 	s->attrs.expr=$2;
 	$$=s;
-} | IF '(' expression ')' statement {
-	struct statem_t *s=malloc(sizeof(struct statem_t));
-	s->kind=_if;
-	s->attrs._if.condition=$3;
-	s->attrs._if.block=$5;
-	s->attrs._if.else_block=NULL;
-	$$=s;
 } | IF '(' expression ')' statement ELSE statement {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=_if;
@@ -119,7 +112,14 @@ statement: expression ';' {
 	s->attrs._if.block=$5;
 	s->attrs._if.else_block=$7;
 	$$=s;
-};
+} | IF '(' expression ')' statement %prec IFX{
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=_if;
+	s->attrs._if.condition=$3;
+	s->attrs._if.block=$5;
+	s->attrs._if.else_block=NULL;
+	$$=s;
+}
 
 statement_list: statement { 
 	struct statem_t *s=malloc(sizeof(struct statem_t));
@@ -158,7 +158,7 @@ expression: CONST_INT {
 	$$=$2;
 } | assignable_expr ;
 
-assignable_expr:  IDENTIFIER {
+assignable_expr: IDENTIFIER {
 	struct var_t *v=get_var_by_name($1);
 	if (v==NULL) {
 		fprintf(stderr, "Unknown var on line: %d, char: %d\n", current_line, current_char);
@@ -192,9 +192,9 @@ binary_expr:  expression '*' expression {
 	$$=e;
 } | expression EQ_TEST expression {
 	$$=make_bin_op("==", $1, $3);
-} | expression LT_TEST expression {
+} | expression '<' expression {
 	$$=make_bin_op("<", $1, $3);
-} | expression GT_TEST expression {
+} | expression '>' expression {
 	$$=make_bin_op(">", $1, $3);
 };
 
