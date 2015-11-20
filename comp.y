@@ -68,7 +68,7 @@ static struct type_t *current_type=NULL;
 
 %%
 file:  function {
-	//print_f($1);
+	print_f($1);
 	generate_function(output, $1);
 	free_statem($1->statement_list);
 	free_all_vars();

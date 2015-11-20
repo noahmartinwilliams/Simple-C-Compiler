@@ -7,6 +7,7 @@
 #include "backend.h"
 #include "generator-types.h"
 #include "handle-funcs.h"
+#include "stack.h"
 
 /* TODO: make all of this more efficient */
 
@@ -193,6 +194,28 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		place_label(fd, unique_name_true);
 		free(unique_name_else);
 		free(unique_name_true);
+	} else if (s->kind==_while) {
+		/* TODO: have get_var_offset traverse while loop,
+		and get test14 working. */
+		struct reg_t *ret=get_ret_register(word_size);
+		int *l=malloc(sizeof(int));
+		unique_num++;
+		*l=unique_num;
+		push(loop_stack, l);
+
+		char *loop_start, *loop_end;
+		asprintf(&loop_start, "loop$start$%d", unique_num);
+		asprintf(&loop_end, "loop$end$%d", unique_num);
+
+		place_label(fd, loop_start);
+		generate_expression(fd, s->attrs._while.condition);
+
+		compare_register_to_int(fd, ret, 0);
+		jmp_eq(fd, loop_end);
+		generate_statement(fd, s->attrs._while.block);
+		jmp(fd, loop_start);
+		place_label(fd, loop_end);
+
 	}
 }
 
