@@ -195,8 +195,6 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		free(unique_name_else);
 		free(unique_name_true);
 	} else if (s->kind==_while) {
-		/* TODO: have get_var_offset traverse while loop,
-		and get test14 working. */
 		struct reg_t *ret=get_ret_register(word_size);
 		int *l=malloc(sizeof(int));
 		unique_num++;
@@ -207,15 +205,29 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		asprintf(&loop_start, "loop$start$%d", unique_num);
 		asprintf(&loop_end, "loop$end$%d", unique_num);
 
+		fprintf(fd, "\t#while (\n");
 		place_label(fd, loop_start);
 		generate_expression(fd, s->attrs._while.condition);
 
 		compare_register_to_int(fd, ret, 0);
 		jmp_eq(fd, loop_end);
+		fprintf(fd, "\t#) {\n");
 		generate_statement(fd, s->attrs._while.block);
 		jmp(fd, loop_start);
+		fprintf(fd, "\t#}\n");
 		place_label(fd, loop_end);
 
+		free(loop_start);
+		free(loop_end);
+
+	} else if (s->kind==_break) {
+		int *n=pop(loop_stack);
+		char *jump_to;
+		asprintf(&jump_to, "loop$end$%d", *n);
+		fprintf(fd, "\t#break; \n");
+		jmp(fd, jump_to);
+		free(jump_to);
+		push(loop_stack, n);
 	}
 }
 
@@ -231,6 +243,8 @@ off_t get_var_offset(struct statem_t *s, off_t current_off)
 		s->attrs.var->offset=-(o+current_off);
 	} else if (s->kind==_if) {
 		o+=get_var_offset(s->attrs._if.block, current_off+o);
+	} else if (s->kind==_while) {
+		o+=get_var_offset(s->attrs._while.block, current_off+o);
 	}
 
 	return o;
@@ -253,6 +267,13 @@ void generate_function(FILE *fd, struct func_t *f)
 		fprintf(fd, "\tmovq $0, %%rax\n\tret\n");
 	} else {
 		fprintf(fd, "\tmovq %%rax, %%rdi\n\tmovq $60, %%rax\n\tsyscall\n");
+	}
+
+	while (loop_stack!=NULL) {
+		struct stack_t *tmp=loop_stack->next;
+		free(loop_stack->element);
+		free(loop_stack);
+		loop_stack=tmp;
 	}
 }
 

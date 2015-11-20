@@ -47,6 +47,7 @@ static struct type_t *current_type=NULL;
 %token IF
 %token ELSE
 %token EQ_TEST
+%token BREAK
 %token <l> CONST_INT
 %token <str> IDENTIFIER
 %type <expr> expression
@@ -119,7 +120,11 @@ statement: expression ';' {
 	s->attrs._if.block=$5;
 	s->attrs._if.else_block=NULL;
 	$$=s;
-}
+} | BREAK ';' { 
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=_break;
+	$$=s;
+}; 
 
 statement_list: statement { 
 	struct statem_t *s=malloc(sizeof(struct statem_t));

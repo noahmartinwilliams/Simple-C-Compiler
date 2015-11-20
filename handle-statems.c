@@ -93,6 +93,8 @@ void print_statem(char *pre, struct statem_t *s)
 			asprintf(&new_pre, "%s  ", pre);
 			print_statem(new_pre, s->attrs._if.else_block);
 			free(new_pre);
-		}
+		} 
+	} else if (s->kind==_break) {
+		printf("%s|_ break\n", pre);
 	}
 }
