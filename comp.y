@@ -43,6 +43,7 @@ static struct type_t *current_type=NULL;
 	struct var_v *var;
 }
 %token WHILE
+%token NE_TEST
 %token RET
 %token IF
 %token ELSE
@@ -61,7 +62,7 @@ static struct type_t *current_type=NULL;
 %type <type> type
 %type <func> function
 
-%right '<' '>' '=' EQ_TEST
+%right '<' '>' '=' EQ_TEST NE_TEST
 %left '*' '/'
 %left '+' '-'
 %nonassoc IFX
@@ -201,7 +202,9 @@ binary_expr:  expression '*' expression {
 	$$=make_bin_op("<", $1, $3);
 } | expression '>' expression {
 	$$=make_bin_op(">", $1, $3);
-};
+} | expression NE_TEST expression {
+	$$=make_bin_op("!=", $1, $3);
+} ;
 
 var_declaration_ident: IDENTIFIER { 
 	struct statem_t *s=malloc(sizeof(struct statem_t));
