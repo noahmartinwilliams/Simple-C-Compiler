@@ -9,8 +9,6 @@
 #include "handle-funcs.h"
 #include "stack.h"
 
-/* TODO: make all of this more efficient */
-
 char* prepare_var_assignment(FILE *fd, struct expr_t *dest);
 void setup_types()
 {
@@ -227,6 +225,14 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		char *jump_to;
 		asprintf(&jump_to, "loop$end$%d", *n);
 		fprintf(fd, "\t#break; \n");
+		jmp(fd, jump_to);
+		free(jump_to);
+		push(loop_stack, n);
+	} else if (s->kind==_continue) {
+		int *n=pop(loop_stack);
+		char *jump_to;
+		asprintf(&jump_to, "loop$start$%d", *n);
+		fprintf(fd, "\t#continue; \n");
 		jmp(fd, jump_to);
 		free(jump_to);
 		push(loop_stack, n);

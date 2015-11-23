@@ -49,6 +49,7 @@ static struct type_t *current_type=NULL;
 %token ELSE
 %token EQ_TEST
 %token BREAK
+%token CONTINUE
 %token <l> CONST_INT
 %token <str> IDENTIFIER
 %type <expr> expression
@@ -124,6 +125,10 @@ statement: expression ';' {
 } | BREAK ';' { 
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=_break;
+	$$=s;
+} | CONTINUE ';' {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=_continue;
 	$$=s;
 }; 
 

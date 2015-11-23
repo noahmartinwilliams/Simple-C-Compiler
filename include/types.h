@@ -34,7 +34,7 @@ struct var_t {
 };
 
 struct statem_t {
-	enum { expr, list, declare, _while, ret, _if, _break } kind;
+	enum { expr, list, declare, _while, ret, _if, _break, _continue } kind;
 	union {
 		struct expr_t *expr;
 		struct var_t *var;

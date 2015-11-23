@@ -96,5 +96,7 @@ void print_statem(char *pre, struct statem_t *s)
 		} 
 	} else if (s->kind==_break) {
 		printf("%s|_ break\n", pre);
+	} else if (s->kind==_continue) {
+		printf("%s|_ continue\n", pre);
 	}
 }
