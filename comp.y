@@ -42,6 +42,7 @@ static struct type_t *current_type=NULL;
 	struct func_t *func;
 	struct var_v *var;
 }
+%define parse.error verbose
 %token WHILE
 %token NE_TEST
 %token RET
@@ -50,6 +51,7 @@ static struct type_t *current_type=NULL;
 %token EQ_TEST
 %token BREAK
 %token CONTINUE
+%token <str> ASSIGN_OP
 %token <l> CONST_INT
 %token <str> IDENTIFIER
 %type <expr> expression
@@ -209,7 +211,9 @@ binary_expr:  expression '*' expression {
 	$$=make_bin_op(">", $1, $3);
 } | expression NE_TEST expression {
 	$$=make_bin_op("!=", $1, $3);
-} ;
+} | assignable_expr ASSIGN_OP expression {
+	$$=make_bin_op($2, $1, $3);
+};
 
 var_declaration_ident: IDENTIFIER { 
 	struct statem_t *s=malloc(sizeof(struct statem_t));

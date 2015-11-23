@@ -114,6 +114,11 @@ void int_add(FILE *fd, struct reg_t *a, struct reg_t *b)
 	fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(b));
 }
 
+void int_inc_by(FILE *fd, struct reg_t *a, char *dest)
+{
+	fprintf(fd, "\tmovl %s, %s\n", get_reg_name(a), dest);
+}
+
 void int_sub(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
 	fprintf(fd, "\tsubl %s, %s\n", get_reg_name(b), get_reg_name(a));

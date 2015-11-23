@@ -25,4 +25,5 @@ extern void jmp(FILE *fd, char *name);
 extern void assign_constant_int(FILE *fd, int e);
 extern void jmp_lt(FILE *fd, char *name);
 extern void jmp_gt(FILE *fd, char *name);
+extern void int_inc_by(FILE *fd, struct reg_t *a, char *dest);
 #endif
