@@ -64,6 +64,7 @@ static struct type_t *current_type=NULL;
 %type <statem> var_declaration_ident
 %type <type> type
 %type <func> function
+%type <l> num_stars
 
 %right '<' '>' '=' EQ_TEST NE_TEST
 %left '*' '/'
@@ -215,6 +216,12 @@ binary_expr:  expression '*' expression {
 	$$=make_bin_op($2, $1, $3);
 };
 
+num_stars: '*' {
+	$$=1;
+} | num_stars '*' {
+	$$=$1+1;
+};
+
 var_declaration_ident: IDENTIFIER { 
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=declare;
@@ -267,6 +274,24 @@ var_declaration_ident: IDENTIFIER {
 	l->attrs.list.statements=calloc(2, sizeof(struct statem_t*));
 	l->attrs.list.statements[0]=declaration;
 	l->attrs.list.statements[1]=expression;
+
+	$$=l;
+} | num_stars IDENTIFIER {
+
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=declare;
+	struct var_t *v=malloc(sizeof(struct var_t));
+	v->scope=scope; /* TODO: get this working better later */
+	v->name=$2;
+	v->type=increase_type_depth(current_type, $1);
+	add_var(v);
+	s->attrs.var=v;
+
+	struct statem_t *l=malloc(sizeof(struct statem_t));
+	l->kind=list;
+	l->attrs.list.num=1;
+	l->attrs.list.statements=malloc(sizeof(struct statem_t*));
+	l->attrs.list.statements[0]=s;
 
 	$$=l;
 };

@@ -56,3 +56,14 @@ void parser_type_cmp(struct expr_t **a, struct expr_t **b)
 		exit(1);
 	}
 }
+
+struct type_t* increase_type_depth(struct type_t *t, int n)
+{
+	struct type_t *new=malloc(sizeof(struct type_t));
+	memcpy(new, t, sizeof(struct type_t));
+	new->pointer_depth+=n;
+	num_types++;
+	types=realloc(types, num_types*sizeof(struct type_t*));
+	types[num_types-1]=new;
+	return new;
+}

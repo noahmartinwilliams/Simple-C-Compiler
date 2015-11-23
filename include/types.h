@@ -13,6 +13,7 @@ struct tbody_t {
 
 struct type_t {
 	char *name;
+	int pointer_depth;
 	struct tbody_t *body;
 };
 struct expr_t {
