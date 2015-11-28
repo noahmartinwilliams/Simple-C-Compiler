@@ -24,6 +24,7 @@ struct expr_t {
 		struct var_t *var;
 		long int cint_val;
 		char *bin_op;
+		char *un_op;
 	} attrs;
 };
 

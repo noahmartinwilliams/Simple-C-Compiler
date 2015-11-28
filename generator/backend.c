@@ -11,6 +11,7 @@ struct reg_t **regs=NULL;
 int num_regs=0;
 
 
+char* get_reg_name(struct reg_t *reg, size_t size);
 void setup_registers()
 {
 	num_regs+=4;
@@ -37,11 +38,19 @@ void setup_registers()
 	regs[0]->use=RET;
 }
 
-char* get_reg_name(struct reg_t *reg)
+void dereference(FILE *fd, struct reg_t *reg, size_t size)
+{
+	if (size==word_size)
+		fprintf(fd, "\tmovl (%s), %%eax\n", get_reg_name(reg, reg->size));
+	else if (size==pointer_size)
+		fprintf(fd, "\tmovq (%s), %%rax\n", get_reg_name(reg, reg->size));
+}
+
+char* get_reg_name(struct reg_t *reg, size_t size)
 {
 	int x;
 	for (x=0; x<reg->num_sizes; x++) {
-		if (reg->sizes[x].size==reg->size)
+		if (reg->sizes[x].size==size)
 			return reg->sizes[x].name;
 	}
 }
@@ -105,24 +114,49 @@ struct reg_t* get_free_register(FILE *fd, size_t s)
 
 void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest)
 {
-	fprintf(fd, "\tmovl %s, %s\n", get_reg_name(src), get_reg_name(dest));
+	if (src->size==word_size)
+		fprintf(fd, "\tmovl %s, %s\n", get_reg_name(src, src->size), get_reg_name(dest, dest->size));
+	else if (src->size==pointer_size)
+		fprintf(fd, "\tmovq %s, %s\n", get_reg_name(src, src->size), get_reg_name(dest, dest->size));
 }
+
+void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
+{
+	fprintf(fd, "\tmovl %s, %ld(%%rbp)\n", get_reg_name(src, src->size), dest->offset);
+} /* TODO: put this to use*/
 
 void int_add(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
-	fprintf(fd, "\taddl %s, %s\n", get_reg_name(a), get_reg_name(b));
-	fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(b));
+	if (a->size==word_size) {
+		fprintf(fd, "\taddl %s, %s\n", get_reg_name(a, word_size), get_reg_name(b, word_size));
+		fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(b, word_size));
+	} else if (a->size==pointer_size) {
+		fprintf(fd, "\taddq %s, %s\n", get_reg_name(a, pointer_size), get_reg_name(b, pointer_size));
+		fprintf(fd, "\tmovq %s, %%rax\n", get_reg_name(b, pointer_size));
+	}
 }
 
 void int_inc_by(FILE *fd, struct reg_t *a, char *dest)
 {
-	fprintf(fd, "\tmovl %s, %s\n", get_reg_name(a), dest);
+	if (a->size==word_size)
+		fprintf(fd, "\taddl %s, %s\n", get_reg_name(a, a->size), dest);
+	else if (a->size==pointer_size)
+		fprintf(fd, "\taddq %s, %s\n", get_reg_name(a, a->size), dest);
+
+}
+
+void inc_by_int(FILE *fd, int i, char *dest, size_t size)
+{
+	if (size==word_size)
+		fprintf(fd, "\taddl $%d, %s\n", i, dest);
+	else if (size==pointer_size)
+		fprintf(fd, "\taddq $%d, %s\n", i, dest);
 }
 
 void int_sub(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
-	fprintf(fd, "\tsubl %s, %s\n", get_reg_name(b), get_reg_name(a));
-	fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(b));
+	fprintf(fd, "\tsubl %s, %s\n", get_reg_name(b, b->size), get_reg_name(a, a->size));
+	fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(b, b->size));
 }
 
 void int_div(FILE *fd, struct reg_t *a, struct reg_t *b)
@@ -131,17 +165,17 @@ void int_div(FILE *fd, struct reg_t *a, struct reg_t *b)
 	For some reason the div instruction takes just one argument, and
 	DX:AX is the numerator, and the argument is the denominator.
 	This code has to be complicated to deal with that nonsense. */
-	fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(a));
+	fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(a, a->size));
 	fprintf(fd, "\tcltd\n");
-	fprintf(fd, "\tidivl %s\n", get_reg_name(b));
+	fprintf(fd, "\tidivl %s\n", get_reg_name(b, b->size));
 
 }
 
 void int_mul(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
 	if (strcmp(a->sizes[0].name, "%al"))
-		fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(a));
-	fprintf(fd, "\tmull %s\n", get_reg_name(b));
+		fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(a, a->size));
+	fprintf(fd, "\tmull %s\n", get_reg_name(b, b->size));
 }
 
 void expand_stack_space(FILE *fd, off_t off)
@@ -151,12 +185,22 @@ void expand_stack_space(FILE *fd, off_t off)
 
 void read_var(FILE *fd, struct var_t *v)
 {
-	fprintf(fd, "\tmovl %ld(%%rbp), %%eax\n", v->offset);
+	if (v->type->pointer_depth > 0)
+		fprintf(fd, "\tmovq %ld(%%rbp), %%rax\n", v->offset);
+	else {
+		if (v->type->body->size==word_size)
+			fprintf(fd, "\tmovl %ld(%%rbp), %%eax\n", v->offset);
+		if (v->type->body->size==pointer_size)
+			fprintf(fd, "\tmovq %ld(%%rbp), %%rax\n", v->offset);
+	}
 }
 
 void assign_constant(FILE *fd, struct expr_t *e)
 {
-	fprintf(fd, "\tmovl $%ld, %%eax\n", e->attrs.cint_val);
+	if (e->type->pointer_depth>0)
+		fprintf(fd, "\tmovq $%ld, %%eax\n", e->attrs.cint_val);
+	if (e->type->body->size==word_size && e->type->pointer_depth==0)
+		fprintf(fd, "\tmovl $%ld, %%eax\n", e->attrs.cint_val);
 }
 
 void assign_constant_int(FILE *fd, int e)
@@ -166,12 +210,12 @@ void assign_constant_int(FILE *fd, int e)
 
 void compare_registers(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
-	fprintf(fd, "\tcmpl %s, %s\n", get_reg_name(a), get_reg_name(b));
+	fprintf(fd, "\tcmpl %s, %s\n", get_reg_name(a, a->size), get_reg_name(b, b->size));
 }
 
 void compare_register_to_int(FILE *fd, struct reg_t *a, int i)
 {
-	fprintf(fd, "\tcmpl $%d, %s\n", i, get_reg_name(a));
+	fprintf(fd, "\tcmpl $%d, %s\n", i, get_reg_name(a, a->size));
 }
 
 void jmp(FILE *fd, char *name)

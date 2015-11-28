@@ -6,10 +6,24 @@
 #include "globals.h"
 #include "backend.h"
 #include "generator-types.h"
+#include "handle-types.h"
 #include "handle-funcs.h"
 #include "stack.h"
 
 char* prepare_var_assignment(FILE *fd, struct expr_t *dest);
+
+void get_address(FILE *fd, struct expr_t *_var)
+{
+	fprintf(fd, "\t#&\n\t#(\n");
+	depth++;
+	struct reg_t *ret=get_ret_register(_var->type->body->size);
+	if (_var->kind==var) {
+		fprintf(fd, "\tmovq %%rbp, %s\n", get_reg_name(ret, pointer_size));
+		inc_by_int(fd, _var->attrs.var->offset, get_reg_name(ret, pointer_size), pointer_size);
+	}
+	depth--;
+	fprintf(fd, "\t#)\n");
+}
 void setup_types()
 {
 	num_types++;
@@ -28,6 +42,7 @@ void setup_generator()
 }
 
 void generate_binary_expression(FILE *fd, struct expr_t *e);
+void generate_pre_unary_expression(FILE *fd, struct expr_t *e);
 
 void generate_expression(FILE *fd, struct expr_t *e)
 {
@@ -37,7 +52,25 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		read_var(fd, e->attrs.var);
 	} else if (e->kind==const_int) {
 		assign_constant(fd, e);
+	} else if (e->kind==pre_un_op) {
+		generate_pre_unary_expression(fd, e);
 	}
+}
+
+void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
+{
+	depth++;
+	struct reg_t *ret=get_ret_register(pointer_size);
+	if (!strcmp(e->attrs.un_op, "&")) {
+		get_address(fd, e->right);
+	} else if (!strcmp(e->attrs.un_op, "*")) {
+		fprintf(fd, "\t#(\n\t#*\n\t#(\n");
+		generate_expression(fd, e->right);
+		fprintf(fd, "\t#)\n");
+		dereference(fd, ret, pointer_size);
+		fprintf(fd, "\t#)\n");
+	}
+	depth--;
 }
 
 static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*comparitor)(FILE*, char*), char *true_string, char *false_string, struct reg_t *lhs)
@@ -76,9 +109,9 @@ static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*co
 void generate_binary_expression(FILE *fd, struct expr_t *e)
 {
 	depth++;
-	struct reg_t *ret=get_ret_register(e->type->body->size);
-	struct reg_t *lhs=get_free_register(fd, e->type->body->size);
-	struct reg_t *rhs=get_free_register(fd, e->type->body->size);
+	struct reg_t *ret=get_ret_register(get_type_size(e->type));
+	struct reg_t *lhs=get_free_register(fd, get_type_size(e->type));
+	struct reg_t *rhs=get_free_register(fd, get_type_size(e->type));
 	if (!strcmp(e->attrs.bin_op, "+")) {
 		fprintf(fd, "\t#(\n\t#(\n");
 		generate_expression(fd, e->left);
@@ -92,17 +125,26 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 	} else if (!strcmp(e->attrs.bin_op, "=")) {
 		fprintf(fd, "\t#Note: lhs, and rhs of assignment is swapped\n");
 		fprintf(fd, "\t#(\n\t#(\n");
+
 		generate_expression(fd, e->right);
+
 		if (e->left->kind!=var)
 			assign_reg(fd, ret, lhs);
 		char *tmp=prepare_var_assignment(fd, e->left);
 		fprintf(fd, "\t#)\n\t#=\n\t#(\n");
 		/* TODO: figure out a good way to abstract away the direct use
 		 * of the mov command here. Printing opcodes is for handle-registers.c */
-		if (e->left->kind!=var)
-			fprintf(fd, "\tmovl %s, %s\n", get_reg_name(lhs), tmp);
-		else 
-			fprintf(fd, "\tmovl %s, %s\n", get_reg_name(ret), tmp);
+		if (e->left->kind!=var) {
+			if (lhs->size==word_size)
+				fprintf(fd, "\tmovl %s, %s\n", get_reg_name(lhs, word_size), tmp);
+			else if (lhs->size==pointer_size)
+				fprintf(fd, "\tmovq %s, %s\n", get_reg_name(lhs, pointer_size), tmp);
+		} else {
+			if (lhs->size==word_size)
+				fprintf(fd, "\tmovl %s, %s\n", get_reg_name(ret, word_size), tmp);
+			else if (lhs->size==pointer_size)
+				fprintf(fd, "\tmovq %s, %s\n", get_reg_name(ret, pointer_size), tmp);
+		}
 		fprintf(fd, "\t#)\n\t#)\n");
 		free(tmp);
 	} else if (!strcmp(e->attrs.bin_op, "-")) {
@@ -170,7 +212,9 @@ void generate_statement(FILE *fd, struct statem_t *s)
 			generate_statement(fd, s->attrs.list.statements[x]);
 		}
 	} else if (s->kind==ret) {
+		fprintf(fd, "\t#return\n\t#(\n");
 		generate_expression(fd, s->attrs.expr);
+		fprintf(fd, "\t#)\n");
 		if (!in_main)
 			fprintf(fd, "\tret\n");
 		else
@@ -257,7 +301,7 @@ off_t get_var_offset(struct statem_t *s, off_t current_off)
 		for (x=0; x<s->attrs.list.num; x++)
 			o+=get_var_offset(s->attrs.list.statements[x], current_off+o);
 	} else if (s->kind==declare) {
-		o=s->attrs.var->type->body->size;
+		o=get_type_size(s->attrs.var->type);
 		s->attrs.var->offset=-(o+current_off);
 	} else if (s->kind==_if) {
 		o+=get_var_offset(s->attrs._if.block, current_off+o);

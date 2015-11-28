@@ -10,4 +10,5 @@ extern size_t int_size;
 
 extern int unique_num;
 extern struct stack_t *loop_stack;
+extern size_t pointer_size;
 #endif

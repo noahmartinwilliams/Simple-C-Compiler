@@ -26,4 +26,7 @@ extern void assign_constant_int(FILE *fd, int e);
 extern void jmp_lt(FILE *fd, char *name);
 extern void jmp_gt(FILE *fd, char *name);
 extern void int_inc_by(FILE *fd, struct reg_t *a, char *dest);
+extern void inc_by_int(FILE *fd, int i, char *dest, size_t size);
+extern char* get_reg_name(struct reg_t *reg, size_t size);
+extern void dereference(FILE *fd, struct reg_t *reg, size_t size);
 #endif

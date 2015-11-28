@@ -13,7 +13,9 @@ void print_expr(char *pre, struct expr_t *e)
 		printf("%s", e->attrs.bin_op);
 	else if (e->kind==var)
 		printf("%s", e->attrs.var->name);
-	printf(", type: %s, type_size: %ld", e->type->name, e->type->body->size);
+	else if (e->kind==pre_un_op)
+		printf("%s", e->attrs.un_op);
+	printf(", type: %s, type_size: %ld, pointer_depth: %ld", e->type->name, e->type->body->size, e->type->pointer_depth);
 }
 
 void free_expr(struct expr_t *e)

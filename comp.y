@@ -57,6 +57,7 @@ static struct type_t *current_type=NULL;
 %type <expr> expression
 %type <expr> binary_expr
 %type <expr> assignable_expr
+%type <expr> prefix_expr
 %type <statem> statement
 %type <statem> statement_list
 %type <statem> var_declaration
@@ -66,9 +67,10 @@ static struct type_t *current_type=NULL;
 %type <func> function
 %type <l> num_stars
 
-%right '<' '>' '=' EQ_TEST NE_TEST
-%left '*' '/'
+%right '=' ASSIGN_OP
+%right '<' '>' EQ_TEST NE_TEST
 %left '+' '-'
+%left '*' '/'
 %nonassoc IFX
 %nonassoc ELSE
 
@@ -76,10 +78,10 @@ static struct type_t *current_type=NULL;
 file:  function {
 	print_f($1);
 	generate_function(output, $1);
-	free_statem($1->statement_list);
-	free_all_vars();
-	free_all_types();
-	free_all_registers();
+	//free_statem($1->statement_list);
+	//free_all_vars();
+	//free_all_types();
+	//free_all_registers();
 };
 
 function: type IDENTIFIER '(' ')' '{' statement_list '}' {
@@ -170,7 +172,17 @@ expression: CONST_INT {
 	$$=e;
 }  | binary_expr | '(' expression ')' {
 	$$=$2;
-} | assignable_expr ;
+} | assignable_expr | prefix_expr ;
+
+prefix_expr: '&' assignable_expr {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=pre_un_op;
+	e->attrs.un_op=strdup("&");
+	e->right=$2;
+	e->left=NULL;
+	e->type=increase_type_depth($2->type, 1);
+	$$=e;
+};
 
 assignable_expr: IDENTIFIER {
 	struct var_t *v=get_var_by_name($1);
@@ -183,6 +195,14 @@ assignable_expr: IDENTIFIER {
 	e->attrs.var=v;
 	e->type=v->type;
 	free($1);
+	$$=e;
+} | '*' assignable_expr {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=pre_un_op;
+	e->attrs.un_op=strdup("*");
+	e->right=$2;
+	e->left=NULL;
+	e->type=decrease_type_depth($2->type, 1);
 	$$=e;
 };
 
@@ -226,7 +246,7 @@ var_declaration_ident: IDENTIFIER {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=declare;
 	struct var_t *v=malloc(sizeof(struct var_t));
-	v->scope=scope; /* TODO: get this working better later */
+	v->scope=scope;
 	v->name=$1;
 	v->type=current_type;
 	add_var(v);
@@ -241,7 +261,7 @@ var_declaration_ident: IDENTIFIER {
 	$$=l;
 } | IDENTIFIER '=' expression {
 	struct var_t *v=malloc(sizeof(struct var_t));
-	v->scope=scope; /* TODO: get this working better later */
+	v->scope=scope; 
 	v->name=$1;
 	v->type=current_type;
 	add_var(v);
@@ -280,8 +300,9 @@ var_declaration_ident: IDENTIFIER {
 
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=declare;
+
 	struct var_t *v=malloc(sizeof(struct var_t));
-	v->scope=scope; /* TODO: get this working better later */
+	v->scope=scope; 
 	v->name=$2;
 	v->type=increase_type_depth(current_type, $1);
 	add_var(v);
@@ -297,7 +318,9 @@ var_declaration_ident: IDENTIFIER {
 };
 
 
-var_declaration_list: var_declaration_ident | var_declaration_list ',' var_declaration_ident {
+var_declaration_list: var_declaration_ident {
+	$$=$1;
+} | var_declaration_list ',' var_declaration_ident {
 	struct statem_t *s=$3;
 
 	$1->attrs.list.num++;
