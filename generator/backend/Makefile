@@ -1,14 +1,10 @@
-INCLUDE=../include
-include ../include/config.mk
+INCLUDE=../../include
+include ../../include/config.mk
 
-../generator.a: backend.a generator.o generator-globals.o 
-	$(AR) 
-
-backend.a: backend/*
-	$(MAKE) -C backend/ ../backend.a
+../backend.a: backend.o jumps.o int-arithmetic.o
+	$(AR)
 
 clean:
-	$(MAKE) -C backend/ clean
 	rm lex.yy.c 2>/dev/null || true
 	rm comp.tab.c 2>/dev/null || true
 	rm include/comp.tab.h 2>/dev/null || true

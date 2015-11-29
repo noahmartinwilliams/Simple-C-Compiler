@@ -12,6 +12,7 @@ void count(char *s);
 "while"	{ count(yytext); return WHILE; }
 "break"	{ count(yytext); return BREAK; }
 "continue"	{ count(yytext); return CONTINUE; }
+"struct"	{ count(yytext); return STRUCT; }
 [0-9]+	{ count(yytext); yylval.l=atoi(yytext); return CONST_INT; }
 [+-]=	{ count(yytext); yylval.str=strdup(yytext); return ASSIGN_OP; }
 "!="	{ count(yytext); return NE_TEST; }

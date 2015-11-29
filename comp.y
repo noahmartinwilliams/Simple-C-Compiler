@@ -43,14 +43,15 @@ static struct type_t *current_type=NULL;
 	struct var_v *var;
 }
 %define parse.error verbose
-%token WHILE
-%token NE_TEST
-%token RET
-%token IF
-%token ELSE
-%token EQ_TEST
 %token BREAK
 %token CONTINUE
+%token ELSE
+%token EQ_TEST
+%token IF
+%token NE_TEST
+%token RET
+%token STRUCT
+%token WHILE
 %token <str> ASSIGN_OP
 %token <l> CONST_INT
 %token <str> IDENTIFIER
@@ -66,6 +67,7 @@ static struct type_t *current_type=NULL;
 %type <type> type
 %type <func> function
 %type <l> num_stars
+%type <statem> struct_var_declarations
 
 %right '=' ASSIGN_OP
 %right '<' '>' EQ_TEST NE_TEST
@@ -160,6 +162,65 @@ type: IDENTIFIER {
 	}
 	current_type=t;
 	$$=t;
+} | STRUCT IDENTIFIER '{' struct_var_declarations '}' {
+	/* TODO: check to see if there's already a struct prototyped by this name, and use that instead if it exists. */
+	struct type_t *type=malloc(sizeof(struct type_t));
+	type->name=$2;
+	type->pointer_depth=0;
+	type->body=malloc(sizeof(struct tbody_t));
+
+	struct tbody_t *body=type->body;
+	body->attrs.vars.num_vars=$4->attrs.list.num;
+	body->attrs.vars.vars=calloc(body->attrs.vars.num_vars, sizeof(struct var_t*));
+	size_t size=0;
+	int x;
+	for (x=0; x<$4->attrs.list.num; x++) {
+		size+=get_type_size($4->attrs.list.statements[x]->attrs.var->type);
+		body->attrs.vars.vars[x]=$4->attrs.list.statements[x]->attrs.var;
+
+	}
+
+	/*TODO: free struct_var_declarations */
+
+	body->size=size;
+	body->is_struct=true;
+	$$=type;
+
+};
+
+struct_var_declarations: type IDENTIFIER ';' {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=list;
+	s->attrs.list.num=1;
+	s->attrs.list.statements=malloc(sizeof(struct statem_t*));
+	s->attrs.list.statements[0]=malloc(sizeof(struct statem_t*));
+	struct statem_t *var=s->attrs.list.statements[0];
+	var->kind=declare;
+	var->attrs.var=malloc(sizeof(struct var_t));
+	struct var_t *v=var->attrs.var;
+
+	v->type=$1;
+	v->scope=scope;
+	v->name=$2;
+	$$=s;
+} | struct_var_declarations type IDENTIFIER ';' {
+	$1->attrs.list.num++;
+	int num_statements=$1->attrs.list.num;
+	struct statem_t **statements=$1->attrs.list.statements;
+	$1->attrs.list.statements=realloc($1->attrs.list.statements, num_statements*sizeof(struct statem_t*));
+	statements=$1->attrs.list.statements;
+
+	statements[num_statements-1]=malloc(sizeof(struct statem_t));
+
+	statements[num_statements-1]->kind=declare;
+	statements[num_statements-1]->attrs.var=malloc(sizeof(struct var_t));
+
+	struct var_t *v=statements[num_statements-1]->attrs.var;
+
+	v->name=$3;
+	v->type=$2;
+	v->scope=scope;
+	$$=$1;
 };
 
 expression: CONST_INT {
@@ -328,6 +389,7 @@ var_declaration_list: var_declaration_ident {
 	$1->attrs.list.statements[$1->attrs.list.num-1]=s;
 	$$=$1;
 };
+
 var_declaration: type var_declaration_list ';' {
 	$$=$2;
 };

@@ -1,5 +1,5 @@
 CC=gcc -I $(INCLUDE) -ggdb
-AR=ar cr $@ $^
+AR=ar crT $@ $^
 CMP=$(CC) -c $^ -o $@
 CMB=$(CC) $^ -o $@
 YACC=bison -d --verbose

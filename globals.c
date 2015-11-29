@@ -5,7 +5,7 @@
 int current_line=0;
 int current_char=0;
 char *current_file=NULL;
-int yydebug=0;
+int yydebug=1;
 
 bool evaluate_constants=false;
 

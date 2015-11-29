@@ -11,4 +11,7 @@ extern size_t int_size;
 extern int unique_num;
 extern struct stack_t *loop_stack;
 extern size_t pointer_size;
+extern size_t char_size;
+extern struct reg_t **regs;
+extern int num_regs;
 #endif

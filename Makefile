@@ -4,7 +4,7 @@ include include/config.mk
 main: comp.tab.c globals.o lex.yy.o handle.a generator.a
 	$(CMB)
 
-generator.a: generator/*
+generator.a: generator/* generator/backend/*
 	$(MAKE) -C generator/ ../generator.a
 
 handle.a: handle-types.o handle-exprs.o handle-statems.o  handle-funcs.o handle-vars.o print-tree.o

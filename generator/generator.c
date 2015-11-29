@@ -26,13 +26,19 @@ void get_address(FILE *fd, struct expr_t *_var)
 }
 void setup_types()
 {
-	num_types++;
+	num_types+=2;
 	types=realloc(types, num_types*sizeof(struct type_t*));
 	types[num_types-1]=malloc(sizeof(struct type_t));
 	struct type_t *i=types[num_types-1];
 	i->name=strdup("int");
 	i->body=malloc(sizeof(struct tbody_t));
 	i->body->size=int_size;
+
+	types[num_types-2]=malloc(sizeof(struct type_t));
+	i=types[num_types-2];
+	i->name=strdup("char");
+	i->body=malloc(sizeof(struct tbody_t));
+	i->body->size=char_size;
 }
 
 void setup_generator()
@@ -128,25 +134,17 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 
 		generate_expression(fd, e->right);
 
-		if (e->left->kind!=var)
-			assign_reg(fd, ret, lhs);
-		char *tmp=prepare_var_assignment(fd, e->left);
+		assign_reg(fd, ret, lhs);
 		fprintf(fd, "\t#)\n\t#=\n\t#(\n");
 		/* TODO: figure out a good way to abstract away the direct use
 		 * of the mov command here. Printing opcodes is for handle-registers.c */
-		if (e->left->kind!=var) {
-			if (lhs->size==word_size)
-				fprintf(fd, "\tmovl %s, %s\n", get_reg_name(lhs, word_size), tmp);
-			else if (lhs->size==pointer_size)
-				fprintf(fd, "\tmovq %s, %s\n", get_reg_name(lhs, pointer_size), tmp);
-		} else {
-			if (lhs->size==word_size)
-				fprintf(fd, "\tmovl %s, %s\n", get_reg_name(ret, word_size), tmp);
-			else if (lhs->size==pointer_size)
-				fprintf(fd, "\tmovq %s, %s\n", get_reg_name(ret, pointer_size), tmp);
-		}
+		 if (e->kind==pre_un_op && !strcmp(e->attrs.un_op, "*")) {
+			generate_expression(fd, e->right);
+			assign_dereference(fd, lhs, ret);
+		 } else if (e->left->kind==var) {
+			assign_var(fd, lhs, e->left->attrs.var);
+		 }
 		fprintf(fd, "\t#)\n\t#)\n");
-		free(tmp);
 	} else if (!strcmp(e->attrs.bin_op, "-")) {
 		fprintf(fd, "\t#(\n\t#(\n");
 		generate_expression(fd, e->right);
