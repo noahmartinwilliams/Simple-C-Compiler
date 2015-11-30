@@ -6,6 +6,7 @@ void count(char *s);
 %}
 
 %%
+'.'	{ count(yytext); yylval.chr=yytext[1]; return CHAR_LITERAL; }
 "return"	{ count(yytext); return RET; }
 "if"	{ count(yytext); return IF; }
 "else"	{ count(yytext); return ELSE; }

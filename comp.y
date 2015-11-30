@@ -41,6 +41,7 @@ static struct type_t *current_type=NULL;
 	char *str;
 	struct func_t *func;
 	struct var_v *var;
+	char chr;
 }
 %define parse.error verbose
 %token BREAK
@@ -55,6 +56,7 @@ static struct type_t *current_type=NULL;
 %token <str> ASSIGN_OP
 %token <l> CONST_INT
 %token <str> IDENTIFIER
+%token <chr> CHAR_LITERAL
 %type <expr> expression
 %type <expr> binary_expr
 %type <expr> assignable_expr
@@ -242,6 +244,14 @@ prefix_expr: '&' assignable_expr {
 	e->right=$2;
 	e->left=NULL;
 	e->type=increase_type_depth($2->type, 1);
+	$$=e;
+} | CHAR_LITERAL {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=const_int;
+	e->type=get_type_by_name("char");
+	e->left=NULL;
+	e->right=NULL;
+	e->attrs.cint_val=(long int) $1;
 	$$=e;
 };
 

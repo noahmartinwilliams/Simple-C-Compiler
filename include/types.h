@@ -25,7 +25,7 @@ struct type_t {
 };
 struct expr_t {
 	enum { bin_op, pre_un_op, post_un_op, question, const_int, const_float, var } kind;
-	struct expr_t *left, *middle, *right;
+	struct expr_t *left, *right;
 	struct type_t *type;
 	union {
 		struct var_t *var;
