@@ -3,6 +3,7 @@
 #include "globals.h"
 #include <stdlib.h>
 #include <string.h>
+#include "handle-types.h"
 void count(char *s);
 
 #ifdef HAIKU_EASTER_EGG
@@ -55,7 +56,7 @@ static inline void haiku_easter_egg(char *s)
 ","	{ count(yytext); return ','; }
 "&"	{ count(yytext); return '&'; }
 [ \t\n]	{ count(yytext); }
-[_a-zA-Z][_a-zA-Z0-9]*	{ count(yytext); haiku_easter_egg(yytext); yylval.str=strdup(yytext); return IDENTIFIER ; }
+[_a-zA-Z][_a-zA-Z0-9]*	{ count(yytext); haiku_easter_egg(yytext); if (get_type_by_name(yytext)==NULL) {yylval.str=strdup(yytext); return IDENTIFIER ; } else { yylval.type=get_type_by_name(yytext); return TYPE; } }
 %%
 
 void count(char *s)

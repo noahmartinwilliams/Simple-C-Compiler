@@ -13,6 +13,7 @@
 #include "print-tree.h"
 #include "types.h"
 
+void yyerror(const char *s);
 extern int yydebug;
 extern FILE* yyin;
 FILE *output;
@@ -54,6 +55,7 @@ static struct type_t *current_type=NULL;
 %token RET
 %token STRUCT
 %token WHILE
+%token <type> TYPE
 %token <str> ASSIGN_OP
 %token <l> CONST_INT
 %token <str> IDENTIFIER
@@ -69,7 +71,6 @@ static struct type_t *current_type=NULL;
 %type <statem> var_declaration_ident
 %type <type> type
 %type <func> function
-%type <l> num_stars
 %type <statem> struct_var_declarations
 %type <func> function_header
 
@@ -160,15 +161,13 @@ statement_list: statement {
 	$$=$1;
 };
 
-type: IDENTIFIER {
-	struct type_t *t=get_type_by_name($1);
-	free($1);
-	if (t==NULL) {
-		fprintf(stderr, "Error: line %d, char %d, type not known\n", current_line, current_char);
+type: TYPE {
+	if ($1==NULL) {
+		yyerror("type not known\n");
 		exit(1);
 	}
-	current_type=t;
-	$$=t;
+	current_type=$1;
+	$$=$1;
 } | STRUCT IDENTIFIER '{' struct_var_declarations '}' {
 	/* TODO: check to see if there's already a struct prototyped by this name, and use that instead if it exists. */
 	struct type_t *type=malloc(sizeof(struct type_t));
@@ -315,12 +314,6 @@ binary_expr:  expression '*' expression {
 	$$=make_bin_op($2, $1, $3);
 };
 
-num_stars: '*' {
-	$$=1;
-} | num_stars '*' {
-	$$=$1+1;
-};
-
 var_declaration_ident: IDENTIFIER { 
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=declare;
@@ -376,7 +369,7 @@ var_declaration_ident: IDENTIFIER {
 	l->attrs.list.statements[1]=expression;
 
 	$$=l;
-} | num_stars IDENTIFIER {
+} | '*' IDENTIFIER {
 
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=declare;
@@ -384,7 +377,7 @@ var_declaration_ident: IDENTIFIER {
 	struct var_t *v=malloc(sizeof(struct var_t));
 	v->scope=scope; 
 	v->name=$2;
-	v->type=increase_type_depth(current_type, $1);
+	v->type=increase_type_depth(current_type, 1);
 	add_var(v);
 	s->attrs.var=v;
 
@@ -413,7 +406,7 @@ var_declaration: type var_declaration_list ';' {
 	$$=$2;
 };
 %%
-void yyerror(char *s)
+void yyerror(const char *s)
 {
 	fprintf(stderr, "%s: In function '%s':\n", current_file, current_function);
 	fprintf(stderr, "%s:%d:%d: %s\n", current_file, current_line, current_char, s);
@@ -424,7 +417,7 @@ void yyerror(char *s)
 			no_indent++;
 
 	if (no_indent!=NULL) {
-		fprintf(stderr, "%s", no_indent);
+		fprintf(stderr, "%s\n", no_indent);
 		fprintf(stderr, "  ");
 
 		int x;
