@@ -4,7 +4,7 @@ test: test01 test02 test03 test04 test05 test06 test07 test08 test09 test10 test
 	echo "done"
 
 test%: source-test%.c cc
-	$(CC) $@-output.s <$^
+	$(CC) $@-output.s $<
 	as $@-output.s -o output.o
 	ld output.o -o $@
 	[ -f ./wrapper-$@ ] && ( ./wrapper-$@ && (tput setaf 2; echo "[$@ passed]";  tput sgr0; ) || (tput setaf 1; echo "[$@ failed]"; tput sgr0; ) ) \

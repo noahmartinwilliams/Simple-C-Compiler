@@ -14,6 +14,7 @@
 #include "types.h"
 
 extern int yydebug;
+extern FILE* yyin;
 FILE *output;
 
 static inline struct expr_t* make_bin_op(char *X, struct expr_t *Y, struct expr_t *Z)
@@ -70,6 +71,7 @@ static struct type_t *current_type=NULL;
 %type <func> function
 %type <l> num_stars
 %type <statem> struct_var_declarations
+%type <func> function_header
 
 %right '=' ASSIGN_OP
 %right '<' '>' EQ_TEST NE_TEST
@@ -80,24 +82,27 @@ static struct type_t *current_type=NULL;
 
 %%
 file:  function {
-	print_f($1);
+	//print_f($1);
 	generate_function(output, $1);
-	//free_statem($1->statement_list);
-	//free_all_vars();
+	free_all_funcs($1);
+	free_all_vars();
 	//free_all_types();
-	//free_all_registers();
+	free_all_registers();
 };
 
-function: type IDENTIFIER '(' ')' '{' statement_list '}' {
+function_header: type IDENTIFIER '(' ')' {
 	struct func_t *f=malloc(sizeof(struct func_t));
-	f->name=strdup($2);
-	f->statement_list=$6;
+	f->name=$2;
 	f->ret_type=$1;
 	f->num_arguments=0;
 	f->arguments=NULL;
 	add_func(f);
 	$$=f;
-	free($2);
+	current_function=$2;
+}
+function: function_header '{' statement_list '}' {
+	$1->statement_list=$3;
+	$$=$1;
 }
 statement: expression ';' {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
@@ -196,6 +201,7 @@ struct_var_declarations: type IDENTIFIER ';' {
 	s->attrs.list.num=1;
 	s->attrs.list.statements=malloc(sizeof(struct statem_t*));
 	s->attrs.list.statements[0]=malloc(sizeof(struct statem_t*));
+
 	struct statem_t *var=s->attrs.list.statements[0];
 	var->kind=declare;
 	var->attrs.var=malloc(sizeof(struct var_t));
@@ -262,6 +268,8 @@ assignable_expr: IDENTIFIER {
 		exit(1);
 	}
 	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->left=NULL;
+	e->right=NULL;
 	e->kind=var;
 	e->attrs.var=v;
 	e->type=v->type;
@@ -316,6 +324,7 @@ num_stars: '*' {
 var_declaration_ident: IDENTIFIER { 
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=declare;
+
 	struct var_t *v=malloc(sizeof(struct var_t));
 	v->scope=scope;
 	v->name=$1;
@@ -406,7 +415,24 @@ var_declaration: type var_declaration_list ';' {
 %%
 void yyerror(char *s)
 {
-	printf("%s on line: %d, char: %d\n", s, current_line, current_char);
+	fprintf(stderr, "%s: In function '%s':\n", current_file, current_function);
+	fprintf(stderr, "%s:%d:%d: %s\n", current_file, current_line, current_char, s);
+	fprintf(stderr, "  ");
+	char *no_indent=current_line_str;
+	if (no_indent!=NULL)
+		while ((*no_indent==' ' || *no_indent=='\t' ) && *no_indent!='\0')
+			no_indent++;
+
+	if (no_indent!=NULL) {
+		fprintf(stderr, "%s", no_indent);
+		fprintf(stderr, "  ");
+
+		int x;
+		for (x=1; x<current_char; x++) {
+			fprintf(stderr, " ");
+		}
+		fprintf(stderr, "^\n");
+	}
 }
 
 int main(int argc, char *argv[])
@@ -415,6 +441,8 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Usage: %s output_file.s\n", argv[0]);
 		exit(1);
 	}
+	current_file=argv[2];
+	yyin=fopen(argv[2], "r");
 	output=fopen(argv[1], "w+");
 	setup_generator();
 	yyparse();

@@ -21,6 +21,9 @@ void setup_registers()
 		regs[x]=malloc(sizeof(struct reg_t));
 		regs[x]->sizes=calloc(4, sizeof(struct reg_size));
 		regs[x]->num_sizes=4;
+		regs[x]->size=8;
+		regs[x]->in_use=false;
+		regs[x]->depth=0;
 		asprintf(&(regs[x]->sizes[0].name), "%%%sl", primary[x]);
 		asprintf(&(regs[x]->sizes[1].name), "%%%sx", primary[x]);
 		asprintf(&(regs[x]->sizes[2].name), "%%e%sx", primary[x]);

@@ -20,16 +20,15 @@ void print_expr(char *pre, struct expr_t *e)
 
 void free_expr(struct expr_t *e)
 {
-	if (e->kind==var)
-		free_var(e->attrs.var);
-
-	if (e->kind==bin_op) 
+	if (e->kind==bin_op && e->attrs.bin_op!=NULL) 
 		free(e->attrs.bin_op);
 
 	if (e->left!=NULL)
 		free_expr(e->left);
+
 	if (e->right!=NULL)
 		free_expr(e->right);
+
 	free(e);
 }
 

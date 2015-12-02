@@ -4,6 +4,7 @@
 #include "generator-globals.h"
 #include "types.h"
 
+extern void yyerror(char *s);
 struct type_t* get_type_by_name(char *name)
 {
 	int x;
@@ -61,7 +62,7 @@ void free_all_types()
 void parser_type_cmp(struct expr_t **a, struct expr_t **b)
 {
 	if ((*a)->type->pointer_depth!=(*b)->type->pointer_depth) {
-		fprintf(stderr, "Type mismatch at line: %d character: %d\n", current_line, current_char);
+		yyerror("Type mismatch");
 		exit(1);
 	}
 }

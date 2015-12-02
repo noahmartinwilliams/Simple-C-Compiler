@@ -27,3 +27,12 @@ void free_func(struct func_t *f)
 	free(f->arguments);
 	free(f);
 }
+
+void free_all_funcs(struct func_t *f)
+{
+	int x;
+	for (x=0; x<num_funcs; x++) {
+		free_func(funcs[x]);
+	}
+	free(funcs);
+}

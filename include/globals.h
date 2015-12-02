@@ -16,4 +16,11 @@ extern int num_vars;
 extern struct func_t **funcs;
 extern int num_funcs;
 extern int scope;
+#ifdef HAIKU_EASTER_EGG
+extern int number_of_syllables;
+extern int current_haiku_line;
+#endif
+
+extern char *current_function;
+extern char *current_line_str;
 #endif

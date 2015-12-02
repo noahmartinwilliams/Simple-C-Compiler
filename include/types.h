@@ -40,6 +40,7 @@ struct var_t {
 	off_t offset;
 	int scope;
 	char *name;
+	bool hidden;
 };
 
 struct statem_t {

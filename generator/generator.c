@@ -31,14 +31,18 @@ void setup_types()
 	types[num_types-1]=malloc(sizeof(struct type_t));
 	struct type_t *i=types[num_types-1];
 	i->name=strdup("int");
+	i->pointer_depth=0;
 	i->body=malloc(sizeof(struct tbody_t));
 	i->body->size=int_size;
+	i->body->is_struct=false;
 
 	types[num_types-2]=malloc(sizeof(struct type_t));
 	i=types[num_types-2];
 	i->name=strdup("char");
+	i->pointer_depth=0;
 	i->body=malloc(sizeof(struct tbody_t));
 	i->body->size=char_size;
+	i->body->is_struct=false;
 }
 
 void setup_generator()
