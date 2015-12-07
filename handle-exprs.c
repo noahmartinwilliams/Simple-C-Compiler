@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <stddef.h>
 #include "globals.h"
 #include "print-tree.h"
@@ -15,6 +16,10 @@ void print_expr(char *pre, struct expr_t *e)
 		printf("%s", e->attrs.var->name);
 	else if (e->kind==pre_un_op)
 		printf("%s", e->attrs.un_op);
+	else if (e->kind==funccall)
+		printf("%s()", e->attrs.function->name);
+	else if (e->kind==arg)
+		printf("argument: ");
 	printf(", type: %s, type_size: %ld, pointer_depth: %ld", e->type->name, e->type->body->size, e->type->pointer_depth);
 }
 

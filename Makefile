@@ -22,6 +22,8 @@ comp.tab.c include/comp.tab.h: comp.y
 lex.yy.c: comp.l
 	$(LEX) $^
 
+clena: 
+	$(MAKE) clean
 clean:
 	rm lex.yy.c 2>/dev/null || true
 	rm comp.tab.c 2>/dev/null || true

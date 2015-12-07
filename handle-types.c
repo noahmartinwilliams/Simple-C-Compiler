@@ -61,6 +61,15 @@ void free_all_types()
 
 void parser_type_cmp(struct expr_t **a, struct expr_t **b)
 {
+	if (a==NULL || b==NULL) {
+		yyerror("Internal error: Expression is NULL when passed to parser_type_cmp)");
+		exit(1);
+	}
+
+	if ((*a)->type==NULL || (*b)->type==NULL) {
+		yyerror("Internal error: Expression is missing type when passed to parser_type_cmp");
+		exit(1);
+	}
 	if ((*a)->type->pointer_depth!=(*b)->type->pointer_depth) {
 		yyerror("Type mismatch");
 		exit(1);

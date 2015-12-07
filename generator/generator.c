@@ -64,6 +64,23 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		assign_constant(fd, e);
 	} else if (e->kind==pre_un_op) {
 		generate_pre_unary_expression(fd, e);
+	} else if (e->kind==funccall) {
+		fprintf(fd, "\t#(\n\t#%s(\n", e->attrs.function->name);
+		start_call(fd, e->attrs.function);
+		if (e->attrs.function->num_arguments==0) {
+			call(fd, e->attrs.function);
+		} else {
+			struct expr_t *current_e=e->right;
+			struct reg_t *ret=get_ret_register(get_type_size(e->type));
+			while (current_e!=NULL) {
+				generate_expression(fd, current_e);
+				add_argument(fd, ret, current_e->type);
+				current_e=current_e->right;
+			}
+			call(fd, e->attrs.function);
+		}
+		fprintf(fd, "\t#)\n\t#)\n");
+		/*TODO: Figure out how to handle struct return values */
 	}
 }
 
@@ -217,6 +234,8 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		fprintf(fd, "\t#return\n\t#(\n");
 		generate_expression(fd, s->attrs.expr);
 		fprintf(fd, "\t#)\n");
+		fprintf(fd, "\tmovq %%rbp, %%rsp\n");
+		fprintf(fd, "\tpopq %%rbp\n");
 		if (!in_main)
 			fprintf(fd, "\tret\n");
 		else
@@ -322,11 +341,28 @@ void generate_function(FILE *fd, struct func_t *f)
 	} else {
 		fprintf(fd, ".globl %s\n.type %s, @function\n%s:\n", f->name, f->name, f->name);
 	}
+	fprintf(fd, "\tpushq %%rbp\n");
 	fprintf(fd, "\tmovq %%rsp, %%rbp\n");
 	off_t o=get_var_offset(f->statement_list, 0);
+	int x, y=0;
+	/* TODO: adjust this to work with c calling convention for x86_64 */
+	for (x=0; x<f->num_arguments; x++) {
+		if (get_type_size(f->arguments[x]->type)==word_size) {
+			o=o+word_size;
+			fprintf(fd, "\tsubq $%d, %%rsp\n", word_size);
+			fprintf(fd, "\tmovl %%edi, -%d(%%rbp)\n", word_size);
+			f->arguments[x]->offset=-word_size;
+			y++;
+		} else {
+			f->arguments[x]->offset=8*y+16;
+			y++;
+		}
+	}
 	expand_stack_space(fd, o);
 
 	generate_statement(fd, f->statement_list);
+	fprintf(fd, "\tmovq %%rbp, %%rsp\n");
+	fprintf(fd, "\tpopq %%rbp\n");
 	if (strcmp(f->name, "main")) {
 		fprintf(fd, "\tmovq $0, %%rax\n\tret\n");
 	} else {
@@ -350,4 +386,17 @@ char* prepare_var_assignment(FILE *fd, struct expr_t *dest)
 		}
 	}
 	return ret;
+}
+
+void generate_global_vars(FILE *fd, struct statem_t *s)
+{
+	if (s->kind==list) {
+		int x;
+		for (x=0; x<s->attrs.list.num; x++) {
+			generate_global_vars(fd, s->attrs.list.statements[x]);
+		}
+	} else if (s->kind==declare) {
+		backend_make_global_var(fd, s->attrs.var);
+		s->attrs.var->is_global=true;
+	}
 }

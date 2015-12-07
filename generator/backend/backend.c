@@ -6,39 +6,14 @@
 #include "generator.h"
 #include "globals.h"
 #include "types.h"
+#include "registers.h"
 
 
-
-char* get_reg_name(struct reg_t *reg, size_t size);
-void setup_registers()
+void backend_make_global_var(FILE *fd, struct var_t *v)
 {
-	num_regs+=4;
-	regs=realloc(regs, num_regs*sizeof(struct reg_t*));
+	fprintf(fd, "\t.comm %s, %d, %d\n", v->name, get_type_size(v->type), get_type_size(v->type));
 
-	char *primary[]={"a", "b", "c", "d"};
-	int x;
-	for (x=0; x<4; x++) {
-		regs[x]=malloc(sizeof(struct reg_t));
-		regs[x]->sizes=calloc(4, sizeof(struct reg_size));
-		regs[x]->num_sizes=4;
-		regs[x]->size=8;
-		regs[x]->in_use=false;
-		regs[x]->depth=0;
-		asprintf(&(regs[x]->sizes[0].name), "%%%sl", primary[x]);
-		asprintf(&(regs[x]->sizes[1].name), "%%%sx", primary[x]);
-		asprintf(&(regs[x]->sizes[2].name), "%%e%sx", primary[x]);
-		asprintf(&(regs[x]->sizes[3].name), "%%r%sx", primary[x]);
-
-		regs[x]->sizes[0].size=1;
-		regs[x]->sizes[1].size=2;
-		regs[x]->sizes[2].size=4;
-		regs[x]->sizes[3].size=8;
-
-		regs[x]->use=INT;
-	}
-	regs[0]->use=RET;
 }
-
 void dereference(FILE *fd, struct reg_t *reg, size_t size)
 {
 	fprintf(fd, "\tmovq (%s), %%rax\n", get_reg_name(reg, reg->size));
@@ -52,71 +27,7 @@ void assign_dereference(FILE *fd, struct reg_t *assign_from, struct reg_t *assig
 		fprintf(fd, "\tmovq %s, (%s)\n", get_reg_name(assign_from, assign_from->size), get_reg_name(assign_to, assign_to->size));
 }
 
-char* get_reg_name(struct reg_t *reg, size_t size)
-{
-	int x;
-	for (x=0; x<reg->num_sizes; x++) {
-		if (reg->sizes[x].size==size)
-			return reg->sizes[x].name;
-	}
-}
 
-void free_reg_size(struct reg_size a) 
-{
-	free(a.name);
-}
-
-void free_all_registers()
-{
-	int x;
-	for (x=0; x<num_regs; x++) {
-		int y;
-		for (y=0; y<regs[x]->num_sizes; y++) {
-			free_reg_size(regs[x]->sizes[y]);
-		}
-		free(regs[x]->sizes);
-		free(regs[x]);
-	}
-	free(regs);
-}
-
-struct reg_t* get_ret_register(size_t s)
-{
-	if (regs==NULL) {
-		fprintf(stderr, "internal error: registers empty\n");
-		exit(1);
-	}
-	int x;
-	for (x=0; x<num_regs; x++) {
-		if (regs[x]->use==RET) {
-			regs[x]->size=s;
-			return regs[x];
-		}
-	}
-	return NULL;
-}
-
-struct reg_t* get_free_register(FILE *fd, size_t s)
-{
-	int x;
-	for (x=0; x<num_regs; x++) {
-		if (!regs[x]->in_use && regs[x]->use==INT) {
-			regs[x]->in_use=true;
-			regs[x]->size=s;
-			return regs[x];
-		}
-	}
-
-	for (x=0; x<num_regs; x++) {
-		if(regs[x]->size==s && regs[x]->depth < depth && regs[x]->use==INT) {
-			fprintf(fd, "\tpushq %s\n", regs[x]->sizes[3].name);
-			regs[x]->depth++;
-			return regs[x];
-		}
-	}
-
-	return NULL;
-}
 
 void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest)
 {
@@ -132,11 +43,16 @@ void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest)
 
 void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 {
-	if (get_type_size(dest->type)==word_size)
-		fprintf(fd, "\tmovl %s, %ld(%%rbp)\n", get_reg_name(src, src->size), dest->offset);
-	else if (get_type_size(dest->type)==pointer_size)
-		fprintf(fd, "\tmovq %s, %ld(%%rbp)\n", get_reg_name(src, src->size), dest->offset);
-} /* TODO: put this to use*/
+	if (!dest->is_global) {
+		if (get_type_size(dest->type)==word_size)
+			fprintf(fd, "\tmovl %s, %ld(%%rbp)\n", get_reg_name(src, src->size), dest->offset);
+		else if (get_type_size(dest->type)==pointer_size)
+			fprintf(fd, "\tmovq %s, %ld(%%rbp)\n", get_reg_name(src, src->size), dest->offset);
+	} else {
+		if (get_type_size(dest->type)==word_size)
+			fprintf(fd, "\tmovl %s, %s(%%rip)\n", get_reg_name(src, src->size), dest->name);
+	}
+} 
 
 
 void expand_stack_space(FILE *fd, off_t off)
@@ -146,15 +62,17 @@ void expand_stack_space(FILE *fd, off_t off)
 
 void read_var(FILE *fd, struct var_t *v)
 {
-	if (v->type->pointer_depth > 0)
-		fprintf(fd, "\tmovq %ld(%%rbp), %%rax\n", v->offset);
-	else {
+	if (!v->is_global) {
 		if (get_type_size(v->type)==char_size)
 			fprintf(fd, "\tmovb %ld(%%rbp), %%al\n", v->offset);
 		if (get_type_size(v->type)==word_size)
 			fprintf(fd, "\tmovl %ld(%%rbp), %%eax\n", v->offset);
 		if (get_type_size(v->type)==pointer_size)
 			fprintf(fd, "\tmovq %ld(%%rbp), %%rax\n", v->offset);
+	} else {
+		if (get_type_size(v->type)==word_size) {
+			fprintf(fd, "\tmovl %s(%%rip), %%eax\n", v->name);
+		}
 	}
 }
 
@@ -185,12 +103,33 @@ void compare_register_to_int(FILE *fd, struct reg_t *a, int i)
 		fprintf(fd, "\tcmpl $%d, %s\n", i, get_reg_name(a, a->size));
 }
 
-void free_register(FILE *fd, struct reg_t *r)
+
+void start_call(FILE *fd, struct func_t *f)
 {
-	if (r->depth==0)
-		r->in_use=false;
-	else {
-		fprintf(fd, "\tpopq %s\n", r->sizes[3].name);
-		r->depth--;
+	int x;
+	for (x=0; x<num_regs; x++) {
+		int y;
+		size_t biggest_size=0;
+		for (y=0; y<regs[x]->num_sizes; y++)
+			if (regs[x]->sizes[y].size>biggest_size)
+				biggest_size=regs[x]->sizes[y].size;
+		if (regs[x]->in_use)
+			fprintf(fd, "\tpush %s\n", get_reg_name(regs[x], biggest_size));
 	}
+	if (f->num_arguments==0 && f->ret_type->body->is_struct==false) {
+		return;
+	}
+}
+
+void add_argument(FILE *fd, struct reg_t *reg, struct type_t *t )
+{
+	/*TODO: Fix this to work better. */	
+	if (!strcmp(t->name, "int"))
+		if (reg->size==word_size)
+			fprintf(fd, "\tmovl %s, %%edi\n", get_reg_name(reg, word_size));
+}
+
+void call(FILE *fd, struct func_t *f)
+{
+	fprintf(fd, "\tcall %s\n", f->name);
 }

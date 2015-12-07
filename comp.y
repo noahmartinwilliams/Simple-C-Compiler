@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include "generator.h"
 #include "globals.h"
 #include "handle-exprs.h"
@@ -34,6 +35,11 @@ static inline struct expr_t* make_bin_op(char *X, struct expr_t *Y, struct expr_
 }
 
 static struct type_t *current_type=NULL;
+
+struct arguments_t {
+	struct var_t **vars;
+	int num_vars;
+};
 %}
 %union {
 	long int l;
@@ -42,7 +48,8 @@ static struct type_t *current_type=NULL;
 	struct type_t *type;
 	char *str;
 	struct func_t *func;
-	struct var_v *var;
+	struct var_t *var;
+	struct arguments_t *vars;
 	char chr;
 }
 %define parse.error verbose
@@ -60,6 +67,8 @@ static struct type_t *current_type=NULL;
 %token <l> CONST_INT
 %token <str> IDENTIFIER
 %token <chr> CHAR_LITERAL
+%type <vars> arg_declaration
+%type <expr> noncomma_expression
 %type <expr> expression
 %type <expr> binary_expr
 %type <expr> assignable_expr
@@ -73,6 +82,7 @@ static struct type_t *current_type=NULL;
 %type <func> function
 %type <statem> struct_var_declarations
 %type <func> function_header
+%type <expr> call_arg_list
 
 %right '=' ASSIGN_OP
 %right '<' '>' EQ_TEST NE_TEST
@@ -82,21 +92,55 @@ static struct type_t *current_type=NULL;
 %nonassoc ELSE
 
 %%
-file:  function {
-	//print_f($1);
+file: file_entry | file file_entry ;
+file_entry:  function {
+	print_f($1);
 	generate_function(output, $1);
-	free_all_funcs($1);
-	free_all_vars();
+	//free_all_funcs($1);
+	//free_all_vars();
 	//free_all_types();
-	free_all_registers();
+	//free_all_registers();
+} | var_declaration {
+	generate_global_vars(output, $1);
 };
 
+arg_declaration: type IDENTIFIER {
+	struct arguments_t *a=malloc(sizeof(struct arguments_t));
+	a->vars=calloc(1, sizeof(struct var_t**));
+	a->vars[0]=malloc(sizeof(struct var_t*));
+	a->vars[0]->scope=1;
+	a->vars[0]->hidden=false;
+	a->vars[0]->name=strdup($2);
+	a->vars[0]->type=$1;
+	printf("%p\n", a->vars[0]->type);
+	a->num_vars=1;
+	add_var(a->vars[0]);
+	printf("var size: %d\n", sizeof(struct var_t));
+	printf("off: %d\n", sizeof(off_t));
+	printf("hidden offset: %d\n", offsetof(struct var_t, hidden));
+	printf("name offset: %d\n", offsetof(struct var_t, name));
+	printf("name value: %s\n", a->vars[0]->name);
+	printf("hidden value: %d\n", (int) (a->vars[0]->hidden));
+	/*TODO: figure out why gcc is overwriting the hidden attribute */
+	$$=a;
+};
 function_header: type IDENTIFIER '(' ')' {
 	struct func_t *f=malloc(sizeof(struct func_t));
 	f->name=$2;
 	f->ret_type=$1;
 	f->num_arguments=0;
 	f->arguments=NULL;
+	add_func(f);
+	$$=f;
+	current_function=$2;
+} | type IDENTIFIER '(' arg_declaration ')' {
+	struct func_t *f=malloc(sizeof(struct func_t));
+	f->name=$2;
+	f->ret_type=$1;
+	f->num_arguments=0;
+	f->arguments=$4->vars;
+	f->num_arguments=$4->num_vars;
+	free($4);
 	add_func(f);
 	$$=f;
 	current_function=$2;
@@ -230,7 +274,11 @@ struct_var_declarations: type IDENTIFIER ';' {
 	$$=$1;
 };
 
-expression: CONST_INT {
+call_arg_list: noncomma_expression {
+	$$=$1;
+};
+expression: noncomma_expression ;
+noncomma_expression: CONST_INT {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->type=get_type_by_name("int");
 	e->kind=const_int;
@@ -240,7 +288,23 @@ expression: CONST_INT {
 	$$=e;
 }  | binary_expr | '(' expression ')' {
 	$$=$2;
-} | assignable_expr | prefix_expr ;
+} | assignable_expr | prefix_expr | IDENTIFIER '(' ')' {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=funccall;
+	e->left=NULL;
+	e->right=NULL;
+	e->attrs.function=get_func_by_name($1);
+	e->type=e->attrs.function->ret_type;
+	$$=e;
+} | IDENTIFIER '(' call_arg_list ')' {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=funccall;
+	e->right=$3;
+	e->left=NULL;
+	e->attrs.function=get_func_by_name($1);
+	e->type=e->attrs.function->ret_type;
+	$$=e;
+};
 
 prefix_expr: '&' assignable_expr {
 	struct expr_t *e=malloc(sizeof(struct expr_t));

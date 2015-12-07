@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "globals.h"
 #include "handle-types.h"
+#include <stdio.h>
 
 void add_var(struct var_t *v)
 {
@@ -35,7 +36,7 @@ struct var_t* get_var_by_name(char *name)
 	struct var_t *highest_scope=NULL;
 	int max_scope=0;
 	for (x=0; x<num_vars; x++) {
-		if (vars[x]!=NULL && !strcmp(name, vars[x]->name) && vars[x]->scope<=scope && vars[x]->scope > max_scope && !vars[x]->hidden) {
+		if (vars[x]!=NULL && !strcmp(name, vars[x]->name) && vars[x]->scope<=scope && vars[x]->scope >= max_scope && !vars[x]->hidden) {
 			highest_scope=vars[x];
 			max_scope=highest_scope->scope;
 		}
