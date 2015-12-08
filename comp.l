@@ -40,6 +40,7 @@ static inline void haiku_easter_egg(char *s)
 [0-9]+	{ count(yytext); yylval.l=atoi(yytext); return CONST_INT; }
 [+-]=	{ count(yytext); yylval.str=strdup(yytext); return ASSIGN_OP; }
 "!="	{ count(yytext); return NE_TEST; }
+">="	{ count(yytext); return GE_TEST; }
 "=="	{ count(yytext); return EQ_TEST; }
 ">"	{ count(yytext); return '>'; }
 "<"	{ count(yytext); return '<'; }

@@ -62,6 +62,7 @@ struct arguments_t {
 %token RET
 %token STRUCT
 %token WHILE
+%token GE_TEST
 %token <type> TYPE
 %token <str> ASSIGN_OP
 %token <l> CONST_INT
@@ -348,15 +349,15 @@ assignable_expr: IDENTIFIER {
 	$$=e;
 };
 
-binary_expr:  expression '*' expression {
+binary_expr:  noncomma_expression '*' noncomma_expression {
 	$$=make_bin_op("*", $1, $3);
-} | expression '/' expression {
+} | noncomma_expression '/' noncomma_expression {
 	$$=make_bin_op("/", $1, $3);
-} | expression '+' expression {
+} | noncomma_expression '+' noncomma_expression {
 	$$=make_bin_op("+", $1, $3);
-} | expression '-' expression {
+} | noncomma_expression '-' noncomma_expression {
 	$$=make_bin_op("-", $1, $3);
-} | assignable_expr '=' expression {
+} | assignable_expr '=' noncomma_expression {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	struct expr_t *a=$1, *b=$3;
 	parser_type_cmp(&a, &b);
@@ -366,16 +367,18 @@ binary_expr:  expression '*' expression {
 	e->right=b;
 	e->attrs.bin_op=strdup("=");
 	$$=e;
-} | expression EQ_TEST expression {
+} | noncomma_expression EQ_TEST noncomma_expression {
 	$$=make_bin_op("==", $1, $3);
-} | expression '<' expression {
+} | noncomma_expression '<' noncomma_expression {
 	$$=make_bin_op("<", $1, $3);
-} | expression '>' expression {
+} | noncomma_expression '>' noncomma_expression {
 	$$=make_bin_op(">", $1, $3);
-} | expression NE_TEST expression {
+} | noncomma_expression NE_TEST noncomma_expression {
 	$$=make_bin_op("!=", $1, $3);
-} | assignable_expr ASSIGN_OP expression {
+} | assignable_expr ASSIGN_OP noncomma_expression {
 	$$=make_bin_op($2, $1, $3);
+} | noncomma_expression GE_TEST noncomma_expression {
+	$$=make_bin_op(">=", $1, $3);
 };
 
 var_declaration_ident: IDENTIFIER { 
