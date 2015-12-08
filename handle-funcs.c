@@ -28,7 +28,7 @@ void free_func(struct func_t *f)
 	free(f);
 }
 
-void free_all_funcs(struct func_t *f)
+void free_all_funcs()
 {
 	int x;
 	for (x=0; x<num_funcs; x++) {

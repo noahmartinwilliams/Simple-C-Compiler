@@ -43,7 +43,7 @@ void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest)
 
 void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 {
-	if (!dest->is_global) {
+	if (dest->scope!=0) {
 		if (get_type_size(dest->type)==word_size)
 			fprintf(fd, "\tmovl %s, %ld(%%rbp)\n", get_reg_name(src, src->size), dest->offset);
 		else if (get_type_size(dest->type)==pointer_size)
@@ -62,7 +62,7 @@ void expand_stack_space(FILE *fd, off_t off)
 
 void read_var(FILE *fd, struct var_t *v)
 {
-	if (!v->is_global) {
+	if (v->scope!=0) {
 		if (get_type_size(v->type)==char_size)
 			fprintf(fd, "\tmovb %ld(%%rbp), %%al\n", v->offset);
 		if (get_type_size(v->type)==word_size)

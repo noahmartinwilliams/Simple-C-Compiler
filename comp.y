@@ -86,7 +86,7 @@ struct arguments_t {
 %type <expr> call_arg_list
 
 %right '=' ASSIGN_OP
-%right '<' '>' EQ_TEST NE_TEST
+%right '<' '>' GE_TEST EQ_TEST NE_TEST
 %left '+' '-'
 %left '*' '/'
 %nonassoc IFX
@@ -97,10 +97,8 @@ file: file_entry | file file_entry ;
 file_entry:  function {
 	print_f($1);
 	generate_function(output, $1);
-	//free_all_funcs($1);
 	//free_all_vars();
 	//free_all_types();
-	//free_all_registers();
 } | var_declaration {
 	generate_global_vars(output, $1);
 };
@@ -113,16 +111,9 @@ arg_declaration: type IDENTIFIER {
 	a->vars[0]->hidden=false;
 	a->vars[0]->name=strdup($2);
 	a->vars[0]->type=$1;
-	printf("%p\n", a->vars[0]->type);
+	free($2);
 	a->num_vars=1;
 	add_var(a->vars[0]);
-	printf("var size: %d\n", sizeof(struct var_t));
-	printf("off: %d\n", sizeof(off_t));
-	printf("hidden offset: %d\n", offsetof(struct var_t, hidden));
-	printf("name offset: %d\n", offsetof(struct var_t, name));
-	printf("name value: %s\n", a->vars[0]->name);
-	printf("hidden value: %d\n", (int) (a->vars[0]->hidden));
-	/*TODO: figure out why gcc is overwriting the hidden attribute */
 	$$=a;
 };
 function_header: type IDENTIFIER '(' ')' {
@@ -328,7 +319,7 @@ prefix_expr: '&' assignable_expr {
 assignable_expr: IDENTIFIER {
 	struct var_t *v=get_var_by_name($1);
 	if (v==NULL) {
-		fprintf(stderr, "Unknown var on line: %d, char: %d\n", current_line, current_char);
+		yyerror("Unkown var");
 		exit(1);
 	}
 	struct expr_t *e=malloc(sizeof(struct expr_t));
@@ -506,7 +497,10 @@ int main(int argc, char *argv[])
 	output=fopen(argv[1], "w+");
 	setup_generator();
 	yyparse();
+	free_all_funcs();
+	free_all_registers();
 	free_all_types();
+	free_all_vars();
 	fclose(output);
 	return 0;
 }

@@ -28,6 +28,12 @@ void free_expr(struct expr_t *e)
 	if (e->kind==bin_op && e->attrs.bin_op!=NULL) 
 		free(e->attrs.bin_op);
 
+	else if (e->kind==funccall)
+		free(e->attrs.function);
+
+	else if (e->kind==pre_un_op || e->kind==post_un_op)
+		free(e->attrs.un_op);
+
 	if (e->left!=NULL)
 		free_expr(e->left);
 

@@ -10,7 +10,7 @@
 char* get_reg_name(struct reg_t *reg, size_t size);
 void setup_registers()
 {
-	num_regs+=11;
+	num_regs+=12;
 	regs=realloc(regs, num_regs*sizeof(struct reg_t*));
 
 	char *primary[]={"a", "b", "c", "d"};

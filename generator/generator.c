@@ -399,6 +399,6 @@ void generate_global_vars(FILE *fd, struct statem_t *s)
 		}
 	} else if (s->kind==declare) {
 		backend_make_global_var(fd, s->attrs.var);
-		s->attrs.var->is_global=true;
+		s->attrs.var->scope=0;
 	}
 }

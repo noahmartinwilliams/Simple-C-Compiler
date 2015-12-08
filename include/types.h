@@ -41,7 +41,6 @@ struct var_t {
 	off_t offset;
 	int scope;
 	bool hidden;
-	bool is_global;
 	struct type_t *type;
 };
 
