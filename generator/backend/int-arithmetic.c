@@ -46,10 +46,10 @@ void int_sub(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
 	if (a->size==char_size) {
 		fprintf(fd, "\tsubb %s, %s\n", get_reg_name(b, b->size), get_reg_name(a, a->size));
-		fprintf(fd, "\tmovb %s, %%al\n", get_reg_name(b, b->size));
+		fprintf(fd, "\tmovb %s, %%al\n", get_reg_name(a, a->size));
 	} else if (a->size==word_size) {
 		fprintf(fd, "\tsubl %s, %s\n", get_reg_name(b, b->size), get_reg_name(a, a->size));
-		fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(b, b->size));
+		fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(a, a->size));
 	}
 }
 

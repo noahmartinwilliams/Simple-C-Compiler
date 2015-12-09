@@ -21,6 +21,7 @@ struct func_t **funcs=NULL;
 int num_funcs=0;
 
 int scope=0;
+bool print_trees=false;
 
 #ifdef HAIKU_EASTER_EGG
 int number_of_syllables=0;

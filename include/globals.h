@@ -23,4 +23,5 @@ extern int current_haiku_line;
 
 extern char *current_function;
 extern char *current_line_str;
+extern bool print_trees;
 #endif

@@ -96,7 +96,8 @@ struct arguments_t {
 %%
 file: file_entry | file file_entry ;
 file_entry:  function {
-	print_f($1);
+	if (print_trees)
+		print_f($1);
 	generate_function(output, $1);
 	//free_all_vars();
 	//free_all_types();
