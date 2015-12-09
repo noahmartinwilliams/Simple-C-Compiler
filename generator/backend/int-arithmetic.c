@@ -45,11 +45,14 @@ void inc_by_int(FILE *fd, int i, char *dest, size_t size)
 void int_sub(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
 	if (a->size==char_size) {
-		fprintf(fd, "\tsubb %s, %s\n", get_reg_name(b, b->size), get_reg_name(a, a->size));
-		fprintf(fd, "\tmovb %s, %%al\n", get_reg_name(a, a->size));
+		fprintf(fd, "\tsubb %s, %s\n", get_reg_name(a, a->size), get_reg_name(b, b->size));
+		fprintf(fd, "\tmovb %s, %%al\n", get_reg_name(b, b->size));
 	} else if (a->size==word_size) {
-		fprintf(fd, "\tsubl %s, %s\n", get_reg_name(b, b->size), get_reg_name(a, a->size));
-		fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(a, a->size));
+		fprintf(fd, "\tsubl %s, %s\n", get_reg_name(a, a->size), get_reg_name(b, b->size));
+		fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(b, b->size));
+	} else if (a->size==pointer_size) {
+		fprintf(fd, "\tsubq %s, %s\n", get_reg_name(a, a->size), get_reg_name(b, b->size));
+		fprintf(fd, "\tmovq %s, %%rax\n", get_reg_name(b, b->size));
 	}
 }
 
@@ -63,11 +66,23 @@ void int_div(FILE *fd, struct reg_t *a, struct reg_t *b)
 	fprintf(fd, "\tcltd\n");
 	fprintf(fd, "\tidivl %s\n", get_reg_name(b, b->size));
 
+	/* TBH I don't even know what this means. I just copied this
+	from the GNU C compiler's output. */
 }
 
 void int_mul(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
-	if (strcmp(a->sizes[0].name, "%al"))
-		fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(a, a->size));
-	fprintf(fd, "\tmull %s\n", get_reg_name(b, b->size));
+	/* The nice people at Intel need to learn to be more F*cking consistent. D:< */
+
+	if (a->size==word_size) {
+		if (strcmp(a->sizes[0].name, "%al"))
+			fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(a, a->size));
+	}
+
+	if (a->size==word_size)
+		fprintf(fd, "\tmull %s\n", get_reg_name(b, b->size));
+
+	else if (a->size==pointer_size)
+		fprintf(fd, "\tmulq %s\n", get_reg_name(b, b->size));
+
 }

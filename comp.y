@@ -53,17 +53,8 @@ struct arguments_t {
 	char chr;
 }
 %define parse.error verbose
-%token BREAK
-%token CONTINUE
-%token ELSE
-%token EQ_TEST
-%token IF
-%token NE_TEST
-%token RET
-%token STRUCT
-%token WHILE
-%token GE_TEST
-%token LE_TEST
+%token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST 
+%token RET STRUCT WHILE GE_TEST LE_TEST
 %token <type> TYPE
 %token <str> ASSIGN_OP
 %token <l> CONST_INT
@@ -87,6 +78,7 @@ struct arguments_t {
 %type <expr> call_arg_list
 
 %right '=' ASSIGN_OP
+%right SHIFT_LEFT
 %right '<' LE_TEST '>' GE_TEST EQ_TEST NE_TEST
 %left '+' '-'
 %left '*' '/'
@@ -374,6 +366,8 @@ binary_expr:  noncomma_expression '*' noncomma_expression {
 	$$=make_bin_op(">=", $1, $3);
 } | noncomma_expression LE_TEST noncomma_expression {
 	$$=make_bin_op("<=", $1, $3);
+} | noncomma_expression SHIFT_LEFT noncomma_expression {
+	$$=make_bin_op("<<", $1, $3);
 };
 
 var_declaration_ident: IDENTIFIER { 

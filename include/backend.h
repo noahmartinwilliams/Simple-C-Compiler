@@ -5,6 +5,7 @@
 #include "generator-types.h"
 #include "registers.h"
 #include "jumps.h"
+#include "agnostic-arithmetic.h"
 
 extern void int_add(FILE *fd, struct reg_t *a, struct reg_t *b);
 extern void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest);
