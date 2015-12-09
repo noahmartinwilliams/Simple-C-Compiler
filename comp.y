@@ -105,13 +105,12 @@ file_entry:  function {
 
 arg_declaration: type IDENTIFIER {
 	struct arguments_t *a=malloc(sizeof(struct arguments_t));
-	a->vars=calloc(1, sizeof(struct var_t**));
-	a->vars[0]=malloc(sizeof(struct var_t*));
+	a->vars=calloc(1, sizeof(struct var_t*));
+	a->vars[0]=malloc(sizeof(struct var_t));
 	a->vars[0]->scope=1;
 	a->vars[0]->hidden=false;
-	a->vars[0]->name=strdup($2);
+	a->vars[0]->name=$2;
 	a->vars[0]->type=$1;
-	free($2);
 	a->num_vars=1;
 	add_var(a->vars[0]);
 	$$=a;
@@ -287,6 +286,7 @@ noncomma_expression: CONST_INT {
 	e->right=NULL;
 	e->attrs.function=get_func_by_name($1);
 	e->type=e->attrs.function->ret_type;
+	free($1);
 	$$=e;
 } | IDENTIFIER '(' call_arg_list ')' {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
@@ -318,6 +318,7 @@ prefix_expr: '&' assignable_expr {
 
 assignable_expr: IDENTIFIER {
 	struct var_t *v=get_var_by_name($1);
+	free($1);
 	if (v==NULL) {
 		yyerror("Unkown var");
 		exit(1);
@@ -328,7 +329,6 @@ assignable_expr: IDENTIFIER {
 	e->kind=var;
 	e->attrs.var=v;
 	e->type=v->type;
-	free($1);
 	$$=e;
 } | '*' assignable_expr {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
