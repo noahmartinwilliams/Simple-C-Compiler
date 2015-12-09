@@ -63,6 +63,7 @@ struct arguments_t {
 %token STRUCT
 %token WHILE
 %token GE_TEST
+%token LE_TEST
 %token <type> TYPE
 %token <str> ASSIGN_OP
 %token <l> CONST_INT
@@ -86,7 +87,7 @@ struct arguments_t {
 %type <expr> call_arg_list
 
 %right '=' ASSIGN_OP
-%right '<' '>' GE_TEST EQ_TEST NE_TEST
+%right '<' LE_TEST '>' GE_TEST EQ_TEST NE_TEST
 %left '+' '-'
 %left '*' '/'
 %nonassoc IFX
@@ -370,6 +371,8 @@ binary_expr:  noncomma_expression '*' noncomma_expression {
 	$$=make_bin_op($2, $1, $3);
 } | noncomma_expression GE_TEST noncomma_expression {
 	$$=make_bin_op(">=", $1, $3);
+} | noncomma_expression LE_TEST noncomma_expression {
+	$$=make_bin_op("<=", $1, $3);
 };
 
 var_declaration_ident: IDENTIFIER { 

@@ -9,5 +9,6 @@ extern void jmp_lt(FILE *fd, char *name);
 extern void jmp_neq(FILE *fd, char *name);
 extern void jmp_eq(FILE *fd, char *name);
 extern void jmp(FILE *fd, char *name);
+extern void jmp_le(FILE *fd, char *name);
 
 #endif

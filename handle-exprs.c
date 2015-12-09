@@ -66,6 +66,8 @@ bool evaluate_constant_expr(char *op, struct expr_t *a, struct expr_t *b, struct
 			e->attrs.cint_val=a->attrs.cint_val!=b->attrs.cint_val;
 		} else if (!strcmp(op, ">=")) {
 			e->attrs.cint_val=a->attrs.cint_val>=b->attrs.cint_val;
+		} else if (!strcmp(op, "<=")) {
+			e->attrs.cint_val=a->attrs.cint_val<=b->attrs.cint_val;
 		}
 		free_expr(a);
 		free_expr(b);

@@ -32,6 +32,12 @@ void jmp_gt(FILE *fd, char *name)
 	fprintf(fd, "\tjg %s\n", name);
 }
 
+void jmp_le(FILE *fd, char *name)
+{
+	fprintf(fd, "\tje %s\n", name);
+	fprintf(fd, "\tjl %s\n", name);
+}
+
 void place_label(FILE *fd, char *name)
 {
 	fprintf(fd, "\t%s:\n", name);

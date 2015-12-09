@@ -207,6 +207,8 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		generate_comparison_expression(fd, e, jmp_neq, "is$ne$%d", "is$eq$%d", lhs);
 	} else if (!strcmp(e->attrs.bin_op, ">=")) {
 		generate_comparison_expression(fd, e, jmp_ge, "is$ge$%d", "is$lt$%d", lhs);
+	} else if (!strcmp(e->attrs.bin_op, "<=")) {
+		generate_comparison_expression(fd, e, jmp_le, "is$le$%d", "is$gt$%d", lhs);
 	} else if (!strcmp(e->attrs.bin_op, "+=")) {
 		fprintf(fd, "\t#Note: lhs, and rhs of assignment is swapped\n");
 		fprintf(fd, "\t#(\n\t#(\n");
