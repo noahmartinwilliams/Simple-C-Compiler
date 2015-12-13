@@ -257,6 +257,23 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 
 		fprintf(fd, "\t#)\n");
 
+	} else if (!strcmp(e->attrs.bin_op, ">>")) {
+
+		fprintf(fd, "\t#(\n\t#(\n");
+
+		generate_expression(fd, e->left);
+		assign_reg(fd, ret, lhs);
+
+		fprintf(fd, "\t#)\n\t#>>\n\t#(\n");
+
+		generate_expression(fd, e->right);
+		assign_reg(fd, ret, rhs);
+
+		fprintf(fd, "\t#)\n");
+		shift_right(fd, lhs, rhs);
+
+		fprintf(fd, "\t#)\n");
+
 	} else if (!strcmp(e->attrs.bin_op, "+=")) {
 		fprintf(fd, "\t#Note: lhs, and rhs of assignment is swapped\n");
 		fprintf(fd, "\t#(\n\t#(\n");

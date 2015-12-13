@@ -133,3 +133,11 @@ void call(FILE *fd, struct func_t *f)
 {
 	fprintf(fd, "\tcall %s\n", f->name);
 }
+
+void add_readonly_data(FILE *fd, struct expr_t *e)
+{
+	unique_num++;
+	fprintf(fd, "\t.section\t.rodata\n");
+	fprintf(fd, "\t.LC%d:\n", unique_num);
+	/* TODO: figure this part out */
+}

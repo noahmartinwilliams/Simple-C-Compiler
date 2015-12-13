@@ -20,3 +20,14 @@ void shift_left(FILE *fd, struct reg_t *src, struct reg_t *dest)
 		fprintf(fd, "\tpopq %%rcx\n");
 	}
 }
+
+void shift_right(FILE *fd, struct reg_t *src, struct reg_t *dest)
+{
+	if (src->size==word_size) {
+		fprintf(fd, "\tpushq %%rcx\n");
+		fprintf(fd, "\tmovl %s, %%ecx\n", get_reg_name(dest, dest->size));
+		fprintf(fd, "\tshr %%cl, %s\n", get_reg_name(src, src->size));
+		fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(src, src->size));
+		fprintf(fd, "\tpopq %%rcx\n");
+	}
+}

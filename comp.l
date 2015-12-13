@@ -29,6 +29,7 @@ static inline void haiku_easter_egg(char *s)
 
 
 %%
+\"(\\\\|[^"\\])*\"	{ count(yytext); yylval.str=strdup(yytext); return STR_LITERAL; }
 '.'	{ count(yytext); yylval.chr=yytext[1]; return CHAR_LITERAL; }
 "return"	{ count(yytext); return RET; }
 "if"	{ count(yytext); return IF; }
@@ -40,6 +41,7 @@ static inline void haiku_easter_egg(char *s)
 [0-9]+	{ count(yytext); yylval.l=atoi(yytext); return CONST_INT; }
 [+-]=	{ count(yytext); yylval.str=strdup(yytext); return ASSIGN_OP; }
 "<<"	{ count(yytext); return SHIFT_LEFT; }
+">>"	{ count(yytext); return SHIFT_RIGHT; }
 "!="	{ count(yytext); return NE_TEST; }
 "<="	{ count(yytext); return LE_TEST; }
 ">="	{ count(yytext); return GE_TEST; }
