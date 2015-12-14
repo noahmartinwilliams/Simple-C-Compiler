@@ -99,18 +99,19 @@ file_entry:  function {
 	generate_global_vars(output, $1);
 } | function_header ';';
 
-arg_declaration: type IDENTIFIER {
+arg_declaration: type var_declaration_ident {
 	struct arguments_t *a=malloc(sizeof(struct arguments_t));
 	a->vars=calloc(1, sizeof(struct var_t*));
 	a->vars[0]=malloc(sizeof(struct var_t));
 	a->vars[0]->scope=1;
 	a->vars[0]->hidden=false;
-	a->vars[0]->name=$2;
+	a->vars[0]->name=strdup($2->attrs.list.statements[0]->attrs.var->name);
 	a->vars[0]->type=$1;
 	a->num_vars=1;
 	add_var(a->vars[0]);
 	$$=a;
 };
+
 function_header: type IDENTIFIER '(' ')' {
 	struct func_t *f=malloc(sizeof(struct func_t));
 	f->name=$2;
@@ -226,8 +227,6 @@ type: TYPE {
 	body->is_struct=true;
 	$$=type;
 
-} | type '*' {
-	$$=increase_type_depth($1, 1);
 };
 
 struct_var_declarations: type IDENTIFIER ';' {
