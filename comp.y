@@ -54,7 +54,9 @@ struct arguments_t {
 }
 %define parse.error verbose
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST 
-%token RET STRUCT WHILE GE_TEST LE_TEST STR_LITERAL SHIF_RIGHT
+%token RET STRUCT WHILE GE_TEST LE_TEST 
+%token <str> STR_LITERAL 
+%token SHIF_RIGHT EXTERN
 %token <type> TYPE
 %token <str> ASSIGN_OP
 %token <l> CONST_INT
@@ -95,7 +97,7 @@ file_entry:  function {
 	//free_all_types();
 } | var_declaration {
 	generate_global_vars(output, $1);
-};
+} | function_header ';';
 
 arg_declaration: type IDENTIFIER {
 	struct arguments_t *a=malloc(sizeof(struct arguments_t));
@@ -129,7 +131,10 @@ function_header: type IDENTIFIER '(' ')' {
 	add_func(f);
 	$$=f;
 	current_function=$2;
-}
+} | EXTERN function_header {
+	$2->attributes|=_extern;
+	$$=$2;
+};
 function: function_header '{' statement_list '}' {
 	$1->statement_list=$3;
 	$$=$1;
@@ -221,6 +226,8 @@ type: TYPE {
 	body->is_struct=true;
 	$$=type;
 
+} | type '*' {
+	$$=increase_type_depth($1, 1);
 };
 
 struct_var_declarations: type IDENTIFIER ';' {
@@ -291,7 +298,14 @@ noncomma_expression: CONST_INT {
 	e->type=e->attrs.function->ret_type;
 	$$=e;
 } | STR_LITERAL {
-	
+	/* TODO: add deallocation */
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->type=increase_type_depth(get_type_by_name("char"), 1);
+	e->kind=const_str;
+	e->right=NULL;
+	e->left=NULL;
+	e->attrs.cstr_val=generate_global_string(output, $1);
+	$$=e;
 };
 
 prefix_expr: '&' assignable_expr {

@@ -124,14 +124,19 @@ void start_call(FILE *fd, struct func_t *f)
 void add_argument(FILE *fd, struct reg_t *reg, struct type_t *t )
 {
 	/*TODO: Fix this to work better. */	
-	if (!strcmp(t->name, "int"))
-		if (reg->size==word_size)
-			fprintf(fd, "\tmovl %s, %%edi\n", get_reg_name(reg, word_size));
+	if (reg->size==word_size) {
+		fprintf(fd, "\tpushq %%rdi\n");
+		fprintf(fd, "\tmovl %s, %%edi\n", get_reg_name(reg, word_size));
+	} else if (reg->size==pointer_size) {
+		fprintf(fd, "\tpushq %%rdi\n");
+		fprintf(fd, "\tmovl %s, %%rdi\n", get_reg_name(reg, pointer_size));
+	}
 }
 
 void call(FILE *fd, struct func_t *f)
 {
 	fprintf(fd, "\tcall %s\n", f->name);
+	fprintf(fd, "\tpopq %%rdi\n");
 }
 
 void add_readonly_data(FILE *fd, struct expr_t *e)

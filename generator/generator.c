@@ -10,6 +10,10 @@
 #include "handle-funcs.h"
 #include "stack.h"
 
+char* generate_global_string(FILE *fd, char *str)
+{
+	return make_global_string(fd, str);
+}
 char* prepare_var_assignment(FILE *fd, struct expr_t *dest);
 
 void get_address(FILE *fd, struct expr_t *_var)
@@ -81,6 +85,8 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		}
 		fprintf(fd, "\t#)\n\t#)\n");
 		/*TODO: Figure out how to handle struct return values */
+	} else if (e->kind==const_str) {
+		load_global_string(fd, e->attrs.cstr_val);
 	}
 }
 
@@ -410,12 +416,7 @@ off_t get_var_offset(struct statem_t *s, off_t current_off)
 
 void generate_function(FILE *fd, struct func_t *f)
 {
-	if (!strcmp(f->name, "main")) {
-		in_main=true;
-		fprintf(fd, ".global _start\n.type _start, @function\n_start:\n");
-	} else {
-		fprintf(fd, ".globl %s\n.type %s, @function\n%s:\n", f->name, f->name, f->name);
-	}
+	fprintf(fd, "\t.text\n\t.globl %s\n\t.type %s, @function\n%s:\n", f->name, f->name, f->name);
 	fprintf(fd, "\tpushq %%rbp\n");
 	fprintf(fd, "\tmovq %%rsp, %%rbp\n");
 	off_t o=get_var_offset(f->statement_list, 0);
@@ -438,11 +439,7 @@ void generate_function(FILE *fd, struct func_t *f)
 	generate_statement(fd, f->statement_list);
 	fprintf(fd, "\tmovq %%rbp, %%rsp\n");
 	fprintf(fd, "\tpopq %%rbp\n");
-	if (strcmp(f->name, "main")) {
-		fprintf(fd, "\tmovq $0, %%rax\n\tret\n");
-	} else {
-		fprintf(fd, "\tmovq %%rax, %%rdi\n\tmovq $60, %%rax\n\tsyscall\n");
-	}
+	fprintf(fd, "\tmovq $0, %%rax\n\tleave\n\tret\n");
 
 	while (loop_stack!=NULL) {
 		struct stack_t *tmp=loop_stack->next;

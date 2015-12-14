@@ -24,7 +24,7 @@ struct type_t {
 	struct tbody_t *body;
 };
 struct expr_t {
-	enum { bin_op, pre_un_op, post_un_op, question, const_int, const_float, var, funccall, arg } kind;
+	enum { bin_op, pre_un_op, post_un_op, question, const_int, const_float, var, funccall, arg, const_str } kind;
 	struct expr_t *left, *right;
 	struct type_t *type;
 	union {
@@ -32,6 +32,7 @@ struct expr_t {
 		long int cint_val;
 		char *bin_op;
 		char *un_op;
+		char *cstr_val;
 		struct func_t *function;
 	} attrs;
 };
@@ -70,6 +71,7 @@ struct statem_t {
 
 struct func_t {
 	char *name;
+	enum { _extern } attributes;
 	struct statem_t *statement_list;
 	struct type_t *ret_type;
 	struct var_t **arguments;

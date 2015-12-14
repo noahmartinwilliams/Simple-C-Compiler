@@ -10,4 +10,5 @@ extern void generate_expression(FILE *fd, struct expr_t *e);
 extern void generate_function(FILE *fd, struct func_t *f);
 
 extern void generate_global_vars(FILE *fd, struct statem_t *s);
+extern char* generate_global_string(FILE *fd, char *str);
 #endif

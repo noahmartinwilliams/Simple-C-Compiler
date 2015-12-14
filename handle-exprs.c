@@ -20,6 +20,8 @@ void print_expr(char *pre, struct expr_t *e)
 		printf("%s()", e->attrs.function->name);
 	else if (e->kind==arg)
 		printf("argument: ");
+	else if (e->kind==const_str)
+		printf("string literal: %s", e->attrs.cstr_val);
 	printf(", type: %s, type_size: %ld, pointer_depth: %ld", e->type->name, e->type->body->size, e->type->pointer_depth);
 }
 
@@ -27,8 +29,12 @@ void free_expr(struct expr_t *e)
 {
 	if (e->kind==bin_op && e->attrs.bin_op!=NULL) 
 		free(e->attrs.bin_op);
+
 	else if (e->kind==pre_un_op || e->kind==post_un_op)
 		free(e->attrs.un_op);
+
+	else if (e->kind==const_str)
+		free(e->attrs.cstr_val);
 
 	if (e->left!=NULL)
 		free_expr(e->left);
