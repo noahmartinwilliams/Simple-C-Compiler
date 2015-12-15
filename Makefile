@@ -14,6 +14,9 @@ test: main
 	cp main tests/cc
 	$(MAKE) -C tests/ test
 
+test%: main
+	cp main tests/cc
+	$(MAKE) -C tests/ $@
 
 comp.tab.c include/comp.tab.h: comp.y
 	$(YACC) $^

@@ -296,6 +296,17 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		int_inc_by(fd, lhs, var);
 
 		fprintf(fd, "\t#)\n");
+	} else if (!strcmp(e->attrs.bin_op, "|")) {
+		fprintf(fd, "\t#(\n\t#(\n");
+		generate_expression(fd, e->right);
+		assign_reg(fd, ret, rhs);
+
+		fprintf(fd, "\t#)\n\t#|\n\t#(\n");
+		generate_expression(fd, e->left);
+		fprintf(fd, "\t#)\n");
+		or(fd, ret, rhs);
+		fprintf(fd, "\t#)\n");
+
 	}
 	free_register(fd, rhs);
 	free_register(fd, lhs);

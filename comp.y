@@ -56,7 +56,7 @@ struct arguments_t {
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST 
 %token RET STRUCT WHILE GE_TEST LE_TEST 
 %token <str> STR_LITERAL 
-%token SHIF_RIGHT EXTERN
+%token SHIF_RIGHT EXTERN 
 %token <type> TYPE
 %token <str> ASSIGN_OP
 %token <l> CONST_INT
@@ -84,6 +84,7 @@ struct arguments_t {
 %right '<' LE_TEST '>' GE_TEST EQ_TEST NE_TEST
 %left '+' '-'
 %left '*' '/'
+%left '|'
 %nonassoc IFX
 %nonassoc ELSE
 
@@ -385,6 +386,8 @@ binary_expr:  noncomma_expression '*' noncomma_expression {
 	$$=make_bin_op("<<", $1, $3);
 } | noncomma_expression SHIFT_RIGHT noncomma_expression {
 	$$=make_bin_op(">>", $1, $3);
+} | noncomma_expression '|' noncomma_expression {
+	$$=make_bin_op("|", $1, $3);
 };
 
 var_declaration_ident: IDENTIFIER { 

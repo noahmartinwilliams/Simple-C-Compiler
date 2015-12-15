@@ -6,4 +6,5 @@ extern void shift_left(FILE *fd, struct reg_t *src, struct reg_t *dest);
 
 
 extern void shift_right(FILE *fd, struct reg_t *src, struct reg_t *dest);
+extern void or(FILE *fd, struct reg_t *a, struct reg_t *b);
 #endif
