@@ -84,6 +84,7 @@ struct arguments_t {
 %right '<' LE_TEST '>' GE_TEST EQ_TEST NE_TEST
 %left '+' '-'
 %left '*' '/'
+%left '&'
 %left '|'
 %nonassoc IFX
 %nonassoc ELSE
@@ -388,6 +389,8 @@ binary_expr:  noncomma_expression '*' noncomma_expression {
 	$$=make_bin_op(">>", $1, $3);
 } | noncomma_expression '|' noncomma_expression {
 	$$=make_bin_op("|", $1, $3);
+} | noncomma_expression '&' noncomma_expression {
+	$$=make_bin_op("&", $1, $3);
 };
 
 var_declaration_ident: IDENTIFIER { 
