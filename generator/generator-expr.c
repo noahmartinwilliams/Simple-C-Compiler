@@ -31,7 +31,7 @@ void generate_expression(FILE *fd, struct expr_t *e)
 			call(fd, e->attrs.function);
 		} else {
 			struct expr_t *current_e=e->right;
-			struct reg_t *ret=get_ret_register(get_type_size(e->type));
+			struct reg_t *ret=get_ret_register(get_type_size(current_e->type));
 			while (current_e!=NULL) {
 				generate_expression(fd, current_e);
 				add_argument(fd, ret, current_e->type);

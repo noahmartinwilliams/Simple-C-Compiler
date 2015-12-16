@@ -17,6 +17,10 @@ struct type_t* get_type_by_name(char *name)
 
 size_t get_type_size(struct type_t *t)
 {
+	if (t==NULL || t->body==NULL) {
+		fprintf(stderr, "Internal Error: Null pointer passed to get_type_size\n");
+		exit(0);
+	}
 	if (t->pointer_depth>0)
 		return pointer_size;
 	else 

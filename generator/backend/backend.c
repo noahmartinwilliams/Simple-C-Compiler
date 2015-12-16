@@ -129,7 +129,10 @@ void add_argument(FILE *fd, struct reg_t *reg, struct type_t *t )
 		fprintf(fd, "\tmovl %s, %%edi\n", get_reg_name(reg, word_size));
 	} else if (reg->size==pointer_size) {
 		fprintf(fd, "\tpushq %%rdi\n");
-		fprintf(fd, "\tmovl %s, %%rdi\n", get_reg_name(reg, pointer_size));
+		fprintf(fd, "\tmovq %s, %%rdi\n", get_reg_name(reg, pointer_size));
+	} else {
+		fprintf(stderr, "Internal Error: unknown size %ld passed to add_argument.\n", reg->size);
+		exit(1);
 	}
 }
 

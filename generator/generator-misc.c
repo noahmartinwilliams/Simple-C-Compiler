@@ -33,7 +33,7 @@ void get_address(FILE *fd, struct expr_t *_var)
 
 void setup_types()
 {
-	num_types+=2;
+	num_types=3;
 	types=realloc(types, num_types*sizeof(struct type_t*));
 	types[num_types-1]=malloc(sizeof(struct type_t));
 	struct type_t *i=types[num_types-1];
@@ -49,6 +49,14 @@ void setup_types()
 	i->pointer_depth=0;
 	i->body=malloc(sizeof(struct tbody_t));
 	i->body->size=char_size;
+	i->body->is_struct=false;
+
+	types[num_types-3]=malloc(sizeof(struct type_t));
+	i=types[num_types-3];
+	i->name=strdup("void");
+	i->pointer_depth=0;
+	i->body=malloc(sizeof(struct tbody_t));
+	i->body->size=0;
 	i->body->is_struct=false;
 }
 
