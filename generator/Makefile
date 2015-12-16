@@ -1,7 +1,7 @@
 INCLUDE=../include
 include ../include/config.mk
 
-../generator.a: backend.a generator.o generator-globals.o 
+../generator.a: backend.a generator-misc.o generator-globals.o  generator-expr.o
 	$(AR) 
 
 backend.a: backend/*
