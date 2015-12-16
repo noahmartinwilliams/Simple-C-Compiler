@@ -31,6 +31,7 @@ static inline void haiku_easter_egg(char *s)
 %%
 \"(\\\\|[^"\\])*\"	{ count(yytext); yylval.str=strdup(yytext); return STR_LITERAL; }
 '.'	{ count(yytext); yylval.chr=yytext[1]; return CHAR_LITERAL; }
+"goto"	{ count(yytext); return GOTO; }
 "extern"	{ count(yytext); return EXTERN; }
 "return"	{ count(yytext); return RET; }
 "if"	{ count(yytext); return IF; }
@@ -62,6 +63,7 @@ static inline void haiku_easter_egg(char *s)
 "{"	{ scope++; count(yytext); return '{'; }
 "}"	{ hide_current_scope(); scope--; count(yytext); return '}'; }
 ","	{ count(yytext); return ','; }
+":"	{ count(yytext); return ':'; }
 "&"	{ count(yytext); return '&'; }
 [ \t\n]	{ count(yytext); }
 [_a-zA-Z][_a-zA-Z0-9]*	{ count(yytext); haiku_easter_egg(yytext); if (get_type_by_name(yytext)==NULL) { yylval.str=strdup(yytext); return IDENTIFIER ; } else { yylval.type=get_type_by_name(yytext); return TYPE; } }

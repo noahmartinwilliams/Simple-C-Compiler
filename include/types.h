@@ -46,10 +46,12 @@ struct var_t {
 };
 
 struct statem_t {
-	enum { expr, list, declare, _while, ret, _if, _break, _continue } kind;
+	enum { expr, list, declare, _while, ret, _if, _break, _continue, label, _goto } kind;
 	union {
+		char *label_name;
 		struct expr_t *expr;
 		struct var_t *var;
+
 		struct {
 			struct statem_t **statements;
 			int num;

@@ -66,10 +66,6 @@ void setup_generator()
 	setup_registers();
 }
 
-
-
-
-
 void generate_statement(FILE *fd, struct statem_t *s)
 {
 	if (s->kind==expr) {
@@ -136,7 +132,9 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		compare_register_to_int(fd, ret, 0);
 		jmp_eq(fd, loop_end);
 		fprintf(fd, "\t#) {\n");
+
 		generate_statement(fd, s->attrs._while.block);
+
 		jmp(fd, loop_start);
 		fprintf(fd, "\t#}\n");
 		place_label(fd, loop_end);
@@ -160,6 +158,14 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		jmp(fd, jump_to);
 		free(jump_to);
 		push(loop_stack, n);
+	} else if (s->kind==_goto) {
+		fprintf(fd, "\t#goto %s;\n", s->attrs.label_name);
+
+		jmp(fd, s->attrs.label_name);
+	} else if (s->kind==label) {
+		fprintf(fd, "\t#%s: \n", s->attrs.label_name);
+
+		place_label(fd, s->attrs.label_name);
 	}
 }
 

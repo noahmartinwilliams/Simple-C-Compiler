@@ -21,6 +21,7 @@ FILE *output;
 
 static inline struct expr_t* make_bin_op(char *X, struct expr_t *Y, struct expr_t *Z)
 {
+	/* TODO: Make sure that integers added to pointers get multiplied by the size of the pointer base type */
 	struct expr_t *e=malloc(sizeof(struct expr_t)); 
 	struct expr_t *a=Y, *b=Z;
 	parser_type_cmp(&a, &b);
@@ -56,7 +57,7 @@ struct arguments_t {
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST 
 %token RET STRUCT WHILE GE_TEST LE_TEST 
 %token <str> STR_LITERAL 
-%token SHIF_RIGHT EXTERN 
+%token SHIF_RIGHT EXTERN GOTO
 %token <type> TYPE
 %token <str> ASSIGN_OP
 %token <l> CONST_INT
@@ -183,7 +184,19 @@ statement: expression ';' {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=_continue;
 	$$=s;
-}; 
+} | IDENTIFIER ':' {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=label;
+	s->attrs.label_name=strdup($1);
+	free($1);
+	$$=s;
+} | GOTO IDENTIFIER ';' {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=_goto;
+	s->attrs.label_name=strdup($2);
+	free($2);
+	$$=s;
+};
 
 statement_list: statement { 
 	struct statem_t *s=malloc(sizeof(struct statem_t));
