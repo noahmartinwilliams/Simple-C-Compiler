@@ -57,7 +57,7 @@ struct arguments_t {
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST 
 %token RET STRUCT WHILE GE_TEST LE_TEST 
 %token <str> STR_LITERAL 
-%token SHIF_RIGHT EXTERN GOTO TEST_OR
+%token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND
 %token <type> TYPE
 %token <str> ASSIGN_OP
 %token <l> CONST_INT
@@ -88,6 +88,7 @@ struct arguments_t {
 %left '&'
 %left '^'
 %left '|'
+%left TEST_AND
 %left TEST_OR
 %nonassoc IFX
 %nonassoc ELSE
@@ -410,6 +411,8 @@ binary_expr:  noncomma_expression '*' noncomma_expression {
 	$$=make_bin_op("^", $1, $3);
 } | noncomma_expression TEST_OR noncomma_expression {
 	$$=make_bin_op("||", $1, $3);
+} | noncomma_expression TEST_AND noncomma_expression {
+	$$=make_bin_op("&&", $1, $3);
 };
 
 var_declaration_ident: IDENTIFIER { 
@@ -529,7 +532,7 @@ void yyerror(const char *s)
 int main(int argc, char *argv[])
 {
 	if (argc<2) {
-		fprintf(stderr, "Usage: %s output_file.s\n", argv[0]);
+		fprintf(stderr, "Usage: output_file.s %s\n", argv[0]);
 		exit(1);
 	}
 	current_file=argv[2];

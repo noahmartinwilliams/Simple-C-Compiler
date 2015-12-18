@@ -189,26 +189,29 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		generate_expression(fd, e->right);
 
 		place_comment(fd, ")");
-		if (!strcmp(e->attrs.bin_op, "+"))
+		char *c=e->attrs.bin_op;
+		if (!strcmp(c, "+"))
 			int_add(fd, lhs, ret);
-		else if (!strcmp(e->attrs.bin_op, "-")) 
+		else if (!strcmp(c, "-")) 
 			int_sub(fd, lhs, ret);
-		else if (!strcmp(e->attrs.bin_op, "/"))
+		else if (!strcmp(c, "/"))
 			int_div(fd, lhs, ret);
-		else if (!strcmp(e->attrs.bin_op, "*"))
+		else if (!strcmp(c, "*"))
 			int_mul(fd, lhs, ret);
-		else if (!strcmp(e->attrs.bin_op, "<<"))
+		else if (!strcmp(c, "<<"))
 			shift_left(fd, lhs, ret);
-		else if (!strcmp(e->attrs.bin_op, ">>"))
+		else if (!strcmp(c, ">>"))
 			shift_right(fd, lhs, ret);
-		else if (!strcmp(e->attrs.bin_op, "|"))
+		else if (!strcmp(c, "|"))
 			or(fd, lhs, ret);
-		else if (!strcmp(e->attrs.bin_op, "&"))
+		else if (!strcmp(c, "&"))
 			and(fd, lhs, ret);
-		else if (!strcmp(e->attrs.bin_op, "^"))
+		else if (!strcmp(c, "^"))
 			xor(fd, lhs, ret);
-		else if (!strcmp(e->attrs.bin_op, "||"))
+		else if (!strcmp(c, "||"))
 			test_or(fd, lhs, ret);
+		else if (!strcmp(c, "&&"))
+			test_and(fd, lhs, ret);
 		place_comment(fd, ")");
 	}
 	free_register(fd, rhs);

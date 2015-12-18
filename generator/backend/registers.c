@@ -62,6 +62,10 @@ char* get_reg_name(struct reg_t *reg, size_t size)
 	}
 }
 
+char* reg_name(struct reg_t *a)
+{
+	return get_reg_name(a, a->size);
+}
 void free_reg_size(struct reg_size a) 
 {
 	free(a.name);

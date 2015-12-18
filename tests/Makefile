@@ -9,7 +9,7 @@ test%: source-test%.c cc
 	$(CC) $@-output.s $<
 	as $@-output.s -o output.o
 	gcc output.o -o $@
-	./tester.sh $@
+	./run-test.sh $@
 
 clean:
 	rm test* 2>/dev/null || true

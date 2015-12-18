@@ -24,11 +24,11 @@ void int_add(FILE *fd, struct reg_t *a, struct reg_t *b)
 void int_inc_by(FILE *fd, struct reg_t *a, char *dest)
 {
 	if (a->size==char_size)
-		fprintf(fd, "\taddb %s, %s\n", get_reg_name(a, a->size), dest);
+		fprintf(fd, "\taddb %s, %s\n", reg_name(a), dest);
 	else if (a->size==word_size)
-		fprintf(fd, "\taddl %s, %s\n", get_reg_name(a, a->size), dest);
+		fprintf(fd, "\taddl %s, %s\n", reg_name(a), dest);
 	else if (a->size==pointer_size)
-		fprintf(fd, "\taddq %s, %s\n", get_reg_name(a, a->size), dest);
+		fprintf(fd, "\taddq %s, %s\n", reg_name(a), dest);
 
 }
 
@@ -45,14 +45,14 @@ void inc_by_int(FILE *fd, int i, char *dest, size_t size)
 void int_sub(FILE *fd, struct reg_t *b, struct reg_t *a)
 {
 	if (a->size==char_size) {
-		fprintf(fd, "\tsubb %s, %s\n", get_reg_name(a, a->size), get_reg_name(b, b->size));
-		fprintf(fd, "\tmovb %s, %%al\n", get_reg_name(b, b->size));
+		fprintf(fd, "\tsubb %s, %s\n", reg_name(a), reg_name(b));
+		fprintf(fd, "\tmovb %s, %%al\n", reg_name(b));
 	} else if (a->size==word_size) {
-		fprintf(fd, "\tsubl %s, %s\n", get_reg_name(a, a->size), get_reg_name(b, b->size));
-		fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(b, b->size));
+		fprintf(fd, "\tsubl %s, %s\n", reg_name(a), reg_name(b));
+		fprintf(fd, "\tmovl %s, %%eax\n", reg_name(b));
 	} else if (a->size==pointer_size) {
-		fprintf(fd, "\tsubq %s, %s\n", get_reg_name(a, a->size), get_reg_name(b, b->size));
-		fprintf(fd, "\tmovq %s, %%rax\n", get_reg_name(b, b->size));
+		fprintf(fd, "\tsubq %s, %s\n", reg_name(a), reg_name(b));
+		fprintf(fd, "\tmovq %s, %%rax\n", reg_name(b));
 	}
 }
 
@@ -63,7 +63,7 @@ void int_div(FILE *fd, struct reg_t *a, struct reg_t *b)
 	DX:AX is the numerator, and the argument is the denominator.
 	This code has to be complicated to deal with that nonsense. */
 	if (b->use!=RET && a->use!=RET)
-		fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(a, a->size));
+		fprintf(fd, "\tmovl %s, %%eax\n", reg_name(a));
 	else if (b->use==RET) {
 		fprintf(fd, "\tpushq %%rbx\n");
 		fprintf(fd, "\tmovl %%eax, %%ebx\n");
@@ -73,7 +73,7 @@ void int_div(FILE *fd, struct reg_t *a, struct reg_t *b)
 		fprintf(fd, "\tpopq %%rbx\n");
 	} else {
 		fprintf(fd, "\tcltd\n");
-		fprintf(fd, "\tidivl %s\n", get_reg_name(b, b->size));
+		fprintf(fd, "\tidivl %s\n", reg_name(b));
 	}
 
 	/* TBH I don't even know what this means. I just copied this
@@ -86,15 +86,15 @@ void int_mul(FILE *fd, struct reg_t *a, struct reg_t *b)
 
 	if (a->size==word_size) {
 		if (b->use!=RET && a->use==RET)
-			fprintf(fd, "\tmull %s\n", get_reg_name(b, b->size));
+			fprintf(fd, "\tmull %s\n", reg_name(b));
 		else if (b->use==RET && a->use!=RET)
-			fprintf(fd, "\tmull %s\n", get_reg_name(a, a->size));
+			fprintf(fd, "\tmull %s\n", reg_name(a));
 		else if (b->use!=RET && a->use!=RET) {
-			fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(b, b->size));
-			fprintf(fd, "\tmull %s\n", get_reg_name(a, a->size));
-			fprintf(fd, "\tmovl %%eax, %s\n", get_reg_name(b, b->size));
+			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(b));
+			fprintf(fd, "\tmull %s\n", reg_name(a));
+			fprintf(fd, "\tmovl %%eax, %s\n", reg_name(b));
 		}
 	} else if (a->size==pointer_size)
-		fprintf(fd, "\tmulq %s\n", get_reg_name(b, b->size));
+		fprintf(fd, "\tmulq %s\n", reg_name(b));
 
 }
