@@ -51,44 +51,46 @@ bool evaluate_constant_expr(char *op, struct expr_t *a, struct expr_t *b, struct
 		e->kind=const_int;
 		e->left=NULL;
 		e->right=NULL;
+		long int c=a->attrs.cint_val, d=a->attrs.cint_val, f=0;
 		if (!strcmp(op, "+")) {
-			e->attrs.cint_val=a->attrs.cint_val+b->attrs.cint_val;
+			f=c+d;
 		} else if (!strcmp(op, "-")) {
-			e->attrs.cint_val=a->attrs.cint_val-b->attrs.cint_val;
+			f=c-d;
 		} else if (!strcmp(op, "/")) {
-			e->attrs.cint_val=a->attrs.cint_val/b->attrs.cint_val;
+			f=c/d;
 			/* NOTE: This might cause problems in the future if
 			it's cross-compiling, and the target architecture
 			handles integer rounding differently */
 		} else if (!strcmp(op, "*")) {
-			e->attrs.cint_val=a->attrs.cint_val*b->attrs.cint_val;
+			f=c*d;
 		} else if (!strcmp(op, "==")) {
-			e->attrs.cint_val=a->attrs.cint_val==b->attrs.cint_val;
+			f=c==d;
 		} else if (!strcmp(op, "<")) {
-			e->attrs.cint_val=a->attrs.cint_val<b->attrs.cint_val;
+			f=c<d;
 		} else if (!strcmp(op, ">")) {
-			e->attrs.cint_val=a->attrs.cint_val>b->attrs.cint_val;
+			f=c>d;
 		} else if (!strcmp(op, "!=")) {
-			e->attrs.cint_val=a->attrs.cint_val!=b->attrs.cint_val;
+			f=c!=d;
 		} else if (!strcmp(op, ">=")) {
-			e->attrs.cint_val=a->attrs.cint_val>=b->attrs.cint_val;
+			f=c>=d;
 		} else if (!strcmp(op, "<=")) {
-			e->attrs.cint_val=a->attrs.cint_val<=b->attrs.cint_val;
+			f=c<=d;
 		} else if (!strcmp(op, "<<")) {
-			e->attrs.cint_val=a->attrs.cint_val<<b->attrs.cint_val;
+			f=c<<d;
 		} else if (!strcmp(op, ">>")) {
-			e->attrs.cint_val=a->attrs.cint_val>>b->attrs.cint_val;
+			f=c>>d;
 		} else if (!strcmp(op, "|")) {
-			e->attrs.cint_val=a->attrs.cint_val|b->attrs.cint_val;
+			f=c|d;
 		} else if (!strcmp(op, "&")) {
-			e->attrs.cint_val=a->attrs.cint_val&b->attrs.cint_val;
+			f=c&d;
 		} else if (!strcmp(op, "^")) {
-			e->attrs.cint_val=a->attrs.cint_val^b->attrs.cint_val;
+			f=c^d;
 		} else if (!strcmp(op, "||")) {
-			e->attrs.cint_val=a->attrs.cint_val||b->attrs.cint_val;
+			f=c||d;
 		} else if (!strcmp(op, "&&")) {
-			e->attrs.cint_val=a->attrs.cint_val&&b->attrs.cint_val;
+			f=c&&d;
 		}
+		e->attrs.cint_val=f;
 		free_expr(a);
 		free_expr(b);
 		return true;

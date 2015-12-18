@@ -12,11 +12,11 @@ handle.a: handle-types.o handle-exprs.o handle-statems.o  handle-funcs.o handle-
 
 test: main
 	cp main tests/cc
-	$(MAKE) -C tests/ test
+	$(MAKE) -s -C tests/ test
 
 test%: main
 	cp main tests/cc
-	$(MAKE) -C tests/ $@
+	$(MAKE) -s -C tests/ $@
 
 comp.tab.c include/comp.tab.h: comp.y
 	$(YACC) $^

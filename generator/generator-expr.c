@@ -52,7 +52,13 @@ void generate_expression(FILE *fd, struct expr_t *e)
 void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 {
 	depth++;
-	struct reg_t *ret=get_ret_register(pointer_size);
+	size_t s=0;
+	if (e->type==NULL)
+		s=word_size;
+	else
+		s=get_type_size(e->right->type);
+
+	struct reg_t *ret=get_ret_register(s);
 	if (!strcmp(e->attrs.un_op, "&")) {
 		place_comment(fd, "(");
 		place_comment(fd, "&");
@@ -67,6 +73,18 @@ void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 		generate_expression(fd, e->right);
 		place_comment(fd, ")");
 		dereference(fd, ret, pointer_size);
+		place_comment(fd, ")");
+	} else if (!strcmp(e->attrs.un_op, "!")) {
+		place_comment(fd, "(");
+		place_comment(fd, "!");
+		place_comment(fd, "(");
+
+		generate_expression(fd, e->right);
+		
+		place_comment(fd, ")");
+
+		test_invert(fd, ret);
+
 		place_comment(fd, ")");
 	}
 	depth--;

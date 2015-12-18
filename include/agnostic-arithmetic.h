@@ -11,4 +11,5 @@ extern void and(FILE *fd, struct reg_t *a, struct reg_t *b);
 extern void xor(FILE *fd, struct reg_t *a, struct reg_t *b);
 extern void test_or(FILE *fd, struct reg_t *a, struct reg_t *b);
 extern void test_and(FILE *fd, struct reg_t *a, struct reg_t *b);
+extern void test_invert(FILE *fd, struct reg_t *r);
 #endif

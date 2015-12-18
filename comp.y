@@ -80,11 +80,12 @@ struct arguments_t {
 %type <func> function_header
 %type <expr> call_arg_list
 
+%right '!'
 %right '=' ASSIGN_OP
-%right SHIFT_LEFT SHIFT_RIGHT
-%right '<' LE_TEST '>' GE_TEST EQ_TEST NE_TEST
-%left '+' '-'
 %left '*' '/'
+%left '+' '-'
+%left SHIFT_LEFT SHIFT_RIGHT
+%left '<' LE_TEST '>' GE_TEST EQ_TEST NE_TEST
 %left '&'
 %left '^'
 %left '|'
@@ -340,6 +341,14 @@ prefix_expr: '&' assignable_expr {
 	e->left=NULL;
 	e->right=NULL;
 	e->attrs.cint_val=(long int) $1;
+	$$=e;
+} | '!' noncomma_expression {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=pre_un_op;
+	e->attrs.un_op=strdup("!");
+	e->right=$2;
+	e->left=NULL;
+	e->type=$2->type;
 	$$=e;
 };
 

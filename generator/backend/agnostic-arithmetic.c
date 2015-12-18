@@ -106,3 +106,24 @@ void test_and(FILE *fd, struct reg_t *a, struct reg_t *b)
 
 	}
 }
+
+void test_invert(FILE *fd, struct reg_t *r)
+{
+	unique_num++;
+	if (r->size==word_size) {
+		fprintf(fd, "\tcmpl $0, %s\n", reg_name(r));
+		fprintf(fd, "\tje invert$%d$false\n", unique_num);
+
+
+		fprintf(fd, "\tmovl $0, %s\n", reg_name(r));
+		if (r->use!=RET)
+			fprintf(fd, "\tmovl $0, %%eax\n");
+
+		fprintf(fd, "\tjmp invert$%d$true\n", unique_num);
+		fprintf(fd, "\tinvert$%d$false:\n", unique_num);
+		fprintf(fd, "\tmovl $1, %s\n", reg_name(r));
+		if (r->use!=RET)
+			fprintf(fd, "\tmovl $1, %%eax\n");
+		fprintf(fd, "\tinvert$%d$true:\n", unique_num);
+	}
+}

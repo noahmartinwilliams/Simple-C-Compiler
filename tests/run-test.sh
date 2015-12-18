@@ -27,7 +27,7 @@ then
 	fi
 else
 	tput setaf 1
-	echo -n "$1 failed"
+	echo "[$1 failed]"
 	tput sgr0
 	
 	exit 1;

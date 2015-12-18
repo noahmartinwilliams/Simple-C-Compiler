@@ -1,6 +1,16 @@
 *-plan
+*-plans
 output.s
 comp.output
 experiments/*
 tests/output
 challenges
+plan-*
+how-it-works
+*-notes
+problems
+note-*
+variables
+awesome-ideas
+opcodes
+yacc-parts
