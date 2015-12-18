@@ -1,7 +1,7 @@
 CC=./cc
 
 test: 
-	ls source-test*.c | while read NAME; do N=$$(echo $$NAME | sed 's/source-\(.*\)\.c/\1/g'); make $$N; done
+	ls source-test*.c | while read NAME; do N=$$(echo $$NAME | sed 's/source-\(.*\)\.c/\1/g'); make $$N || exit 1; done || exit 1;
 	echo "done"
 
 
@@ -9,8 +9,7 @@ test%: source-test%.c cc
 	$(CC) $@-output.s $<
 	as $@-output.s -o output.o
 	gcc output.o -o $@
-	[ -f ./wrapper-$@ ] && ( ./wrapper-$@ && (tput setaf 2; echo "[$@ passed]";  tput sgr0; ) || (tput setaf 1; echo "[$@ failed]"; tput sgr0; ) ) \
-	|| ( ./$@ && (tput setaf 2; echo "[$@ passed]";  tput sgr0; ) || (tput setaf 1; echo "[$@ failed]"; tput sgr0; )  )
+	./tester.sh $@
 
 clean:
 	rm test* 2>/dev/null || true

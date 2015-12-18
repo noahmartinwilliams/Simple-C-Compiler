@@ -25,7 +25,9 @@ void generate_expression(FILE *fd, struct expr_t *e)
 	} else if (e->kind==pre_un_op) {
 		generate_pre_unary_expression(fd, e);
 	} else if (e->kind==funccall) {
-		fprintf(fd, "\t#(\n\t#%s(\n", e->attrs.function->name);
+		place_comment(fd, "(");
+		place_comment(fd, e->attrs.function->name);
+		place_comment(fd, "(");
 		start_call(fd, e->attrs.function);
 		if (e->attrs.function->num_arguments==0) {
 			call(fd, e->attrs.function);
@@ -39,7 +41,8 @@ void generate_expression(FILE *fd, struct expr_t *e)
 			}
 			call(fd, e->attrs.function);
 		}
-		fprintf(fd, "\t#)\n\t#)\n");
+		place_comment(fd, ")");
+		place_comment(fd, ")");
 		/*TODO: Figure out how to handle struct return values */
 	} else if (e->kind==const_str) {
 		load_global_string(fd, e->attrs.cstr_val);
@@ -51,13 +54,20 @@ void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 	depth++;
 	struct reg_t *ret=get_ret_register(pointer_size);
 	if (!strcmp(e->attrs.un_op, "&")) {
+		place_comment(fd, "(");
+		place_comment(fd, "&");
+		place_comment(fd, "(");
 		get_address(fd, e->right);
+		place_comment(fd, ")");
+		place_comment(fd, ")");
 	} else if (!strcmp(e->attrs.un_op, "*")) {
-		fprintf(fd, "\t#(\n\t#*\n\t#(\n");
+		place_comment(fd, "(");
+		place_comment(fd, "*");
+		place_comment(fd, "(");
 		generate_expression(fd, e->right);
-		fprintf(fd, "\t#)\n");
+		place_comment(fd, ")");
 		dereference(fd, ret, pointer_size);
-		fprintf(fd, "\t#)\n");
+		place_comment(fd, ")");
 	}
 	depth--;
 }
@@ -67,14 +77,17 @@ static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*co
 {
 	struct reg_t *ret=get_ret_register(e->type->body->size);
 
-	fprintf(fd, "\t#(\n\t#(\n");
+	place_comment(fd, "(");
+	place_comment(fd, "(");
 	generate_expression(fd, e->left);
 	assign_reg(fd, ret, lhs);
 
-	fprintf(fd, "\t#)\n\t#%s\n\t#(\n", e->attrs.bin_op);
+	place_comment(fd, ")");
+	place_comment(fd, e->attrs.bin_op);
+	place_comment(fd, "(");
 
 	generate_expression(fd, e->right);
-	fprintf(fd, "\t#)\n");
+	place_comment(fd, ")");
 	compare_registers(fd, ret, lhs);
 
 	unique_num++;
@@ -90,7 +103,7 @@ static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*co
 	assign_constant_int(fd, 1);
 	place_label(fd, is_false);
 
-	fprintf(fd, "\t#)\n");
+	place_comment(fd, ")");
 
 	free(is_true);
 	free(is_false);
@@ -104,89 +117,7 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 	struct reg_t *lhs=get_free_register(fd, get_type_size(e->type));
 	struct reg_t *rhs=get_free_register(fd, get_type_size(e->type));
 
-	if (!strcmp(e->attrs.bin_op, "+")) {
-		fprintf(fd, "\t#(\n\t#(\n");
-
-		generate_expression(fd, e->left);
-		assign_reg(fd, ret, lhs);
-
-		fprintf(fd, "\t#)\n\t#+\n\t#(\n");
-
-		generate_expression(fd, e->right);
-
-		assign_reg(fd, ret, rhs);
-		fprintf(fd, "\t#)\n");
-
-		int_add(fd, lhs, rhs);
-
-		fprintf(fd, "\t#)\n");
-	} else if (!strcmp(e->attrs.bin_op, "=")) {
-		fprintf(fd, "\t#Note: lhs, and rhs of assignment is swapped\n");
-		fprintf(fd, "\t#(\n\t#(\n");
-
-		generate_expression(fd, e->right);
-
-		assign_reg(fd, ret, lhs);
-		fprintf(fd, "\t#)\n\t#=\n\t#(\n");
-		/* TODO: figure out a good way to abstract away the direct use
-		 * of the mov command here. Printing opcodes is for handle-registers.c */
-		 if (e->kind==pre_un_op && !strcmp(e->attrs.un_op, "*")) {
-			generate_expression(fd, e->right);
-			assign_dereference(fd, lhs, ret);
-		 } else if (e->left->kind==var) {
-			assign_var(fd, lhs, e->left->attrs.var);
-		 }
-		fprintf(fd, "\t#)\n\t#)\n");
-	} else if (!strcmp(e->attrs.bin_op, "-")) {
-		fprintf(fd, "\t#(\n\t#(\n");
-
-		generate_expression(fd, e->right);
-		assign_reg(fd, ret, rhs);
-
-		fprintf(fd, "\t#)\n\t#-\n\t#(\n");
-
-		generate_expression(fd, e->left);
-		assign_reg(fd, ret, lhs);
-
-		fprintf(fd, "\t#)\n");
-
-		int_sub(fd, rhs, lhs);
-
-		fprintf(fd, "\t#)\n");
-	} else if (!strcmp(e->attrs.bin_op, "/")) {
-		fprintf(fd, "\t#(\n\t#(\n");
-
-		generate_expression(fd, e->left);
-		assign_reg(fd, ret, lhs);
-
-		fprintf(fd, "\t#)\n\t#/\n\t#(\n");
-
-		generate_expression(fd, e->right);
-		assign_reg(fd, ret, rhs);
-
-		fprintf(fd, "\t#)\n");
-
-		int_div(fd, lhs, rhs);
-
-		fprintf(fd, "\t#)\n");
-
-	} else if (!strcmp(e->attrs.bin_op, "*")) {
-		fprintf(fd, "\t#(\n\t#(\n");
-
-		generate_expression(fd, e->left);
-		assign_reg(fd, ret, lhs);
-
-		fprintf(fd, "\t#)\n\t#*\n\t#(\n");
-
-		generate_expression(fd, e->right);
-
-		fprintf(fd, "\t#)\n");
-
-		int_mul(fd, ret, lhs);
-
-		fprintf(fd, "\t#)\n");
-
-	} else if (!strcmp(e->attrs.bin_op, "==")) {
+	if (!strcmp(e->attrs.bin_op, "==")) {
 		generate_comparison_expression(fd, e, jmp_eq, "is$eq$%d", "is$not$eq$%d", lhs);
 
 	} else if (!strcmp(e->attrs.bin_op, "<")) {
@@ -204,96 +135,81 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 	} else if (!strcmp(e->attrs.bin_op, "<=")) {
 		generate_comparison_expression(fd, e, jmp_le, "is$le$%d", "is$gt$%d", lhs);
 
-	} else if (!strcmp(e->attrs.bin_op, "<<")) {
-
-		fprintf(fd, "\t#(\n\t#(\n");
-
-		generate_expression(fd, e->left);
-		assign_reg(fd, ret, lhs);
-
-		fprintf(fd, "\t#)\n\t#<<\n\t#(\n");
+	} else if (!strcmp(e->attrs.bin_op, "=")) {
+		place_comment(fd, "Note: lhs, and rhs of assignment is swapped");
+		place_comment(fd, "(");
+		place_comment(fd, "(");
 
 		generate_expression(fd, e->right);
-		assign_reg(fd, ret, rhs);
 
-		fprintf(fd, "\t#)\n");
-		shift_left(fd, lhs, rhs);
-
-		fprintf(fd, "\t#)\n");
-
-	} else if (!strcmp(e->attrs.bin_op, ">>")) {
-
-		fprintf(fd, "\t#(\n\t#(\n");
-
-		generate_expression(fd, e->left);
 		assign_reg(fd, ret, lhs);
-
-		fprintf(fd, "\t#)\n\t#>>\n\t#(\n");
-
-		generate_expression(fd, e->right);
-		assign_reg(fd, ret, rhs);
-
-		fprintf(fd, "\t#)\n");
-		shift_right(fd, lhs, rhs);
-
-		fprintf(fd, "\t#)\n");
-
+		place_comment(fd, ")");
+		place_comment(fd, "=");
+		place_comment(fd, ")");
+		/* TODO: figure out a good way to abstract away the direct use
+		 * of the mov command here. Printing opcodes is for handle-registers.c */
+		 if (e->kind==pre_un_op && !strcmp(e->attrs.un_op, "*")) {
+			generate_expression(fd, e->right);
+			assign_dereference(fd, lhs, ret);
+		 } else if (e->left->kind==var) {
+			assign_var(fd, lhs, e->left->attrs.var);
+		 }
+		place_comment(fd, ")");
+		place_comment(fd, ")");
 	} else if (!strcmp(e->attrs.bin_op, "+=")) {
-		fprintf(fd, "\t#Note: lhs, and rhs of assignment is swapped\n");
-		fprintf(fd, "\t#(\n\t#(\n");
+		place_comment(fd, "Note: lhs, and rhs of assignment is swapped");
+		place_comment(fd, "(");
+		place_comment(fd, "(");
 
 		generate_expression(fd, e->right);
 		assign_reg(fd, ret, lhs);
 
-		fprintf(fd, "\t#)\n\t#+=\n\t#(\n");
+		place_comment(fd, ")");
+		place_comment(fd, "+=");
+		place_comment(fd, "(");
 
 		char *var=prepare_var_assignment(fd, e->left);
 
-		fprintf(fd, "\t#)\n");
+		place_comment(fd, ")");
 
 		int_inc_by(fd, lhs, var);
 
-		fprintf(fd, "\t#)\n");
-	} else if (!strcmp(e->attrs.bin_op, "|")) {
-		fprintf(fd, "\t#(\n\t#(\n");
-		generate_expression(fd, e->right);
-		assign_reg(fd, ret, rhs);
-		fprintf(fd, "\t#)\n\t#|\n\t#(\n");
+		place_comment(fd, ")");
+	} else { 
+		place_comment(fd, "(");
+		place_comment(fd, "(");
 
 		generate_expression(fd, e->left);
+		assign_reg(fd, ret, lhs);
 
-		fprintf(fd, "\t#)\n");
+		place_comment(fd, ")");
+		place_comment(fd, e->attrs.bin_op);
+		place_comment(fd, "(");
 
-		or(fd, ret, rhs);
-		fprintf(fd, "\t#)\n");
-
-	} else if (!strcmp(e->attrs.bin_op, "&")) {
-		fprintf(fd, "\t#(\n\t#(\n");
 		generate_expression(fd, e->right);
-		assign_reg(fd, ret, rhs);
 
-		fprintf(fd, "\t#)\n\t#&\n\t#(\n");
-
-		generate_expression(fd, e->left);
-
-		fprintf(fd, "\t#)\n");
-
-		and(fd, ret, rhs);
-		fprintf(fd, "\t#)\n");
-
-	} else if (!strcmp(e->attrs.bin_op, "^")) {
-		fprintf(fd, "\t#(\n\t#(\n");
-		generate_expression(fd, e->right);
-		assign_reg(fd, ret, rhs);
-
-		fprintf(fd, "\t#)\n\t#^\n\t#(\n");
-
-		generate_expression(fd, e->left);
-
-		fprintf(fd, "\t#)\n");
-
-		xor(fd, ret, rhs);
-		fprintf(fd, "\t#)\n");
+		place_comment(fd, ")");
+		if (!strcmp(e->attrs.bin_op, "+"))
+			int_add(fd, lhs, ret);
+		else if (!strcmp(e->attrs.bin_op, "-")) 
+			int_sub(fd, lhs, ret);
+		else if (!strcmp(e->attrs.bin_op, "/"))
+			int_div(fd, lhs, ret);
+		else if (!strcmp(e->attrs.bin_op, "*"))
+			int_mul(fd, lhs, ret);
+		else if (!strcmp(e->attrs.bin_op, "<<"))
+			shift_left(fd, lhs, ret);
+		else if (!strcmp(e->attrs.bin_op, ">>"))
+			shift_right(fd, lhs, ret);
+		else if (!strcmp(e->attrs.bin_op, "|"))
+			or(fd, lhs, ret);
+		else if (!strcmp(e->attrs.bin_op, "&"))
+			and(fd, lhs, ret);
+		else if (!strcmp(e->attrs.bin_op, "^"))
+			xor(fd, lhs, ret);
+		else if (!strcmp(e->attrs.bin_op, "||"))
+			test_or(fd, lhs, ret);
+		place_comment(fd, ")");
 	}
 	free_register(fd, rhs);
 	free_register(fd, lhs);

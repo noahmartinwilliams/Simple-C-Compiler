@@ -14,6 +14,12 @@ void backend_make_global_var(FILE *fd, struct var_t *v)
 	fprintf(fd, "\t.comm %s, %d, %d\n", v->name, get_type_size(v->type), get_type_size(v->type));
 
 }
+
+void place_comment(FILE *fd, char *str)
+{
+	fprintf(fd, "\t#%s\n", str);
+}
+
 void dereference(FILE *fd, struct reg_t *reg, size_t size)
 {
 	fprintf(fd, "\tmovq (%s), %%rax\n", get_reg_name(reg, reg->size));

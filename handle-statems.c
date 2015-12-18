@@ -27,6 +27,8 @@ void free_statem(struct statem_t *s)
 		free_statem(s->attrs._if.block);
 		if (s->attrs._if.else_block!=NULL)
 			free_statem(s->attrs._if.else_block);
+	} else if (s->kind==label || s->kind==_goto) {
+		free(s->attrs.label_name);
 	}
 	free(s);
 }
@@ -100,5 +102,9 @@ void print_statem(char *pre, struct statem_t *s)
 		printf("%s|_ break\n", pre);
 	} else if (s->kind==_continue) {
 		printf("%s|_ continue\n", pre);
+	} else if (s->kind==_goto) {
+		printf("%s|_ goto %s\n", pre, s->attrs.label_name);
+	} else if (s->kind==label) {
+		printf("%s|_ label %s:\n", pre, s->attrs.label_name);
 	}
 }

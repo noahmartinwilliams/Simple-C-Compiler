@@ -10,6 +10,7 @@
 #include "handle-types.h"
 #include "handle-funcs.h"
 #include "stack.h"
+#include "generator-statem.h"
 
 char* generate_global_string(FILE *fd, char *str)
 {
@@ -66,108 +67,6 @@ void setup_generator()
 	setup_registers();
 }
 
-void generate_statement(FILE *fd, struct statem_t *s)
-{
-	if (s->kind==expr) {
-		generate_expression(fd, s->attrs.expr);
-	} else if (s->kind==list) {
-		int x;
-		for (x=0; x<s->attrs.list.num; x++) {
-			generate_statement(fd, s->attrs.list.statements[x]);
-		}
-	} else if (s->kind==ret) {
-		fprintf(fd, "\t#return\n\t#(\n");
-		generate_expression(fd, s->attrs.expr);
-		fprintf(fd, "\t#)\n");
-		fprintf(fd, "\tmovq %%rbp, %%rsp\n");
-		fprintf(fd, "\tpopq %%rbp\n");
-		if (!in_main)
-			fprintf(fd, "\tret\n");
-		else
-			fprintf(fd, "\tmovq %%rax, %%rdi\n\tmovq $60, %%rax\n\tsyscall\n");
-	} else if (s->kind==declare) {
-		return;
-	} else if (s->kind==_if) {
-		fprintf(fd, "\t#if (\n");
-		generate_expression(fd, s->attrs._if.condition);
-		struct reg_t *ret=get_ret_register(word_size);
-		compare_register_to_int(fd, ret, 0);
-
-		unique_num++;
-		char *unique_name_else, *unique_name_true;
-		asprintf(&unique_name_else, "if$not$true$%d", unique_num);
-		asprintf(&unique_name_true, "if$true$%d", unique_num);
-		fprintf(fd, "\t#)\n");
-
-		jmp_eq(fd, unique_name_else);
-		fprintf(fd, "\t#{\n");
-		generate_statement(fd, s->attrs._if.block);
-		jmp(fd, unique_name_true);
-		if (s->attrs._if.else_block==NULL) {
-			fprintf(fd, "\t#}\n");
-			place_label(fd, unique_name_else);
-		} else {
-			place_label(fd, unique_name_else);
-			fprintf(fd, "\t#} else {\n");
-			generate_statement(fd, s->attrs._if.else_block);
-		}
-		place_label(fd, unique_name_true);
-		free(unique_name_else);
-		free(unique_name_true);
-	} else if (s->kind==_while) {
-		struct reg_t *ret=get_ret_register(word_size);
-		int *l=malloc(sizeof(int));
-		unique_num++;
-		*l=unique_num;
-		push(loop_stack, l);
-
-		char *loop_start, *loop_end;
-		asprintf(&loop_start, "loop$start$%d", unique_num);
-		asprintf(&loop_end, "loop$end$%d", unique_num);
-
-		fprintf(fd, "\t#while (\n");
-		place_label(fd, loop_start);
-		generate_expression(fd, s->attrs._while.condition);
-
-		compare_register_to_int(fd, ret, 0);
-		jmp_eq(fd, loop_end);
-		fprintf(fd, "\t#) {\n");
-
-		generate_statement(fd, s->attrs._while.block);
-
-		jmp(fd, loop_start);
-		fprintf(fd, "\t#}\n");
-		place_label(fd, loop_end);
-
-		free(loop_start);
-		free(loop_end);
-
-	} else if (s->kind==_break) {
-		int *n=pop(loop_stack);
-		char *jump_to;
-		asprintf(&jump_to, "loop$end$%d", *n);
-		fprintf(fd, "\t#break; \n");
-		jmp(fd, jump_to);
-		free(jump_to);
-		push(loop_stack, n);
-	} else if (s->kind==_continue) {
-		int *n=pop(loop_stack);
-		char *jump_to;
-		asprintf(&jump_to, "loop$start$%d", *n);
-		fprintf(fd, "\t#continue; \n");
-		jmp(fd, jump_to);
-		free(jump_to);
-		push(loop_stack, n);
-	} else if (s->kind==_goto) {
-		fprintf(fd, "\t#goto %s;\n", s->attrs.label_name);
-
-		jmp(fd, s->attrs.label_name);
-	} else if (s->kind==label) {
-		fprintf(fd, "\t#%s: \n", s->attrs.label_name);
-
-		place_label(fd, s->attrs.label_name);
-	}
-}
 
 off_t get_var_offset(struct statem_t *s, off_t current_off)
 {

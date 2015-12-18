@@ -58,3 +58,25 @@ void xor(FILE *fd, struct reg_t *a, struct reg_t *b)
 			fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(b, b->size));
 	}
 }
+
+void test_or(FILE *fd, struct reg_t *a, struct reg_t *b)
+{
+	unique_num++;
+	if (a->size==word_size) {
+		/* Good GOD, this is a lot of code. -.- */
+		/*TODO: figure out how to shorten this */
+		fprintf(fd, "\tcmpl $0, %s\n", get_reg_name(a, a->size));
+		fprintf(fd, "\tjne test$or$%d$true\n", unique_num);
+		fprintf(fd, "\tcmpl $0, %s\n", get_reg_name(b, b->size));
+		fprintf(fd, "\tjne test$or$%d$true\n", unique_num);
+		fprintf(fd, "\tmovl $0, %s\n", get_reg_name(b, b->size));
+		if (b->use!=RET)
+			fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(b, b->size));
+		fprintf(fd, "\tjmp test$or$%d$false\n", unique_num);
+		fprintf(fd, "\ttest$or$%d$true:\n", unique_num);
+		fprintf(fd, "\tmovl $1, %s\n", get_reg_name(b, b->size));
+		if (b->use!=RET)
+			fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(b, b->size));
+		fprintf(fd, "\ttest$or$%d$false:\n", unique_num);
+	}
+}

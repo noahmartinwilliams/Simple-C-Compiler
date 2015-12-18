@@ -25,4 +25,5 @@ extern void assign_dereference(FILE *fd, struct reg_t *assign_from, struct reg_t
 extern void call(FILE *fd, struct func_t *f);
 extern void start_call(FILE *fd, struct func_t *f);
 extern void backend_make_global_var(FILE *fd, struct var_t *v);
+extern void place_comment(FILE *fd, char *str);
 #endif
