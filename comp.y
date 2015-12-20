@@ -55,7 +55,7 @@ struct arguments_t {
 }
 %define parse.error verbose
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST 
-%token RET STRUCT WHILE GE_TEST LE_TEST FOR
+%token RET STRUCT WHILE GE_TEST LE_TEST FOR INC_OP
 %token <str> STR_LITERAL 
 %token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND
 %token <type> TYPE
@@ -79,8 +79,9 @@ struct arguments_t {
 %type <statem> struct_var_declarations
 %type <func> function_header
 %type <expr> call_arg_list
+%type <expr> postfix_expr
 
-%right '!'
+%right '!' INC_OP
 %right '=' ASSIGN_OP
 %left '*' '/'
 %left '+' '-'
@@ -331,6 +332,16 @@ noncomma_expression: CONST_INT {
 	e->right=NULL;
 	e->left=NULL;
 	e->attrs.cstr_val=generate_global_string(output, $1);
+	$$=e;
+} | postfix_expr;
+
+postfix_expr: assignable_expr INC_OP {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=post_un_op;
+	e->left=$1;
+	e->right=NULL;
+	e->attrs.un_op=strdup("++");
+	e->type=$1->type;
 	$$=e;
 };
 

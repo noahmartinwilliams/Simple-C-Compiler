@@ -13,6 +13,7 @@
 
 void generate_binary_expression(FILE *fd, struct expr_t *e);
 void generate_pre_unary_expression(FILE *fd, struct expr_t *e);
+void generate_post_unary_expression(FILE *fd, struct expr_t *e);
 
 void generate_expression(FILE *fd, struct expr_t *e)
 {
@@ -46,9 +47,33 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		/*TODO: Figure out how to handle struct return values */
 	} else if (e->kind==const_str) {
 		load_global_string(fd, e->attrs.cstr_val);
+	} else if (e->kind==post_un_op) {
+		generate_post_unary_expression(fd, e);
 	}
 }
 
+void generate_post_unary_expression(FILE *fd, struct expr_t *e)
+{
+	struct reg_t *ret=get_ret_register(get_type_size(e->type));
+	struct reg_t *lhs=get_free_register(fd, get_type_size(e->type));
+	place_comment(fd, "(");
+	place_comment(fd, "(");
+	generate_expression(fd, e->left);
+	assign_reg(fd, ret, lhs);
+	place_comment(fd, ")");
+
+	if (!strcmp(e->attrs.un_op, "++")) {
+		int_inc(fd, ret);
+		if (e->kind==pre_un_op && !strcmp(e->attrs.un_op, "*")) {
+			assign_dereference(fd, lhs, ret);
+		} else if (e->left->kind==var) {
+			assign_var(fd, ret, e->left->attrs.var);
+		}
+		assign_reg(fd, lhs, ret);
+		place_comment(fd, "++");
+	}
+	place_comment(fd, ")");
+}
 void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 {
 	depth++;
@@ -93,6 +118,7 @@ void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 
 static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*comparitor)(FILE*, char*), char *true_string, char *false_string, struct reg_t *lhs)
 {
+	depth++;
 	struct reg_t *ret=get_ret_register(e->type->body->size);
 
 	place_comment(fd, "(");
@@ -125,6 +151,7 @@ static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*co
 
 	free(is_true);
 	free(is_false);
+	depth--;
 
 }
 

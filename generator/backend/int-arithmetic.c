@@ -98,3 +98,12 @@ void int_mul(FILE *fd, struct reg_t *a, struct reg_t *b)
 		fprintf(fd, "\tmulq %s\n", reg_name(b));
 
 }
+
+void int_inc(FILE *fd, struct reg_t *r)
+{
+	if (r->size==word_size) {
+		fprintf(fd, "\tincl %s\n", reg_name(r));
+		if (r->use!=RET) 
+			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(r));
+	}
+}
