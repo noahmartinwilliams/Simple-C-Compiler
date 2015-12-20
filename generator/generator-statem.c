@@ -117,5 +117,37 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		place_comment(fd, ":");
 
 		place_label(fd, s->attrs.label_name);
+	} else if (s->kind==_for) {
+		place_comment(fd, "for (");
+		generate_expression(fd, s->attrs._for.initial);
+		place_comment(fd, "; ");
+
+		struct reg_t *ret=get_ret_register(word_size);
+		int *l=malloc(sizeof(int));
+		unique_num++;
+		*l=unique_num;
+		push(loop_stack, l);
+
+		char *loop_start, *loop_end;
+		asprintf(&loop_start, "loop$start$%d", unique_num);
+		asprintf(&loop_end, "loop$end$%d", unique_num);
+
+		place_label(fd, loop_start);
+		generate_expression(fd, s->attrs._for.cond);
+
+		compare_register_to_int(fd, ret, 0);
+		jmp_eq(fd, loop_end);
+		place_comment(fd, ") {");
+
+		generate_statement(fd, s->attrs._for.block);
+
+		generate_expression(fd, s->attrs._for.update);
+		jmp(fd, loop_start);
+		place_comment(fd, "}");
+		place_label(fd, loop_end);
+
+		free(loop_start);
+		free(loop_end);
+
 	}
 }

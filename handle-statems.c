@@ -29,6 +29,11 @@ void free_statem(struct statem_t *s)
 			free_statem(s->attrs._if.else_block);
 	} else if (s->kind==label || s->kind==_goto) {
 		free(s->attrs.label_name);
+	} else if (s->kind==_for) {
+		free_expr(s->attrs._for.initial);
+		free_expr(s->attrs._for.cond);
+		free_expr(s->attrs._for.update);
+		free_statem(s->attrs._for.block);
 	}
 	free(s);
 }
@@ -106,5 +111,24 @@ void print_statem(char *pre, struct statem_t *s)
 		printf("%s|_ goto %s\n", pre, s->attrs.label_name);
 	} else if (s->kind==label) {
 		printf("%s|_ label %s:\n", pre, s->attrs.label_name);
+	} else if (s->kind==_for) {
+		printf("%s|_ for \n", pre);
+		char *new_pre=NULL;
+		asprintf(&new_pre, "%s | | | | ", pre);
+		print_tree((__printer_function_t) &print_expr, s->attrs._for.initial, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+		free(new_pre);
+		
+		asprintf(&new_pre, "%s | | | ", pre);
+		print_tree((__printer_function_t) &print_expr, s->attrs._for.cond, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+
+		free(new_pre);
+
+		asprintf(&new_pre, "%s | | ", pre);
+		print_tree((__printer_function_t) &print_expr, s->attrs._for.update, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+		free(new_pre);
+
+		asprintf(&new_pre, "%s | ", pre);
+		print_statem(new_pre, s->attrs._for.block);
+		free(new_pre);
 	}
 }

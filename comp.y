@@ -55,7 +55,7 @@ struct arguments_t {
 }
 %define parse.error verbose
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST 
-%token RET STRUCT WHILE GE_TEST LE_TEST 
+%token RET STRUCT WHILE GE_TEST LE_TEST FOR
 %token <str> STR_LITERAL 
 %token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND
 %token <type> TYPE
@@ -198,6 +198,14 @@ statement: expression ';' {
 	s->kind=_goto;
 	s->attrs.label_name=strdup($2);
 	free($2);
+	$$=s;
+} | FOR '(' expression ';' expression ';' expression ')' statement {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=_for;
+	s->attrs._for.initial=$3;
+	s->attrs._for.cond=$5;
+	s->attrs._for.update=$7;
+	s->attrs._for.block=$9;
 	$$=s;
 };
 
