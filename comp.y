@@ -54,10 +54,9 @@ struct arguments_t {
 	char chr;
 }
 %define parse.error verbose
-%token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST 
-%token RET STRUCT WHILE GE_TEST LE_TEST FOR INC_OP
-%token <str> STR_LITERAL 
+%token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST RET STRUCT WHILE GE_TEST LE_TEST FOR INC_OP DO
 %token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP
+%token <str> STR_LITERAL 
 %token <type> TYPE
 %token <str> ASSIGN_OP
 %token <l> CONST_INT
@@ -195,6 +194,12 @@ statement: expression ';' {
 	s->attrs._for.cond=$5;
 	s->attrs._for.update=$7;
 	s->attrs._for.block=$9;
+	$$=s;
+} | DO statement WHILE '(' expression ')' ';' {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=do_while;
+	s->attrs.do_while.condition=$5;
+	s->attrs.do_while.block=$2;
 	$$=s;
 };
 

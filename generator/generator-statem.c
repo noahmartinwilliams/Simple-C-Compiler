@@ -14,6 +14,7 @@
 
 void generate_statement(FILE *fd, struct statem_t *s)
 {
+	struct reg_t *retu=get_ret_register(word_size);
 	if (s->kind==expr) {
 		generate_expression(fd, s->attrs.expr);
 	} else if (s->kind==list) {
@@ -37,8 +38,7 @@ void generate_statement(FILE *fd, struct statem_t *s)
 	} else if (s->kind==_if) {
 		place_comment(fd, "if (");
 		generate_expression(fd, s->attrs._if.condition);
-		struct reg_t *ret=get_ret_register(word_size);
-		compare_register_to_int(fd, ret, 0);
+		compare_register_to_int(fd, retu, 0);
 
 		unique_num++;
 		char *unique_name_else, *unique_name_true;
@@ -63,7 +63,6 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		free(unique_name_else);
 		free(unique_name_true);
 	} else if (s->kind==_while) {
-		struct reg_t *ret=get_ret_register(word_size);
 		int *l=malloc(sizeof(int));
 		unique_num++;
 		*l=unique_num;
@@ -77,7 +76,7 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		place_label(fd, loop_start);
 		generate_expression(fd, s->attrs._while.condition);
 
-		compare_register_to_int(fd, ret, 0);
+		compare_register_to_int(fd, retu, 0);
 		jmp_eq(fd, loop_end);
 		place_comment(fd, ") {");
 
@@ -89,6 +88,7 @@ void generate_statement(FILE *fd, struct statem_t *s)
 
 		free(loop_start);
 		free(loop_end);
+		free(pop(loop_stack));
 
 	} else if (s->kind==_break) {
 		int *n=pop(loop_stack);
@@ -122,7 +122,6 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		generate_expression(fd, s->attrs._for.initial);
 		place_comment(fd, "; ");
 
-		struct reg_t *ret=get_ret_register(word_size);
 		int *l=malloc(sizeof(int));
 		unique_num++;
 		*l=unique_num;
@@ -135,7 +134,7 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		place_label(fd, loop_start);
 		generate_expression(fd, s->attrs._for.cond);
 
-		compare_register_to_int(fd, ret, 0);
+		compare_register_to_int(fd, retu, 0);
 		jmp_eq(fd, loop_end);
 		place_comment(fd, ") {");
 
@@ -148,6 +147,33 @@ void generate_statement(FILE *fd, struct statem_t *s)
 
 		free(loop_start);
 		free(loop_end);
+		free(pop(loop_stack));
+
+	} else if (s->kind==do_while) {
+		int *l=malloc(sizeof(int));
+		unique_num++;
+		*l=unique_num;
+		push(loop_stack, l);
+
+		char *loop_start, *loop_end;
+		asprintf(&loop_start, "loop$start$%d", unique_num);
+		asprintf(&loop_end, "loop$end$%d", unique_num);
+
+		place_comment(fd, "do {");
+
+		place_label(fd, loop_start);
+		generate_statement(fd, s->attrs.do_while.block);
+
+		place_comment(fd, "} while (");
+		generate_expression(fd, s->attrs.do_while.condition);
+		compare_register_to_int(fd, retu, 0);
+		jmp_neq(fd, loop_start);
+
+		place_comment(fd, ") ;");
+		place_label(fd, loop_end);
+		free(loop_start);
+		free(loop_end);
+		free(pop(loop_stack));
 
 	}
 }

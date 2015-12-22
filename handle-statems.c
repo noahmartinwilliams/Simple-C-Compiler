@@ -34,6 +34,9 @@ void free_statem(struct statem_t *s)
 		free_expr(s->attrs._for.cond);
 		free_expr(s->attrs._for.update);
 		free_statem(s->attrs._for.block);
+	} else if (s->kind==do_while) {
+		free_expr(s->attrs.do_while.condition);
+		free_statem(s->attrs.do_while.block);
 	}
 	free(s);
 }
@@ -129,6 +132,15 @@ void print_statem(char *pre, struct statem_t *s)
 
 		asprintf(&new_pre, "%s | ", pre);
 		print_statem(new_pre, s->attrs._for.block);
+		free(new_pre);
+	} else if (s->kind==do_while ) {
+		printf("%s|_statement kind: do while loop\n", pre);
+		char *new_pre;
+		asprintf(&new_pre, "%s |", pre);
+		print_tree((__printer_function_t) &print_expr, s->attrs.do_while.condition, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+		free(new_pre);
+		asprintf(&new_pre, "%s ", pre);
+		print_statem(new_pre, s->attrs.do_while.block);
 		free(new_pre);
 	}
 }
