@@ -57,32 +57,20 @@ struct arguments_t {
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST 
 %token RET STRUCT WHILE GE_TEST LE_TEST FOR INC_OP
 %token <str> STR_LITERAL 
-%token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND
+%token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP
 %token <type> TYPE
 %token <str> ASSIGN_OP
 %token <l> CONST_INT
 %token <str> IDENTIFIER
 %token <chr> CHAR_LITERAL
 %type <vars> arg_declaration
-%type <expr> noncomma_expression
-%type <expr> expression
-%type <expr> binary_expr
-%type <expr> assignable_expr
-%type <expr> prefix_expr
-%type <statem> statement
-%type <statem> statement_list
-%type <statem> var_declaration
-%type <statem> var_declaration_list
-%type <statem> var_declaration_ident
+%type <expr> noncomma_expression expression binary_expr assignable_expr prefix_expr call_arg_list postfix_expr
+%type <statem> statement statement_list var_declaration var_declaration_list var_declaration_ident struct_var_declarations
 %type <type> type
-%type <func> function
-%type <statem> struct_var_declarations
-%type <func> function_header
-%type <expr> call_arg_list
-%type <expr> postfix_expr
+%type <func> function function_header
 
 %right '=' ASSIGN_OP
-%right '!' '~' INC_OP 
+%right '!' '~' INC_OP DEC_OP
 %left TEST_OR
 %left TEST_AND
 %left '|'
@@ -101,8 +89,6 @@ file_entry:  function {
 	if (print_trees)
 		print_f($1);
 	generate_function(output, $1);
-	//free_all_vars();
-	//free_all_types();
 } | var_declaration {
 	generate_global_vars(output, $1);
 } | function_header ';';
@@ -144,10 +130,12 @@ function_header: type IDENTIFIER '(' ')' {
 	$2->attributes|=_extern;
 	$$=$2;
 };
+
 function: function_header '{' statement_list '}' {
 	$1->statement_list=$3;
 	$$=$1;
 }
+
 statement: expression ';' {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=expr;
@@ -341,6 +329,14 @@ postfix_expr: assignable_expr INC_OP {
 	e->left=$1;
 	e->right=NULL;
 	e->attrs.un_op=strdup("++");
+	e->type=$1->type;
+	$$=e;
+} | assignable_expr DEC_OP {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=post_un_op;
+	e->left=$1;
+	e->right=NULL;
+	e->attrs.un_op=strdup("--");
 	e->type=$1->type;
 	$$=e;
 };

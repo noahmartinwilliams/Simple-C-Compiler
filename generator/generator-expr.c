@@ -65,8 +65,12 @@ void generate_post_unary_expression(FILE *fd, struct expr_t *e)
 	assign_reg(fd, ret, lhs);
 	place_comment(fd, ")");
 
-	if (!strcmp(e->attrs.un_op, "++")) {
-		int_inc(fd, ret);
+	if (!strcmp(e->attrs.un_op, "++") ||  !strcmp(e->attrs.un_op, "--")) {
+		if (!strcmp(e->attrs.un_op, "++"))
+			int_inc(fd, ret);
+		else if (!strcmp(e->attrs.un_op, "--"))
+			int_dec(fd, ret);
+
 		if (e->left->kind==pre_un_op && !strcmp(e->left->attrs.un_op, "*")) {
 			struct reg_t *rhs=get_free_register(fd, get_type_size(e->type));
 			struct reg_t *tmp=get_free_register(fd, get_type_size(e->type));
@@ -83,7 +87,7 @@ void generate_post_unary_expression(FILE *fd, struct expr_t *e)
 			assign_var(fd, ret, e->left->attrs.var);
 		}
 		assign_reg(fd, lhs, ret);
-		place_comment(fd, "++");
+		place_comment(fd, e->attrs.un_op);
 	}
 	place_comment(fd, ")");
 	free_register(fd, lhs);
