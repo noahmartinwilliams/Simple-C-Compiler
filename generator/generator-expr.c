@@ -94,64 +94,52 @@ void generate_post_unary_expression(FILE *fd, struct expr_t *e)
 void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 {
 	depth++;
-	size_t s=0;
-	if (e->type==NULL)
-		s=word_size;
-	else
-		s=get_type_size(e->right->type);
+	size_t s=get_type_size(e->right->type);
 
 	struct reg_t *ret=get_ret_register(s);
 	place_comment(fd, "(");
+	place_comment(fd, e->attrs.un_op);
+	place_comment(fd, "(");
+
 	if (!strcmp(e->attrs.un_op, "&")) {
-		place_comment(fd, "&");
-		place_comment(fd, "(");
+
 		get_address(fd, e->right);
 		place_comment(fd, ")");
-	} else if (!strcmp(e->attrs.un_op, "*")) {
-		place_comment(fd, "*");
-		place_comment(fd, "(");
+
+	} else {
 		generate_expression(fd, e->right);
 		place_comment(fd, ")");
-		dereference(fd, ret, pointer_size);
-	} else if (!strcmp(e->attrs.un_op, "!")) {
-		place_comment(fd, "!");
-		place_comment(fd, "(");
+		if (!strcmp(e->attrs.un_op, "*"))
+			dereference(fd, ret, pointer_size);
 
-		generate_expression(fd, e->right);
-		
-		place_comment(fd, ")");
+		else if (!strcmp(e->attrs.un_op, "!"))
+			test_invert(fd, ret);
 
-		test_invert(fd, ret);
+		else if (!strcmp(e->attrs.un_op, "++")) {
+			
+			int_inc(fd, ret);
+			if (e->right->kind==pre_un_op && !strcmp(e->right->attrs.un_op, "*")) {
+				struct reg_t *rhs=get_free_register(fd, pointer_size);
+				struct reg_t *tmp=get_free_register(fd, get_type_size(e->type));
+				assign_reg(fd, ret, tmp);
 
-	} else if (!strcmp(e->attrs.un_op, "++")) {
-		place_comment(fd, "++");
-		place_comment(fd, "(");
-		
-		generate_expression(fd, e->right);
-		place_comment(fd, ")");
+				set_register_size(ret, pointer_size);
+				generate_expression(fd, e->right->right);
 
-		int_inc(fd, ret);
-		if (e->right->kind==pre_un_op && !strcmp(e->right->attrs.un_op, "*")) {
-			struct reg_t *rhs=get_free_register(fd, pointer_size);
-			struct reg_t *tmp=get_free_register(fd, get_type_size(e->type));
-			assign_reg(fd, ret, tmp);
+				assign_reg(fd, ret, rhs);
+				set_register_size(ret, get_type_size(e->type));
+				assign_reg(fd, tmp, ret);
 
-			set_register_size(ret, pointer_size);
-			generate_expression(fd, e->right->right);
+				free_register(fd, tmp);
 
-			assign_reg(fd, ret, rhs);
-			set_register_size(ret, get_type_size(e->type));
-			assign_reg(fd, tmp, ret);
+				assign_dereference(fd, ret, rhs);
 
-			free_register(fd, tmp);
+				free_register(fd, rhs);
+			} else if (e->right->kind==var)
+				assign_var(fd, ret, e->right->attrs.var);
 
-			assign_dereference(fd, ret, rhs);
-
-			free_register(fd, rhs);
-		} else if (e->right->kind==var) {
-			assign_var(fd, ret, e->right->attrs.var);
-		}
-
+		} else if (!strcmp(e->attrs.un_op, "~")) 
+			invert(fd, ret);
 	}
 	place_comment(fd, ")");
 	depth--;

@@ -82,7 +82,7 @@ struct arguments_t {
 %type <expr> postfix_expr
 
 %right '=' ASSIGN_OP
-%right '!' INC_OP 
+%right '!' '~' INC_OP 
 %left TEST_OR
 %left TEST_AND
 %left '|'
@@ -373,6 +373,14 @@ prefix_expr: '&' assignable_expr {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=pre_un_op;
 	e->attrs.un_op=strdup("++");
+	e->right=$2;
+	e->left=NULL;
+	e->type=$2->type;
+	$$=e;
+} | '~' noncomma_expression {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=pre_un_op;
+	e->attrs.un_op=strdup("~");
 	e->right=$2;
 	e->left=NULL;
 	e->type=$2->type;

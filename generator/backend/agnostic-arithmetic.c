@@ -147,3 +147,15 @@ void test_invert(FILE *fd, struct reg_t *r)
 		fprintf(fd, "\tinvert$%d$true:\n", unique_num);
 	}
 }
+
+void invert(FILE *fd, struct reg_t *r)
+{
+	if (r->size==word_size) {
+		fprintf(fd, "\tnotl %s\n", reg_name(r));
+		if (r->use!=RET)
+			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(r));
+	} else {
+		fprintf(stderr, "Internal Error: invalid register size: %d passed to invert\n", r->size);
+		exit(1);
+	}
+}
