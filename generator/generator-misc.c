@@ -43,6 +43,7 @@ void setup_types()
 	i->body=malloc(sizeof(struct tbody_t));
 	i->body->size=int_size;
 	i->body->is_struct=false;
+	i->body->refcount=1;
 
 	types[num_types-2]=malloc(sizeof(struct type_t));
 	i=types[num_types-2];
@@ -51,6 +52,7 @@ void setup_types()
 	i->body=malloc(sizeof(struct tbody_t));
 	i->body->size=char_size;
 	i->body->is_struct=false;
+	i->body->refcount=1;
 
 	types[num_types-3]=malloc(sizeof(struct type_t));
 	i=types[num_types-3];
@@ -59,6 +61,7 @@ void setup_types()
 	i->body=malloc(sizeof(struct tbody_t));
 	i->body->size=0;
 	i->body->is_struct=false;
+	i->body->refcount=1;
 }
 
 void setup_generator()

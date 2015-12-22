@@ -9,6 +9,7 @@ a function pointer that has void* as the second argument type. */
 
 struct tbody_t {
 	size_t size;
+	int refcount;
 	bool is_struct;
 	union {
 		struct {

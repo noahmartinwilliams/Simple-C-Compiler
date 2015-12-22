@@ -55,7 +55,7 @@ struct arguments_t {
 }
 %define parse.error verbose
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST RET STRUCT WHILE GE_TEST LE_TEST FOR INC_OP DO
-%token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP
+%token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF
 %token <str> STR_LITERAL 
 %token <type> TYPE
 %token <str> ASSIGN_OP
@@ -65,7 +65,7 @@ struct arguments_t {
 %type <vars> arg_declaration
 %type <expr> noncomma_expression expression binary_expr assignable_expr prefix_expr call_arg_list postfix_expr
 %type <statem> statement statement_list var_declaration var_declaration_list var_declaration_ident struct_var_declarations
-%type <type> type
+%type <type> type type_with_stars
 %type <func> function function_header
 
 %right '=' ASSIGN_OP
@@ -90,7 +90,14 @@ file_entry:  function {
 	generate_function(output, $1);
 } | var_declaration {
 	generate_global_vars(output, $1);
-} | function_header ';';
+} | function_header ';' | TYPEDEF type_with_stars IDENTIFIER ';' {
+	struct type_t *t=malloc(sizeof(struct type_t));
+	memcpy(t, $2, sizeof(struct type_t));
+	t->name=strdup($3);
+	t->body->refcount++;
+	free($3);
+	add_type(t);
+};
 
 arg_declaration: type var_declaration_ident {
 	struct arguments_t *a=malloc(sizeof(struct arguments_t));
@@ -246,9 +253,14 @@ type: TYPE {
 
 	body->size=size;
 	body->is_struct=true;
+	add_type(type);
 	$$=type;
 
 };
+
+type_with_stars: type | type_with_stars '*' {
+	$$=increase_type_depth($1, 1);
+}
 
 struct_var_declarations: type IDENTIFIER ';' {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
@@ -577,7 +589,7 @@ void yyerror(const char *s)
 int main(int argc, char *argv[])
 {
 	if (argc<2) {
-		fprintf(stderr, "Usage: output_file.s %s\n", argv[0]);
+		fprintf(stderr, "Usage: %s output_file.s input_file.c \n", argv[0]);
 		exit(1);
 	}
 	current_file=argv[2];

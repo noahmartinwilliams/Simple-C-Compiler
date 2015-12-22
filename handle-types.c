@@ -15,6 +15,13 @@ struct type_t* get_type_by_name(char *name)
 	return NULL;
 }
 
+void add_type(struct type_t *t)
+{
+	num_types++;
+	types=realloc(types, num_types*sizeof(struct type_t*));
+	types[num_types-1]=t;
+}
+
 size_t get_type_size(struct type_t *t)
 {
 	if (t==NULL || t->body==NULL) {
@@ -48,7 +55,9 @@ void free_type(struct type_t *t)
 	if (t==NULL)
 		return;
 	free(t->name);
-	free_tbody(t->body);
+	t->body->refcount--;
+	if (t->body->refcount==0)
+		free_tbody(t->body);
 	free(t);
 }
 
@@ -85,6 +94,7 @@ struct type_t* increase_type_depth(struct type_t *t, int n)
 	struct type_t *new=malloc(sizeof(struct type_t));
 	memcpy(new, t, sizeof(struct type_t));
 	new->pointer_depth+=n;
+	new->body->refcount++;
 	return new;
 }
 
@@ -93,5 +103,6 @@ struct type_t* decrease_type_depth(struct type_t *t, int n)
 	struct type_t *new=malloc(sizeof(struct type_t));
 	memcpy(new, t, sizeof(struct type_t));
 	new->pointer_depth-=n;
+	new->body->refcount++;
 	return new;
 }

@@ -11,4 +11,5 @@ extern void parser_type_cmp(struct expr_t **a, struct expr_t **b);
 extern struct type_t* increase_type_depth(struct type_t *t, int n);
 extern struct type_t* decrease_type_depth(struct type_t *t, int n);
 extern size_t get_type_size(struct type_t *t);
+extern void add_type(struct type_t *t);
 #endif
