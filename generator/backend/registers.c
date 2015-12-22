@@ -132,3 +132,8 @@ void free_register(FILE *fd, struct reg_t *r)
 		r->depth--;
 	}
 }
+
+void set_register_size(struct reg_t *r, size_t s)
+{
+	r->size=s;
+}

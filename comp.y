@@ -81,17 +81,17 @@ struct arguments_t {
 %type <expr> call_arg_list
 %type <expr> postfix_expr
 
-%right '!' INC_OP
 %right '=' ASSIGN_OP
-%left '*' '/'
-%left '+' '-'
-%left SHIFT_LEFT SHIFT_RIGHT
-%left '<' LE_TEST '>' GE_TEST EQ_TEST NE_TEST
-%left '&'
-%left '^'
-%left '|'
-%left TEST_AND
+%right '!' INC_OP 
 %left TEST_OR
+%left TEST_AND
+%left '|'
+%left '^'
+%left '&'
+%left '<' LE_TEST '>' GE_TEST EQ_TEST NE_TEST
+%left SHIFT_LEFT SHIFT_RIGHT
+%left '+' '-'
+%left '*' '/'
 %nonassoc IFX
 %nonassoc ELSE
 
@@ -305,9 +305,9 @@ noncomma_expression: CONST_INT {
 	e->right=NULL;
 	e->attrs.cint_val=$1;
 	$$=e;
-}  | binary_expr | '(' expression ')' {
+} | assignable_expr | binary_expr | '(' expression ')' {
 	$$=$2;
-} | assignable_expr | prefix_expr | IDENTIFIER '(' ')' {
+} | prefix_expr | IDENTIFIER '(' ')' {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=funccall;
 	e->left=NULL;
@@ -369,6 +369,14 @@ prefix_expr: '&' assignable_expr {
 	e->left=NULL;
 	e->type=$2->type;
 	$$=e;
+} | INC_OP assignable_expr {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=pre_un_op;
+	e->attrs.un_op=strdup("++");
+	e->right=$2;
+	e->left=NULL;
+	e->type=$2->type;
+	$$=e;
 };
 
 assignable_expr: IDENTIFIER {
@@ -413,8 +421,6 @@ binary_expr:  noncomma_expression '*' noncomma_expression {
 	e->right=b;
 	e->attrs.bin_op=strdup("=");
 	$$=e;
-} | noncomma_expression EQ_TEST noncomma_expression {
-	$$=make_bin_op("==", $1, $3);
 } | noncomma_expression '<' noncomma_expression {
 	$$=make_bin_op("<", $1, $3);
 } | noncomma_expression '>' noncomma_expression {
@@ -441,7 +447,9 @@ binary_expr:  noncomma_expression '*' noncomma_expression {
 	$$=make_bin_op("||", $1, $3);
 } | noncomma_expression TEST_AND noncomma_expression {
 	$$=make_bin_op("&&", $1, $3);
-};
+} | noncomma_expression EQ_TEST noncomma_expression {
+	$$=make_bin_op("==", $1, $3);
+} ;
 
 var_declaration_ident: IDENTIFIER { 
 	struct statem_t *s=malloc(sizeof(struct statem_t));

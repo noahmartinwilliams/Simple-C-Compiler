@@ -104,6 +104,26 @@ void test_and(FILE *fd, struct reg_t *a, struct reg_t *b)
 
 		fprintf(fd, "\ttest$and$%d$true:\n", unique_num);
 
+	} else if (a->size==pointer_size) {
+		fprintf(fd, "\tcmpq $0, %s\n", reg_name(a));
+		fprintf(fd, "\tje test$and$%d$false\n", unique_num);
+		fprintf(fd, "\tcmpq $0, %s\n", reg_name(b));
+		fprintf(fd, "\tje test$and$%d$false\n", unique_num);
+
+		fprintf(fd, "\tmovq $1, %s\n", reg_name(b));
+		if (b->use!=RET)
+			fprintf(fd, "\tmovq $1, %%eax\n");
+
+		fprintf(fd, "\tjmp test$and$%d$true\n", unique_num);
+
+		fprintf(fd, "\ttest$and$%d$false:\n", unique_num);
+
+		fprintf(fd, "\tmovq $0, %s\n", reg_name(b));
+		if (b->use!=RET)
+			fprintf(fd, "\tmovq $0, %%eax\n");
+
+		fprintf(fd, "\ttest$and$%d$true:\n", unique_num);
+
 	}
 }
 

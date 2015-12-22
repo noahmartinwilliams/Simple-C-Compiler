@@ -49,6 +49,10 @@ void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest)
 
 void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 {
+	if (dest==NULL) {
+		fprintf(stderr, "Internal error: a NULL variable pointer was passed to assign_var\n");
+		exit(1);
+	}
 	if (dest->scope!=0) {
 		if (get_type_size(dest->type)==word_size)
 			fprintf(fd, "\tmovl %s, %ld(%%rbp)\n", reg_name(src), dest->offset);
@@ -97,16 +101,24 @@ void compare_registers(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
 	if (a->size==char_size)
 		fprintf(fd, "\tcmpb %s, %s\n", reg_name(a), reg_name(b));
+
 	else if (a->size==word_size)
 		fprintf(fd, "\tcmpl %s, %s\n", reg_name(a), reg_name(b));
+
+	else if (a->size==pointer_size)
+		fprintf(fd, "\tcmpq %s, %s\n", reg_name(a), reg_name(b));
 }
 
 void compare_register_to_int(FILE *fd, struct reg_t *a, int i)
 {
 	if (a->size==char_size)
 		fprintf(fd, "\tcmpb $%d, %s\n", i, reg_name(a));
+
 	else if (a->size==word_size)
 		fprintf(fd, "\tcmpl $%d, %s\n", i, reg_name(a));
+	
+	else if (a->size==pointer_size)
+		fprintf(fd, "\tcmpq $%d, %s\n", i, reg_name(a));
 }
 
 
