@@ -31,6 +31,8 @@ static inline void haiku_easter_egg(char *s)
 %%
 \"(\\\\|[^"\\]|\\n)*\"	{ count(yytext); yylval.str=strdup(yytext); return STR_LITERAL; }
 '.'	{ count(yytext); yylval.chr=yytext[1]; return CHAR_LITERAL; }
+"."	{ count(yytext); return '.'; }
+"union"	{ count(yytext); return UNION; }
 "typedef"	{ count(yytext); return TYPEDEF; }
 "do"	{ count(yytext); return DO; }
 "for"	{ count(yytext); return FOR; }

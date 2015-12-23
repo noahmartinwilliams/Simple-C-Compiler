@@ -4,6 +4,18 @@
 #include "generator-globals.h"
 #include "types.h"
 
+struct type_t* get_struct_or_union_attr_type(struct type_t *t, char *name)
+{
+	struct tbody_t *tb=t->body;
+	int x;
+	for (x=0; x<tb->attrs.vars.num_vars; x++) {
+		if (!strcmp(tb->attrs.vars.vars[x]->name, name))
+			return tb->attrs.vars.vars[x]->type;
+	}
+
+	return NULL;
+}
+
 extern void yyerror(char *s);
 struct type_t* get_type_by_name(char *name)
 {

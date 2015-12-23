@@ -55,13 +55,14 @@ struct arguments_t {
 }
 %define parse.error verbose
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST RET STRUCT WHILE GE_TEST LE_TEST FOR INC_OP DO
-%token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF
+%token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF 
 %token <str> STR_LITERAL 
 %token <type> TYPE
 %token <str> ASSIGN_OP
 %token <l> CONST_INT
 %token <str> IDENTIFIER
 %token <chr> CHAR_LITERAL
+%token UNION
 %type <vars> arg_declaration
 %type <expr> noncomma_expression expression binary_expr assignable_expr prefix_expr call_arg_list postfix_expr
 %type <statem> statement statement_list var_declaration var_declaration_list var_declaration_ident struct_var_declarations
@@ -253,9 +254,40 @@ type: TYPE {
 
 	body->size=size;
 	body->is_struct=true;
+	body->is_union=false;
 	add_type(type);
 	$$=type;
 
+} | UNION IDENTIFIER '{' struct_var_declarations '}' {
+	struct type_t *type=malloc(sizeof(struct type_t));
+	type->pointer_depth=0;
+	type->name=$2;
+	type->body=malloc(sizeof(struct tbody_t));
+	type->body->refcount=1;
+	type->body->is_union=true;
+	type->body->is_struct=false;
+	int x;
+	size_t max_size=0;
+	type->body->attrs.vars.num_vars=0;
+	type->body->attrs.vars.vars=NULL;
+	struct var_t **v=type->body->attrs.vars.vars;
+	int num_vars=type->body->attrs.vars.num_vars;
+	for (x=0; x<$4->attrs.list.num; x++) {
+		size_t s=get_type_size($4->attrs.list.statements[x]->attrs.var->type);
+		num_vars++;
+		v=realloc(v, num_vars*sizeof(struct var_t*));
+		v[num_vars-1]=malloc(sizeof(struct var_t));
+
+		v[num_vars-1]=$4->attrs.list.statements[x]->attrs.var;
+		if (s>=max_size)
+			max_size=s;
+	}
+	type->body->attrs.vars.num_vars=num_vars;
+	type->body->attrs.vars.vars=v;
+
+	type->body->size=max_size;
+	current_type=type;
+	$$=type;
 };
 
 type_with_stars: type | type_with_stars '*' {
@@ -421,6 +453,14 @@ assignable_expr: IDENTIFIER {
 	e->right=$2;
 	e->left=NULL;
 	e->type=decrease_type_depth($2->type, 1);
+	$$=e;
+} | assignable_expr '.' IDENTIFIER {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	if ($1->type->body->is_union) {
+		memcpy(e, $1, sizeof(struct expr_t));
+		e->type=get_struct_or_union_attr_type($1->type, $3);
+	}
+	free($3);
 	$$=e;
 };
 

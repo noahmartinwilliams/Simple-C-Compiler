@@ -12,4 +12,5 @@ extern struct type_t* increase_type_depth(struct type_t *t, int n);
 extern struct type_t* decrease_type_depth(struct type_t *t, int n);
 extern size_t get_type_size(struct type_t *t);
 extern void add_type(struct type_t *t);
+extern struct type_t* get_struct_or_union_attr_type(struct type_t *t, char *name);
 #endif

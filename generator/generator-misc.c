@@ -44,6 +44,7 @@ void setup_types()
 	i->body->size=int_size;
 	i->body->is_struct=false;
 	i->body->refcount=1;
+	i->body->is_union=false;
 
 	types[num_types-2]=malloc(sizeof(struct type_t));
 	i=types[num_types-2];
@@ -53,6 +54,7 @@ void setup_types()
 	i->body->size=char_size;
 	i->body->is_struct=false;
 	i->body->refcount=1;
+	i->body->is_union=false;
 
 	types[num_types-3]=malloc(sizeof(struct type_t));
 	i=types[num_types-3];
@@ -62,6 +64,7 @@ void setup_types()
 	i->body->size=0;
 	i->body->is_struct=false;
 	i->body->refcount=1;
+	i->body->is_union=false;
 }
 
 void setup_generator()
@@ -85,6 +88,10 @@ off_t get_var_offset(struct statem_t *s, off_t current_off)
 		o+=get_var_offset(s->attrs._if.block, current_off+o);
 	} else if (s->kind==_while) {
 		o+=get_var_offset(s->attrs._while.block, current_off+o);
+	} else if (s->kind==do_while) {
+		o+=get_var_offset(s->attrs.do_while.block, current_off+o);
+	} else if (s->kind==_for) {
+		o+=get_var_offset(s->attrs._for.block, current_off+o);
 	}
 
 	return o;

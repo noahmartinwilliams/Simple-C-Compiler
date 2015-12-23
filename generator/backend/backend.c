@@ -88,8 +88,14 @@ void read_var(FILE *fd, struct var_t *v)
 
 void assign_constant(FILE *fd, struct expr_t *e)
 {
-	if (get_type_size(e->type)==word_size)
+	if (get_type_size(e->type)==char_size)
+		fprintf(fd, "\tmovb $%ld, %%al\n", e->attrs.cint_val);
+	else if (get_type_size(e->type)==word_size)
 		fprintf(fd, "\tmovl $%ld, %%eax\n", e->attrs.cint_val);
+	else {
+		fprintf(stderr, "Internal Error: unknown size: %ld passed to assign_constant\n", get_type_size(e->type));
+		exit(1);
+	}
 }
 
 void assign_constant_int(FILE *fd, int e)
