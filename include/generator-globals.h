@@ -14,4 +14,6 @@ extern size_t pointer_size;
 extern size_t char_size;
 extern struct reg_t **regs;
 extern int num_regs;
+extern bool multiple_functions;
+extern size_t current_stack_offset;
 #endif

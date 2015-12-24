@@ -111,6 +111,18 @@ arg_declaration: type var_declaration_ident {
 	a->num_vars=1;
 	add_var(a->vars[0]);
 	$$=a;
+} | arg_declaration ',' type var_declaration_ident {
+	struct arguments_t *a=$1;
+	a->num_vars++;
+	a->vars=realloc(a->vars, a->num_vars*sizeof(struct var_t*));
+	int n=a->num_vars-1;
+	a->vars[n]=malloc(sizeof(struct var_t));
+	a->vars[n]->scope=1;
+	a->vars[n]->hidden=false;
+	a->vars[n]->name=strdup($4->attrs.list.statements[0]->attrs.var->name);
+	a->vars[n]->type=$3;
+	add_var(a->vars[n]);
+	$$=a;
 };
 
 function_header: type IDENTIFIER '(' ')' {
@@ -331,6 +343,23 @@ struct_var_declarations: type IDENTIFIER ';' {
 };
 
 call_arg_list: noncomma_expression {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=arg;
+	e->left=NULL;
+	e->right=NULL;
+	e->type=$1->type;
+	e->attrs.argument=$1;
+	$$=e;
+} | call_arg_list ',' noncomma_expression {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	struct expr_t *tmp=$1;
+	for (; tmp->right!=NULL; tmp=tmp->right) {}
+	e->kind=arg;
+	e->type=$3->type;
+	e->right=NULL;
+	e->left=NULL;
+	e->attrs.argument=$3;
+	tmp->right=e;
 	$$=$1;
 };
 expression: noncomma_expression ;

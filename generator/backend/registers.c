@@ -10,7 +10,7 @@
 char* get_reg_name(struct reg_t *reg, size_t size);
 void setup_registers()
 {
-	num_regs+=12;
+	num_regs+=13;
 	regs=realloc(regs, num_regs*sizeof(struct reg_t*));
 
 	char *primary[]={"a", "b", "c", "d"};
@@ -51,6 +51,20 @@ void setup_registers()
 		regs[x]->depth=0;
 		regs[x]->use=INT;
 	}
+	regs[x]=malloc(sizeof(struct reg_t));
+	regs[x]->sizes=calloc(4, sizeof(struct reg_size));
+	regs[x]->num_sizes=4;
+	regs[x]->sizes[0].name=strdup("%dil"); // I have no idea if this is right. :/
+	regs[x]->sizes[0].size=1;
+	regs[x]->sizes[1].name=strdup("%di");
+	regs[x]->sizes[1].size=2;
+	regs[x]->sizes[2].name=strdup("%edi");
+	regs[x]->sizes[2].size=4;
+	regs[x]->sizes[3].name=strdup("%rdi");
+	regs[x]->sizes[3].size=8;
+	regs[x]->in_use=false;
+	regs[x]->depth=0;
+	regs[x]->use=INT;
 }
 
 char* get_reg_name(struct reg_t *reg, size_t size)

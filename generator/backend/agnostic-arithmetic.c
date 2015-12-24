@@ -13,22 +13,48 @@ void shift_left(FILE *fd, struct reg_t *src, struct reg_t *dest)
 		Why the hell do these things have these completely arbitrary
 		idiotic rules? */
 
-		fprintf(fd, "\tpushq %%rcx\n");
-		fprintf(fd, "\tmovl %s, %%ecx\n", reg_name(dest));
-		fprintf(fd, "\tshl %%cl, %s\n", reg_name(src));
-		fprintf(fd, "\tmovl %s, %%eax\n", reg_name(src));
-		fprintf(fd, "\tpopq %%rcx\n");
+		if (!strcmp(reg_name(src), "%ecx")) {
+			fprintf(fd, "\tpushq %%rcx\n");
+			fprintf(fd, "\tpushq %%rdx\n");
+			fprintf(fd, "\tmovl %%ecx, %%edx\n");
+			fprintf(fd, "\tmovl %s, %%ecx\n", reg_name(dest));
+			fprintf(fd, "\tshl %%cl, %%edx\n");
+			fprintf(fd, "\tmovl %%edx, %%eax\n");
+			fprintf(fd, "\tmovl %%edx, %s\n", reg_name(dest));
+			fprintf(fd, "\tpopq %%rdx\n");
+			fprintf(fd, "\tpopq %%rcx\n");
+		} else {
+			fprintf(fd, "\tpushq %%rcx\n");
+			fprintf(fd, "\tmovl %s, %%ecx\n", reg_name(dest));
+			fprintf(fd, "\tshl %%cl, %s\n", reg_name(src));
+			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(src));
+			fprintf(fd, "\tmovl %s, %s\n", reg_name(src), reg_name(dest));
+			fprintf(fd, "\tpopq %%rcx\n");
+		}
 	}
 }
 
 void shift_right(FILE *fd, struct reg_t *src, struct reg_t *dest)
 {
 	if (src->size==word_size) {
-		fprintf(fd, "\tpushq %%rcx\n");
-		fprintf(fd, "\tmovl %s, %%ecx\n", reg_name(dest));
-		fprintf(fd, "\tshr %%cl, %s\n", reg_name(src));
-		fprintf(fd, "\tmovl %s, %%eax\n", reg_name(src));
-		fprintf(fd, "\tpopq %%rcx\n");
+		if (!strcmp(reg_name(src), "%ecx")) {
+			fprintf(fd, "\tpushq %%rcx\n");
+			fprintf(fd, "\tpushq %%rdx\n");
+			fprintf(fd, "\tmovl %%ecx, %%edx\n");
+			fprintf(fd, "\tmovl %s, %%ecx\n", reg_name(dest));
+			fprintf(fd, "\tshr %%cl, %%edx\n");
+			fprintf(fd, "\tmovl %%edx, %%eax\n");
+			fprintf(fd, "\tmovl %%edx, %s\n", reg_name(dest));
+			fprintf(fd, "\tpopq %%rdx\n");
+			fprintf(fd, "\tpopq %%rcx\n");
+		} else {
+			fprintf(fd, "\tpushq %%rcx\n");
+			fprintf(fd, "\tmovl %s, %%ecx\n", reg_name(dest));
+			fprintf(fd, "\tshr %%cl, %s\n", reg_name(src));
+			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(src));
+			fprintf(fd, "\tmovl %s, %s\n", reg_name(src), reg_name(dest));
+			fprintf(fd, "\tpopq %%rcx\n");
+		}
 	}
 }
 

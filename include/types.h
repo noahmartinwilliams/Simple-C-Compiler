@@ -34,6 +34,7 @@ struct expr_t {
 		char *bin_op;
 		char *un_op;
 		char *cstr_val;
+		struct expr_t *argument;
 		struct func_t *function;
 	} attrs;
 };

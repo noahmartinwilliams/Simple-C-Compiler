@@ -38,7 +38,7 @@ void generate_expression(FILE *fd, struct expr_t *e)
 			struct expr_t *current_e=e->right;
 			struct reg_t *ret=get_ret_register(get_type_size(current_e->type));
 			while (current_e!=NULL) {
-				generate_expression(fd, current_e);
+				generate_expression(fd, current_e->attrs.argument);
 				add_argument(fd, ret, current_e->type);
 				current_e=current_e->right;
 			}
@@ -195,9 +195,35 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 {
 	depth++;
 	struct reg_t *ret=get_ret_register(get_type_size(e->type));
+	if (!strcmp(e->attrs.bin_op, "=")) {
+		/* The reason for redoing rhs, and lhs is that 
+		this way I can declare lhs AFTER I've generated the 
+		right hand side of the expression which leaves whatever
+		register I choose available for evaulation of the rhs */
+		place_comment(fd, "Note: lhs, and rhs of assignment is swapped");
+		place_comment(fd, "(");
+		place_comment(fd, "(");
+
+		generate_expression(fd, e->right);
+		struct reg_t *lhs=get_free_register(fd, get_type_size(e->type));
+
+		assign_reg(fd, ret, lhs);
+		place_comment(fd, ")");
+		place_comment(fd, "=");
+		place_comment(fd, "(");
+		/* TODO: figure out a good way to abstract away the direct use
+		 * of the mov command here. Printing opcodes is for handle-registers.c */
+		 if (e->kind==pre_un_op && !strcmp(e->attrs.un_op, "*")) {
+			generate_expression(fd, e->right);
+			assign_dereference(fd, lhs, ret);
+		 } else if (e->left->kind==var) {
+			assign_var(fd, lhs, e->left->attrs.var);
+		 }
+		place_comment(fd, ")");
+		place_comment(fd, ")");
+	} else {
 	struct reg_t *lhs=get_free_register(fd, get_type_size(e->type));
 	struct reg_t *rhs=get_free_register(fd, get_type_size(e->type));
-
 	if (!strcmp(e->attrs.bin_op, "==")) {
 		generate_comparison_expression(fd, e, jmp_eq, "is$eq$%d", "is$not$eq$%d", lhs);
 
@@ -216,27 +242,6 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 	} else if (!strcmp(e->attrs.bin_op, "<=")) {
 		generate_comparison_expression(fd, e, jmp_le, "is$le$%d", "is$gt$%d", lhs);
 
-	} else if (!strcmp(e->attrs.bin_op, "=")) {
-		place_comment(fd, "Note: lhs, and rhs of assignment is swapped");
-		place_comment(fd, "(");
-		place_comment(fd, "(");
-
-		generate_expression(fd, e->right);
-
-		assign_reg(fd, ret, lhs);
-		place_comment(fd, ")");
-		place_comment(fd, "=");
-		place_comment(fd, "(");
-		/* TODO: figure out a good way to abstract away the direct use
-		 * of the mov command here. Printing opcodes is for handle-registers.c */
-		 if (e->kind==pre_un_op && !strcmp(e->attrs.un_op, "*")) {
-			generate_expression(fd, e->right);
-			assign_dereference(fd, lhs, ret);
-		 } else if (e->left->kind==var) {
-			assign_var(fd, lhs, e->left->attrs.var);
-		 }
-		place_comment(fd, ")");
-		place_comment(fd, ")");
 	} else if (!strcmp(e->attrs.bin_op, "+=")) {
 		place_comment(fd, "Note: lhs, and rhs of assignment is swapped");
 		place_comment(fd, "(");
@@ -297,5 +302,6 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 	}
 	free_register(fd, rhs);
 	free_register(fd, lhs);
+	}
 	depth--;
 }

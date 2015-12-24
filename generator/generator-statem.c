@@ -26,13 +26,8 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		place_comment(fd, "return");
 		place_comment(fd, "(");
 		generate_expression(fd, s->attrs.expr);
+		return_from_call(fd);
 		place_comment(fd, ")");
-		fprintf(fd, "\tmovq %%rbp, %%rsp\n");
-		fprintf(fd, "\tpopq %%rbp\n");
-		if (!in_main)
-			fprintf(fd, "\tret\n");
-		else
-			fprintf(fd, "\tmovq %%rax, %%rdi\n\tmovq $60, %%rax\n\tsyscall\n");
 	} else if (s->kind==declare) {
 		return;
 	} else if (s->kind==_if) {

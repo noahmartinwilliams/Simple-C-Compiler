@@ -67,7 +67,8 @@ void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 
 void expand_stack_space(FILE *fd, off_t off)
 {
-	fprintf(fd, "\tsubq $%ld, %%rsp\n", off);
+	if (off!=0)
+		fprintf(fd, "\tsubq $%ld, %%rsp\n", off);
 }
 
 void read_var(FILE *fd, struct var_t *v)
@@ -125,45 +126,6 @@ void compare_register_to_int(FILE *fd, struct reg_t *a, int i)
 	
 	else if (a->size==pointer_size)
 		fprintf(fd, "\tcmpq $%d, %s\n", i, reg_name(a));
-}
-
-
-void start_call(FILE *fd, struct func_t *f)
-{
-	int x;
-	for (x=0; x<num_regs; x++) {
-		int y;
-		size_t biggest_size=0;
-		for (y=0; y<regs[x]->num_sizes; y++)
-			if (regs[x]->sizes[y].size>biggest_size)
-				biggest_size=regs[x]->sizes[y].size;
-		if (regs[x]->in_use)
-			fprintf(fd, "\tpush %s\n", get_reg_name(regs[x], biggest_size));
-	}
-	if (f->num_arguments==0 && f->ret_type->body->is_struct==false) {
-		return;
-	}
-}
-
-void add_argument(FILE *fd, struct reg_t *reg, struct type_t *t )
-{
-	/*TODO: Fix this to work better. */	
-	if (reg->size==word_size) {
-		fprintf(fd, "\tpushq %%rdi\n");
-		fprintf(fd, "\tmovl %s, %%edi\n", get_reg_name(reg, word_size));
-	} else if (reg->size==pointer_size) {
-		fprintf(fd, "\tpushq %%rdi\n");
-		fprintf(fd, "\tmovq %s, %%rdi\n", get_reg_name(reg, pointer_size));
-	} else {
-		fprintf(stderr, "Internal Error: unknown size %ld passed to add_argument.\n", reg->size);
-		exit(1);
-	}
-}
-
-void call(FILE *fd, struct func_t *f)
-{
-	fprintf(fd, "\tcall %s\n", f->name);
-	fprintf(fd, "\tpopq %%rdi\n");
 }
 
 void add_readonly_data(FILE *fd, struct expr_t *e)
