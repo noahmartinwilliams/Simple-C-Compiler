@@ -13,6 +13,7 @@
 #include "printer.h"
 #include "print-tree.h"
 #include "types.h"
+#include "generator-globals.h"
 
 void yyerror(const char *s);
 extern int yydebug;
@@ -55,7 +56,7 @@ struct arguments_t {
 }
 %define parse.error verbose
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST RET STRUCT WHILE GE_TEST LE_TEST FOR INC_OP DO
-%token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF 
+%token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF MULTI_ARGS
 %token <str> STR_LITERAL 
 %token <type> TYPE
 %token <str> ASSIGN_OP
@@ -92,7 +93,9 @@ file_entry:  function {
 	generate_function(output, $1);
 } | var_declaration {
 	generate_global_vars(output, $1);
-} | function_header ';' | TYPEDEF type_with_stars IDENTIFIER ';' {
+} | function_header ';' {
+	multiple_functions=true;
+} | TYPEDEF type_with_stars IDENTIFIER ';' {
 	struct type_t *t=malloc(sizeof(struct type_t));
 	memcpy(t, $2, sizeof(struct type_t));
 	t->name=strdup($3);
@@ -129,6 +132,7 @@ arg_declaration: type var_declaration_ident {
 function_header: type IDENTIFIER '(' ')' {
 	struct func_t *f=malloc(sizeof(struct func_t));
 	f->name=$2;
+	f->has_var_args=false;
 	f->ret_type=$1;
 	f->num_arguments=0;
 	f->arguments=NULL;
@@ -138,6 +142,7 @@ function_header: type IDENTIFIER '(' ')' {
 } | type IDENTIFIER '(' arg_declaration ')' {
 	struct func_t *f=malloc(sizeof(struct func_t));
 	f->name=$2;
+	f->has_var_args=false;
 	f->ret_type=$1;
 	f->num_arguments=0;
 	f->arguments=$4->vars;
@@ -149,6 +154,18 @@ function_header: type IDENTIFIER '(' ')' {
 } | EXTERN function_header {
 	$2->attributes|=_extern;
 	$$=$2;
+} | type IDENTIFIER '(' arg_declaration ',' MULTI_ARGS ')' {
+	struct func_t *f=malloc(sizeof(struct func_t));
+	f->name=$2;
+	f->ret_type=$1;
+	f->num_arguments=0;
+	f->arguments=$4->vars;
+	f->num_arguments=$4->num_vars;
+	f->has_var_args=true;
+	free($4);
+	add_func(f);
+	$$=f;
+	current_function=$2;
 };
 
 function: function_header '{' statement_list '}' {

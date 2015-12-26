@@ -128,7 +128,7 @@ void generate_function(FILE *fd, struct func_t *f)
 		regs[x]->used_for_call=false;
 	}
 
-	if (o==0) {
+	if (o==0 || multiple_functions) {
 		current_stack_offset=0;
 		fprintf(fd, "\tsubq $16, %%rsp\n");
 		fprintf(fd, "\tmovl $0, -4(%%rbp)\n");

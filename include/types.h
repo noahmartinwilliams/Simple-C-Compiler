@@ -90,6 +90,8 @@ struct func_t {
 	struct type_t *ret_type;
 	struct var_t **arguments;
 	int num_arguments;
+
+	bool has_var_args;
 };
 
 #endif

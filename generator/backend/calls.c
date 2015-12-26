@@ -24,6 +24,14 @@ static struct reg_t* get_reg_by_name(char *name)
 	return NULL;
 }
 
+static void reset_used_for_call()
+{
+	int x;
+	for (x=0; x<num_regs; x++) {
+		regs[x]->used_for_call=false;
+	}
+}
+
 char* get_next_call_register(enum reg_use r)
 {
 	struct reg_t *ret;
@@ -61,6 +69,7 @@ char* get_next_call_register(enum reg_use r)
 }
 void start_call(FILE *fd, struct func_t *f)
 {
+	reset_used_for_call();
 	int x;
 	for (x=0; x<num_regs; x++) {
 		int y;
@@ -112,7 +121,7 @@ void call(FILE *fd, struct func_t *f)
 
 void return_from_call(FILE *fd)
 {
-	if (in_main && current_stack_offset==0) {
+	if (in_main && multiple_functions) {
 		fprintf(fd, "\tleave\n\tret\n");
 	} else {
 		fprintf(fd, "\tmovq %%rbp, %%rsp\n");
