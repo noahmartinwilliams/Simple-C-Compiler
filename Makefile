@@ -1,7 +1,7 @@
 INCLUDE=./include
 include include/config.mk
 
-main: comp.tab.c globals.o lex.yy.o handle.a generator.a
+main: comp.tab.c globals.o lex.yy.o handle.a generator.a optimization-globals.o
 	$(CMB)
 
 generator.a: generator/* generator/backend/*

@@ -14,10 +14,12 @@ void int_add(FILE *fd, struct reg_t *a, struct reg_t *b)
 		fprintf(fd, "\tmovb %s, %%al\n", get_reg_name(b, word_size));
 	} else if (a->size==word_size) {
 		fprintf(fd, "\taddl %s, %s\n", get_reg_name(a, word_size), get_reg_name(b, word_size));
-		fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(b, word_size));
+		if (b->use!=RET)
+			fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(b, word_size));
 	} else if (a->size==pointer_size) {
 		fprintf(fd, "\taddq %s, %s\n", get_reg_name(a, pointer_size), get_reg_name(b, pointer_size));
-		fprintf(fd, "\tmovq %s, %%rax\n", get_reg_name(b, pointer_size));
+		if (b->use!=RET)
+			fprintf(fd, "\tmovq %s, %%rax\n", get_reg_name(b, pointer_size));
 	}
 }
 
@@ -49,10 +51,12 @@ void int_sub(FILE *fd, struct reg_t *b, struct reg_t *a)
 		fprintf(fd, "\tmovb %s, %%al\n", reg_name(b));
 	} else if (a->size==word_size) {
 		fprintf(fd, "\tsubl %s, %s\n", reg_name(a), reg_name(b));
-		fprintf(fd, "\tmovl %s, %%eax\n", reg_name(b));
+		if (b->use!=RET)
+			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(b));
 	} else if (a->size==pointer_size) {
 		fprintf(fd, "\tsubq %s, %s\n", reg_name(a), reg_name(b));
-		fprintf(fd, "\tmovq %s, %%rax\n", reg_name(b));
+		if (b->use!=RET)
+			fprintf(fd, "\tmovq %s, %%rax\n", reg_name(b));
 	}
 }
 

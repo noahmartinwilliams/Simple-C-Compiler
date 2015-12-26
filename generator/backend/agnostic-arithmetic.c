@@ -23,6 +23,7 @@ void shift_left(FILE *fd, struct reg_t *src, struct reg_t *dest)
 			fprintf(fd, "\tmovl %%edx, %s\n", reg_name(dest));
 			fprintf(fd, "\tpopq %%rdx\n");
 			fprintf(fd, "\tpopq %%rcx\n");
+			/* OH GOD WHY??? T.T */
 		} else {
 			fprintf(fd, "\tpushq %%rcx\n");
 			fprintf(fd, "\tmovl %s, %%ecx\n", reg_name(dest));

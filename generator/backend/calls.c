@@ -23,6 +23,7 @@ static struct reg_t* get_reg_by_name(char *name)
 	}
 	return NULL;
 }
+
 char* get_next_call_register(enum reg_use r)
 {
 	struct reg_t *ret;
@@ -80,7 +81,11 @@ void start_call(FILE *fd, struct func_t *f)
 void add_argument(FILE *fd, struct reg_t *reg, struct type_t *t )
 {
 	/*TODO: Fix this to work better. */	
-	fprintf(fd, "\tmovq %s, %s\n", get_reg_name(reg, pointer_size), get_next_call_register(INT));
+	char *next=get_next_call_register(INT);
+	char *name=get_reg_name(reg, pointer_size);
+
+	if (strcmp(name, next))
+		fprintf(fd, "\tmovq %s, %s\n", name, next);
 }
 
 void call(FILE *fd, struct func_t *f)

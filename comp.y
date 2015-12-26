@@ -80,6 +80,7 @@ struct arguments_t {
 %left SHIFT_LEFT SHIFT_RIGHT
 %left '+' '-'
 %left '*' '/'
+%left '(' ')' '.'
 %nonassoc IFX
 %nonassoc ELSE
 

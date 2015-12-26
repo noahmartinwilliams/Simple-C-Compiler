@@ -195,8 +195,9 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 {
 	depth++;
 	struct reg_t *ret=get_ret_register(get_type_size(e->type));
+	struct reg_t *lhs, *rhs;
 	if (!strcmp(e->attrs.bin_op, "=")) {
-		/* The reason for redoing rhs, and lhs is that 
+		/* The reason for redoing rhs, and lhs in the else statement is that 
 		this way I can declare lhs AFTER I've generated the 
 		right hand side of the expression which leaves whatever
 		register I choose available for evaulation of the rhs */
@@ -205,7 +206,7 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, "(");
 
 		generate_expression(fd, e->right);
-		struct reg_t *lhs=get_free_register(fd, get_type_size(e->type));
+		lhs=get_free_register(fd, get_type_size(e->type));
 
 		assign_reg(fd, ret, lhs);
 		place_comment(fd, ")");
@@ -221,87 +222,88 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		 }
 		place_comment(fd, ")");
 		place_comment(fd, ")");
+		free_register(fd, lhs);
 	} else {
-	struct reg_t *lhs=get_free_register(fd, get_type_size(e->type));
-	struct reg_t *rhs=get_free_register(fd, get_type_size(e->type));
-	if (!strcmp(e->attrs.bin_op, "==")) {
-		generate_comparison_expression(fd, e, jmp_eq, "is$eq$%d", "is$not$eq$%d", lhs);
+		lhs=get_free_register(fd, get_type_size(e->type));
+		rhs=get_free_register(fd, get_type_size(e->type));
+		if (!strcmp(e->attrs.bin_op, "==")) {
+			generate_comparison_expression(fd, e, jmp_eq, "is$eq$%d", "is$not$eq$%d", lhs);
 
-	} else if (!strcmp(e->attrs.bin_op, "<")) {
-		generate_comparison_expression(fd, e, jmp_lt, "is$lt$%d", "is$not$lt$%d", lhs);
+		} else if (!strcmp(e->attrs.bin_op, "<")) {
+			generate_comparison_expression(fd, e, jmp_lt, "is$lt$%d", "is$not$lt$%d", lhs);
 
-	} else if (!strcmp(e->attrs.bin_op, ">")) {
-		generate_comparison_expression(fd, e, jmp_gt, "is$gt$%d", "is$not$gt$%d", lhs);
+		} else if (!strcmp(e->attrs.bin_op, ">")) {
+			generate_comparison_expression(fd, e, jmp_gt, "is$gt$%d", "is$not$gt$%d", lhs);
 
-	} else if (!strcmp(e->attrs.bin_op, "!=")) {
-		generate_comparison_expression(fd, e, jmp_neq, "is$ne$%d", "is$eq$%d", lhs);
+		} else if (!strcmp(e->attrs.bin_op, "!=")) {
+			generate_comparison_expression(fd, e, jmp_neq, "is$ne$%d", "is$eq$%d", lhs);
 
-	} else if (!strcmp(e->attrs.bin_op, ">=")) {
-		generate_comparison_expression(fd, e, jmp_ge, "is$ge$%d", "is$lt$%d", lhs);
+		} else if (!strcmp(e->attrs.bin_op, ">=")) {
+			generate_comparison_expression(fd, e, jmp_ge, "is$ge$%d", "is$lt$%d", lhs);
 
-	} else if (!strcmp(e->attrs.bin_op, "<=")) {
-		generate_comparison_expression(fd, e, jmp_le, "is$le$%d", "is$gt$%d", lhs);
+		} else if (!strcmp(e->attrs.bin_op, "<=")) {
+			generate_comparison_expression(fd, e, jmp_le, "is$le$%d", "is$gt$%d", lhs);
 
-	} else if (!strcmp(e->attrs.bin_op, "+=")) {
-		place_comment(fd, "Note: lhs, and rhs of assignment is swapped");
-		place_comment(fd, "(");
-		place_comment(fd, "(");
+		} else if (!strcmp(e->attrs.bin_op, "+=")) {
+			place_comment(fd, "Note: lhs, and rhs of assignment is swapped");
+			place_comment(fd, "(");
+			place_comment(fd, "(");
 
-		generate_expression(fd, e->right);
-		assign_reg(fd, ret, lhs);
+			generate_expression(fd, e->right);
+			assign_reg(fd, ret, lhs);
 
-		place_comment(fd, ")");
-		place_comment(fd, "+=");
-		place_comment(fd, "(");
+			place_comment(fd, ")");
+			place_comment(fd, "+=");
+			place_comment(fd, "(");
 
-		char *var=prepare_var_assignment(fd, e->left);
+			char *var=prepare_var_assignment(fd, e->left);
 
-		place_comment(fd, ")");
+			place_comment(fd, ")");
 
-		int_inc_by(fd, lhs, var);
+			int_inc_by(fd, lhs, var);
 
-		place_comment(fd, ")");
-	} else { 
-		place_comment(fd, "(");
-		place_comment(fd, "(");
+			place_comment(fd, ")");
+		} else { 
+			place_comment(fd, "(");
+			place_comment(fd, "(");
 
-		generate_expression(fd, e->left);
-		assign_reg(fd, ret, lhs);
+			generate_expression(fd, e->left);
+			assign_reg(fd, ret, lhs);
 
-		place_comment(fd, ")");
-		place_comment(fd, e->attrs.bin_op);
-		place_comment(fd, "(");
+			place_comment(fd, ")");
+			place_comment(fd, e->attrs.bin_op);
+			place_comment(fd, "(");
 
-		generate_expression(fd, e->right);
+			generate_expression(fd, e->right);
 
-		place_comment(fd, ")");
-		char *c=e->attrs.bin_op;
-		if (!strcmp(c, "+"))
-			int_add(fd, lhs, ret);
-		else if (!strcmp(c, "-")) 
-			int_sub(fd, lhs, ret);
-		else if (!strcmp(c, "/"))
-			int_div(fd, lhs, ret);
-		else if (!strcmp(c, "*"))
-			int_mul(fd, lhs, ret);
-		else if (!strcmp(c, "<<"))
-			shift_left(fd, lhs, ret);
-		else if (!strcmp(c, ">>"))
-			shift_right(fd, lhs, ret);
-		else if (!strcmp(c, "|"))
-			or(fd, lhs, ret);
-		else if (!strcmp(c, "&"))
-			and(fd, lhs, ret);
-		else if (!strcmp(c, "^"))
-			xor(fd, lhs, ret);
-		else if (!strcmp(c, "||"))
-			test_or(fd, lhs, ret);
-		else if (!strcmp(c, "&&"))
-			test_and(fd, lhs, ret);
-		place_comment(fd, ")");
-	}
-	free_register(fd, rhs);
-	free_register(fd, lhs);
+			place_comment(fd, ")");
+			char *c=e->attrs.bin_op;
+			if (!strcmp(c, "+"))
+				int_add(fd, lhs, ret);
+			else if (!strcmp(c, "-")) 
+				int_sub(fd, lhs, ret);
+			else if (!strcmp(c, "/"))
+				int_div(fd, lhs, ret);
+			else if (!strcmp(c, "*"))
+				int_mul(fd, lhs, ret);
+			else if (!strcmp(c, "<<"))
+				shift_left(fd, lhs, ret);
+			else if (!strcmp(c, ">>"))
+				shift_right(fd, lhs, ret);
+			else if (!strcmp(c, "|"))
+				or(fd, lhs, ret);
+			else if (!strcmp(c, "&"))
+				and(fd, lhs, ret);
+			else if (!strcmp(c, "^"))
+				xor(fd, lhs, ret);
+			else if (!strcmp(c, "||"))
+				test_or(fd, lhs, ret);
+			else if (!strcmp(c, "&&"))
+				test_and(fd, lhs, ret);
+			place_comment(fd, ")");
+		}
+		free_register(fd, rhs);
+		free_register(fd, lhs);
 	}
 	depth--;
 }
