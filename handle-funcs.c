@@ -24,15 +24,21 @@ void free_func(struct func_t *f)
 {
 	free(f->name);
 	free_statem(f->statement_list);
-	free(f->arguments);
+	if (f->arguments!=NULL) {
+		int x;
+		for (x=0; x<f->num_arguments; x++) {
+			free_var(f->arguments[x]);
+		}
+		free(f->arguments);
+	}
+	free_type(f->ret_type);
 	free(f);
 }
 
 void free_all_funcs()
 {
 	int x;
-	for (x=0; x<num_funcs; x++) {
+	for (x=0; x<num_funcs; x++) 
 		free_func(funcs[x]);
-	}
 	free(funcs);
 }

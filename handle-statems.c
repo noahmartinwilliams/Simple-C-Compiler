@@ -37,7 +37,8 @@ void free_statem(struct statem_t *s)
 	} else if (s->kind==do_while) {
 		free_expr(s->attrs.do_while.condition);
 		free_statem(s->attrs.do_while.block);
-	}
+	} else if (s->kind==declare) 
+		free_var(s->attrs.var);
 	free(s);
 }
 

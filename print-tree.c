@@ -7,7 +7,6 @@ void print_tree(void (*printer) (char*, void*), void *tree, char *str, off_t a, 
 	char *s=NULL;
 	printf("%s|_", str);
 	printer(str, tree);
-	printf("\n");
 	asprintf(&s, "%s |", str);
 	if (*((void**) (tree+a))!=NULL) {
 		print_tree(printer, *((void**) (tree+a)), s, a, b);

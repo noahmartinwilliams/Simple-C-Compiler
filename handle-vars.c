@@ -17,6 +17,11 @@ void free_var(struct var_t *v)
 	if (v==NULL)
 		return;
 
+	v->refcount--;
+	if (v->refcount > 0)
+		return;
+
+	free_type(v->type);
 	free(v->name);
 	free(v);
 }

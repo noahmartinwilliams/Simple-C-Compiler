@@ -59,6 +59,18 @@ int get_type_index_by_name(char *name)
 
 void free_tbody(struct tbody_t *t)
 {
+	if (t==NULL)
+		return;
+
+	t->refcount--;
+	if (t->refcount==0)
+		free(t);
+}
+
+void free_native_type(struct type_t *t)
+{
+	free(t->name);
+	free_tbody(t->body);
 	free(t);
 }
 
@@ -66,18 +78,26 @@ void free_type(struct type_t *t)
 {
 	if (t==NULL)
 		return;
-	free(t->name);
-	t->body->refcount--;
-	if (t->body->refcount==0)
-		free_tbody(t->body);
-	free(t);
+
+	if (t->native_type)
+		return;
+
+	t->refcount--;
+	if (t->refcount>0)
+		return;
+
+
+	free_native_type(t);
 }
 
 void free_all_types()
 {
 	int x;
 	for (x=0; x<num_types; x++) {
-		free_type(types[x]);
+		types[x]->native_type=false;
+		free(types[x]->body);
+		types[x]->body=NULL;
+		free_native_type(types[x]);
 	}
 	free(types);
 	types=NULL;
@@ -105,6 +125,9 @@ struct type_t* increase_type_depth(struct type_t *t, int n)
 {
 	struct type_t *new=malloc(sizeof(struct type_t));
 	memcpy(new, t, sizeof(struct type_t));
+	new->native_type=false;
+	new->name=strdup(t->name);
+	new->refcount=1;
 	new->pointer_depth+=n;
 	new->body->refcount++;
 	return new;
@@ -114,7 +137,11 @@ struct type_t* decrease_type_depth(struct type_t *t, int n)
 {
 	struct type_t *new=malloc(sizeof(struct type_t));
 	memcpy(new, t, sizeof(struct type_t));
+	new->refcount=1;
+	new->native_type=false;
 	new->pointer_depth-=n;
 	new->body->refcount++;
+	new->name=strdup(t->name);
 	return new;
 }
+

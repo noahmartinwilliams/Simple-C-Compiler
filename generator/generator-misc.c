@@ -21,7 +21,7 @@ char* prepare_var_assignment(FILE *fd, struct expr_t *dest);
 
 void get_address(FILE *fd, struct expr_t *_var)
 {
-	fprintf(fd, "\t#&\n\t#(\n");
+	place_comment(fd, "& (");
 	depth++;
 	struct reg_t *ret=get_ret_register(_var->type->body->size);
 	if (_var->kind==var) {
@@ -29,7 +29,7 @@ void get_address(FILE *fd, struct expr_t *_var)
 		inc_by_int(fd, _var->attrs.var->offset, get_reg_name(ret, pointer_size), pointer_size);
 	}
 	depth--;
-	fprintf(fd, "\t#)\n");
+	place_comment(fd, "(");
 }
 
 void setup_types()
@@ -45,6 +45,8 @@ void setup_types()
 	i->body->is_struct=false;
 	i->body->refcount=1;
 	i->body->is_union=false;
+	i->refcount=1;
+	i->native_type=true;
 
 	types[num_types-2]=malloc(sizeof(struct type_t));
 	i=types[num_types-2];
@@ -55,6 +57,8 @@ void setup_types()
 	i->body->is_struct=false;
 	i->body->refcount=1;
 	i->body->is_union=false;
+	i->refcount=1;
+	i->native_type=true;
 
 	types[num_types-3]=malloc(sizeof(struct type_t));
 	i=types[num_types-3];
@@ -65,6 +69,8 @@ void setup_types()
 	i->body->is_struct=false;
 	i->body->refcount=1;
 	i->body->is_union=false;
+	i->refcount=1;
+	i->native_type=true;
 }
 
 void setup_generator()

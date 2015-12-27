@@ -20,10 +20,13 @@ struct tbody_t {
 };
 
 struct type_t {
+	bool native_type;
+	int refcount;
 	char *name;
 	int pointer_depth;
 	struct tbody_t *body;
 };
+
 struct expr_t {
 	enum { bin_op, pre_un_op, post_un_op, question, const_int, const_float, var, funccall, arg, const_str } kind;
 	struct expr_t *left, *right;
@@ -45,6 +48,7 @@ struct var_t {
 	int scope;
 	bool hidden;
 	struct type_t *type;
+	int refcount;
 };
 
 struct statem_t {
