@@ -105,7 +105,12 @@ off_t get_var_offset(struct statem_t *s, off_t current_off)
 
 void generate_function(FILE *fd, struct func_t *f)
 {
-	fprintf(fd, "\t.text\n\t.globl %s\n\t.type %s, @function\n%s:\n", f->name, f->name, f->name);
+	fprintf(fd, "\t.text\n");
+	if (f->attributes & _static){
+		fprintf(fd, "\t.type %s, @function\n%s:\n", f->name, f->name);
+	} else {
+		fprintf(fd, "\t.globl %s\n\t.type %s, @function\n%s:\n", f->name, f->name, f->name);
+	}
 	fprintf(fd, "\tpushq %%rbp\n");
 	fprintf(fd, "\tmovq %%rsp, %%rbp\n");
 	if (!strcmp("main", f->name)) {

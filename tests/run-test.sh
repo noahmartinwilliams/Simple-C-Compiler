@@ -1,5 +1,5 @@
 #! /bin/bash
-RET=$([ -f ./wrapper-$1 ] && ( ./wrapper-$1; echo $? ) || echo "no")
+RET=$([ -f ./wrapper-$1.sh ] && ( ./wrapper-$1.sh; echo $? ) || echo "no")
 
 if [ "$RET" = 0 ];
 then

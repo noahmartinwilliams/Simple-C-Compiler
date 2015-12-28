@@ -6,9 +6,7 @@ test:
 
 
 test%: source-test%.c cc
-	$(CC) $@-output.s $<
-	as $@-output.s -o output.o
-	gcc output.o -o $@
+	./compile-source.sh $< $@
 	./run-test.sh $@
 
 clean:

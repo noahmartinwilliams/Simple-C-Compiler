@@ -57,7 +57,7 @@ struct arguments_t {
 }
 %define parse.error verbose
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST RET STRUCT WHILE GE_TEST LE_TEST FOR INC_OP DO
-%token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF MULTI_ARGS
+%token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF MULTI_ARGS STATIC
 %token <str> STR_LITERAL 
 %token <type> TYPE
 %token <str> ASSIGN_OP
@@ -189,6 +189,9 @@ function_header: type IDENTIFIER '(' ')' {
 	current_function=strdup($2);
 	free($2);
 	$$=f;
+} | STATIC function_header {
+	$2->attributes|=_static;
+	$$=$2;
 };
 
 function: function_header '{' statement_list '}' {
@@ -567,6 +570,9 @@ assignable_expr: IDENTIFIER {
 	if ($1->type->body->is_union) {
 		memcpy(e, $1, sizeof(struct expr_t));
 		e->type=get_struct_or_union_attr_type($1->type, $3);
+	} else if ($1->type->body->is_struct) {
+		/* a.b ---> *(&a+offsetof(typeof(a), b)) */
+
 	}
 	free($3);
 	$$=e;

@@ -34,6 +34,7 @@ static inline void haiku_easter_egg(char *s)
 "."	{ count(yytext); return '.'; }
 "..."	{ count(yytext); return MULTI_ARGS; }
 "union"	{ count(yytext); return UNION; }
+"static"	{ count(yytext); return STATIC; }
 "typedef"	{ count(yytext); return TYPEDEF; }
 "do"	{ count(yytext); return DO; }
 "for"	{ count(yytext); return FOR; }

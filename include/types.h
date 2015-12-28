@@ -89,7 +89,7 @@ struct statem_t {
 
 struct func_t {
 	char *name;
-	enum { _extern } attributes;
+	enum { _extern, _static } attributes;
 	struct statem_t *statement_list;
 	struct type_t *ret_type;
 	struct var_t **arguments;
