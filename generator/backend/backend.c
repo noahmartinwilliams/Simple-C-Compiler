@@ -8,32 +8,105 @@
 #include "types.h"
 #include "generator/backend/registers.h"
 
-
-void backend_make_global_var(FILE *fd, struct var_t *v)
+void setup_backend()
 {
-	fprintf(fd, "\t.comm %s, %d, %d\n", v->name, get_type_size(v->type), get_type_size(v->type));
+	num_regs+=14;
+	regs=realloc(regs, num_regs*sizeof(struct reg_t*));
 
+	char *primary[]={"a", "b", "c", "d"};
+	int x;
+	for (x=0; x<4; x++) {
+		regs[x]=malloc(sizeof(struct reg_t));
+		regs[x]->sizes=calloc(4, sizeof(struct reg_size));
+		regs[x]->num_sizes=4;
+		regs[x]->size=8;
+		regs[x]->in_use=false;
+		regs[x]->depths=NULL;
+		asprintf(&(regs[x]->sizes[0].name), "%%%sl", primary[x]);
+		asprintf(&(regs[x]->sizes[1].name), "%%%sx", primary[x]);
+		asprintf(&(regs[x]->sizes[2].name), "%%e%sx", primary[x]);
+		asprintf(&(regs[x]->sizes[3].name), "%%r%sx", primary[x]);
+
+		regs[x]->sizes[0].size=1;
+		regs[x]->sizes[1].size=2;
+		regs[x]->sizes[2].size=4;
+		regs[x]->sizes[3].size=8;
+
+		regs[x]->use=INT;
+	}
+	regs[0]->use=RET;
+	for (x=4; x<12; x++) {
+		regs[x]=malloc(sizeof(struct reg_t));
+		regs[x]->sizes=calloc(4, sizeof(struct reg_size));
+		regs[x]->num_sizes=4;
+		asprintf(&(regs[x]->sizes[3].name), "%%r%d", (x-4)+8);
+		regs[x]->sizes[3].size=8;
+		asprintf(&(regs[x]->sizes[0].name), "%%r%dd", (x-4)+8);
+		regs[x]->sizes[0].size=4;
+		asprintf(&(regs[x]->sizes[1].name), "%%r%dw", (x-4)+8);
+		regs[x]->sizes[1].size=2;
+		asprintf(&(regs[x]->sizes[2].name), "%%r%db", (x-4)+8);
+		regs[x]->sizes[2].size=1;
+		regs[x]->in_use=false;
+		regs[x]->depths=NULL;
+		regs[x]->use=INT;
+	}
+	regs[x]=malloc(sizeof(struct reg_t));
+	regs[x]->sizes=calloc(4, sizeof(struct reg_size));
+	regs[x]->num_sizes=4;
+	regs[x]->sizes[0].name=strdup("%dil"); // I have no idea if this is right. :/
+	regs[x]->sizes[0].size=1;
+	regs[x]->sizes[1].name=strdup("%di");
+	regs[x]->sizes[1].size=2;
+	regs[x]->sizes[2].name=strdup("%edi");
+	regs[x]->sizes[2].size=4;
+	regs[x]->sizes[3].name=strdup("%rdi");
+	regs[x]->sizes[3].size=8;
+	regs[x]->in_use=false;
+	regs[x]->depths=NULL;
+	regs[x]->use=INT;
+
+	x++;
+	regs[x]=malloc(sizeof(struct reg_t));
+	regs[x]->sizes=calloc(4, sizeof(struct reg_size));
+	regs[x]->num_sizes=4;
+	regs[x]->sizes[0].name=strdup("%sil"); // I have no idea if this is right. :/
+	regs[x]->sizes[0].size=1;
+	regs[x]->sizes[1].name=strdup("%si");
+	regs[x]->sizes[1].size=2;
+	regs[x]->sizes[2].name=strdup("%esi");
+	regs[x]->sizes[2].size=4;
+	regs[x]->sizes[3].name=strdup("%rsi");
+	regs[x]->sizes[3].size=8;
+	regs[x]->in_use=false;
+	regs[x]->depths=NULL;
+	regs[x]->use=INT;
+}
+
+static void free_reg_size(struct reg_size a) 
+{
+	free(a.name);
+}
+
+void cleanup_backend()
+{
+	int x;
+	for (x=0; x<num_regs; x++) {
+		int y;
+		for (y=0; y<regs[x]->num_sizes; y++) {
+			free_reg_size(regs[x]->sizes[y]);
+		}
+		free(regs[x]->sizes);
+		for (; regs[x]->depths!=NULL; free(pop(regs[x]->depths))) {}
+		free(regs[x]);
+	}
+	free(regs);
 }
 
 void place_comment(FILE *fd, char *str)
 {
 	fprintf(fd, "\t#%s\n", str);
 }
-
-void dereference(FILE *fd, struct reg_t *reg, size_t size)
-{
-	fprintf(fd, "\tmovq (%s), %%rax\n", reg_name(reg));
-}
-
-void assign_dereference(FILE *fd, struct reg_t *assign_from, struct reg_t *assign_to)
-{
-	if (assign_from->size==word_size)
-		fprintf(fd, "\tmovl %s, (%s)\n", reg_name(assign_from), reg_name(assign_to));
-	else if (assign_from->size==pointer_size)
-		fprintf(fd, "\tmovq %s, (%s)\n", reg_name(assign_from), reg_name(assign_to));
-}
-
-
 
 void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest)
 {
@@ -45,46 +118,6 @@ void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest)
 
 	else if (dest->size==pointer_size)
 		fprintf(fd, "\tmovq %s, %s\n", get_reg_name(src, dest->size), reg_name(dest));
-}
-
-void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
-{
-	if (dest==NULL) {
-		fprintf(stderr, "Internal error: a NULL variable pointer was passed to assign_var\n");
-		exit(1);
-	}
-	if (dest->scope!=0) {
-		if (get_type_size(dest->type)==word_size)
-			fprintf(fd, "\tmovl %s, %ld(%%rbp)\n", reg_name(src), dest->offset);
-		else if (get_type_size(dest->type)==pointer_size)
-			fprintf(fd, "\tmovq %s, %ld(%%rbp)\n", reg_name(src), dest->offset);
-	} else {
-		if (get_type_size(dest->type)==word_size)
-			fprintf(fd, "\tmovl %s, %s(%%rip)\n", reg_name(src), dest->name);
-	}
-} 
-
-
-void expand_stack_space(FILE *fd, off_t off)
-{
-	if (off!=0)
-		fprintf(fd, "\tsubq $%ld, %%rsp\n", off);
-}
-
-void read_var(FILE *fd, struct var_t *v)
-{
-	if (v->scope!=0) {
-		if (get_type_size(v->type)==char_size)
-			fprintf(fd, "\tmovb %ld(%%rbp), %%al\n", v->offset);
-		if (get_type_size(v->type)==word_size)
-			fprintf(fd, "\tmovl %ld(%%rbp), %%eax\n", v->offset);
-		if (get_type_size(v->type)==pointer_size)
-			fprintf(fd, "\tmovq %ld(%%rbp), %%rax\n", v->offset);
-	} else {
-		if (get_type_size(v->type)==word_size) {
-			fprintf(fd, "\tmovl %s(%%rip), %%eax\n", v->name);
-		}
-	}
 }
 
 void assign_constant(FILE *fd, struct expr_t *e)

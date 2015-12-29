@@ -23,26 +23,6 @@ void int_add(FILE *fd, struct reg_t *a, struct reg_t *b)
 	}
 }
 
-void int_inc_by(FILE *fd, struct reg_t *a, char *dest)
-{
-	if (a->size==char_size)
-		fprintf(fd, "\taddb %s, %s\n", reg_name(a), dest);
-	else if (a->size==word_size)
-		fprintf(fd, "\taddl %s, %s\n", reg_name(a), dest);
-	else if (a->size==pointer_size)
-		fprintf(fd, "\taddq %s, %s\n", reg_name(a), dest);
-
-}
-
-void inc_by_int(FILE *fd, int i, char *dest, size_t size)
-{
-	if (size==char_size)
-		fprintf(fd, "\taddb $%d, %s\n", i, dest);
-	else if (size==word_size)
-		fprintf(fd, "\taddl $%d, %s\n", i, dest);
-	else if (size==pointer_size)
-		fprintf(fd, "\taddq $%d, %s\n", i, dest);
-}
 
 void int_sub(FILE *fd, struct reg_t *b, struct reg_t *a)
 {

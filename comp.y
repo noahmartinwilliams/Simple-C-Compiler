@@ -772,7 +772,7 @@ int main(int argc, char *argv[])
 	free(current_function);
 	free_type(current_type);
 	free_all_funcs();
-	free_all_registers();
+	cleanup_backend();
 	free_all_types();
 	free_all_vars();
 	fclose(output);

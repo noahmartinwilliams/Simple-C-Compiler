@@ -17,15 +17,13 @@ void generate_post_unary_expression(FILE *fd, struct expr_t *e);
 
 void generate_expression(FILE *fd, struct expr_t *e)
 {
-	if (e->kind==bin_op) {
+	if (e->kind==bin_op)
 		generate_binary_expression(fd, e);
-	} else if (e->kind==var) {
+	else if (e->kind==var)
 		read_var(fd, e->attrs.var);
-	} else if (e->kind==const_int) {
-
+	else if (e->kind==const_int)
 		assign_constant(fd, e);
-
-	} else if (e->kind==pre_un_op) {
+	else if (e->kind==pre_un_op) {
 		generate_pre_unary_expression(fd, e);
 	} else if (e->kind==funccall) {
 		place_comment(fd, "(");
@@ -129,11 +127,11 @@ void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 				struct reg_t *tmp=get_free_register(fd, get_type_size(e->type));
 				assign_reg(fd, ret, tmp);
 
-				set_register_size(ret, pointer_size);
+				ret=get_ret_register(pointer_size);
 				generate_expression(fd, e->right->right);
 
 				assign_reg(fd, ret, rhs);
-				set_register_size(ret, get_type_size(e->type));
+				ret=get_ret_register(get_type_size(e->type));
 				assign_reg(fd, tmp, ret);
 
 				free_register(fd, tmp);
@@ -256,12 +254,17 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 			place_comment(fd, "+=");
 			place_comment(fd, "(");
 
-			char *var=prepare_var_assignment(fd, e->left);
+			generate_expression(fd, e->left);
+			int_add(fd, ret, lhs);
+
+			if (e->left->kind==pre_un_op && !strcmp(e->left->attrs.un_op, "*")) {
+				assign_reg(fd, ret, lhs);
+				generate_expression(fd, e->left);
+				assign_dereference(fd, lhs, ret);
+			} else if (e->left->kind==var)
+				assign_var(fd, ret, e->left->attrs.var);
 
 			place_comment(fd, ")");
-
-			int_inc_by(fd, lhs, var);
-
 			place_comment(fd, ")");
 		} else { 
 			place_comment(fd, "(");

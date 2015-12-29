@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "types.h"
 #include "generator/generator-globals.h"
+#include "generator/backend/variables.h"
 #include "generator/generator-expr.h"
 #include "globals.h"
 #include "generator/backend/backend.h"
@@ -17,20 +18,6 @@ char* generate_global_string(FILE *fd, char *str)
 	return make_global_string(fd, str);
 }
 
-char* prepare_var_assignment(FILE *fd, struct expr_t *dest);
-
-void get_address(FILE *fd, struct expr_t *_var)
-{
-	place_comment(fd, "& (");
-	depth++;
-	struct reg_t *ret=get_ret_register(_var->type->body->size);
-	if (_var->kind==var) {
-		fprintf(fd, "\tmovq %%rbp, %s\n", get_reg_name(ret, pointer_size));
-		inc_by_int(fd, _var->attrs.var->offset, get_reg_name(ret, pointer_size), pointer_size);
-	}
-	depth--;
-	place_comment(fd, "(");
-}
 
 void setup_types()
 {
@@ -76,7 +63,7 @@ void setup_types()
 void setup_generator()
 {
 	setup_types();
-	setup_registers();
+	setup_backend();
 }
 
 void generate_function(FILE *fd, struct func_t *f)

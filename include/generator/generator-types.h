@@ -2,6 +2,7 @@
 #define __GENERATOR_TYPES_H__
 #include "types.h"
 #include <stdbool.h>
+#include "stack.h"
 
 enum reg_use { RET, INT };
 struct reg_size {
@@ -14,7 +15,7 @@ struct reg_t {
 	int num_sizes;
 	size_t size;
 	bool in_use, used_for_call;
-	int depth;
+	struct stack_t *depths;
 	enum reg_use use;
 };
 

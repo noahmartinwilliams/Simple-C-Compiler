@@ -15,6 +15,12 @@ static bool doing_inline=false;
 static struct func_t *current_func=NULL;
 static int current_arg=0;
 
+static void expand_stack_space(FILE *fd, off_t off)
+{
+	if (off!=0)
+		fprintf(fd, "\tsubq $%ld, %%rsp\n", off);
+}
+
 static struct reg_t* get_reg_by_name(char *name)
 {
 	int x;
@@ -36,7 +42,7 @@ static void reset_used_for_call()
 	}
 }
 
-char* get_next_call_register(enum reg_use r)
+static char* get_next_call_register(enum reg_use r)
 {
 	struct reg_t *ret;
 	char *rname;

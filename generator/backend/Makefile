@@ -1,7 +1,7 @@
 INCLUDE=../../include
 include ../../include/config.mk
 
-../backend.a: backend.o jumps.o int-arithmetic.o registers.o agnostic-arithmetic.o statics.o calls.o
+../backend.a: backend.o jumps.o int-arithmetic.o registers.o agnostic-arithmetic.o statics.o calls.o variables.o
 	$(AR)
 
 clean:

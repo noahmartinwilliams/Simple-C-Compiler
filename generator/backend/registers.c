@@ -7,82 +7,6 @@
 #include "globals.h"
 #include "types.h"
 
-char* get_reg_name(struct reg_t *reg, size_t size);
-void setup_registers()
-{
-	num_regs+=14;
-	regs=realloc(regs, num_regs*sizeof(struct reg_t*));
-
-	char *primary[]={"a", "b", "c", "d"};
-	int x;
-	for (x=0; x<4; x++) {
-		regs[x]=malloc(sizeof(struct reg_t));
-		regs[x]->sizes=calloc(4, sizeof(struct reg_size));
-		regs[x]->num_sizes=4;
-		regs[x]->size=8;
-		regs[x]->in_use=false;
-		regs[x]->depth=0;
-		asprintf(&(regs[x]->sizes[0].name), "%%%sl", primary[x]);
-		asprintf(&(regs[x]->sizes[1].name), "%%%sx", primary[x]);
-		asprintf(&(regs[x]->sizes[2].name), "%%e%sx", primary[x]);
-		asprintf(&(regs[x]->sizes[3].name), "%%r%sx", primary[x]);
-
-		regs[x]->sizes[0].size=1;
-		regs[x]->sizes[1].size=2;
-		regs[x]->sizes[2].size=4;
-		regs[x]->sizes[3].size=8;
-
-		regs[x]->use=INT;
-	}
-	regs[0]->use=RET;
-	for (x=4; x<12; x++) {
-		regs[x]=malloc(sizeof(struct reg_t));
-		regs[x]->sizes=calloc(4, sizeof(struct reg_size));
-		regs[x]->num_sizes=4;
-		asprintf(&(regs[x]->sizes[3].name), "%%r%d", (x-4)+8);
-		regs[x]->sizes[3].size=8;
-		asprintf(&(regs[x]->sizes[0].name), "%%r%dd", (x-4)+8);
-		regs[x]->sizes[0].size=4;
-		asprintf(&(regs[x]->sizes[1].name), "%%r%dw", (x-4)+8);
-		regs[x]->sizes[1].size=2;
-		asprintf(&(regs[x]->sizes[2].name), "%%r%db", (x-4)+8);
-		regs[x]->sizes[2].size=1;
-		regs[x]->in_use=false;
-		regs[x]->depth=0;
-		regs[x]->use=INT;
-	}
-	regs[x]=malloc(sizeof(struct reg_t));
-	regs[x]->sizes=calloc(4, sizeof(struct reg_size));
-	regs[x]->num_sizes=4;
-	regs[x]->sizes[0].name=strdup("%dil"); // I have no idea if this is right. :/
-	regs[x]->sizes[0].size=1;
-	regs[x]->sizes[1].name=strdup("%di");
-	regs[x]->sizes[1].size=2;
-	regs[x]->sizes[2].name=strdup("%edi");
-	regs[x]->sizes[2].size=4;
-	regs[x]->sizes[3].name=strdup("%rdi");
-	regs[x]->sizes[3].size=8;
-	regs[x]->in_use=false;
-	regs[x]->depth=0;
-	regs[x]->use=INT;
-
-	x++;
-	regs[x]=malloc(sizeof(struct reg_t));
-	regs[x]->sizes=calloc(4, sizeof(struct reg_size));
-	regs[x]->num_sizes=4;
-	regs[x]->sizes[0].name=strdup("%sil"); // I have no idea if this is right. :/
-	regs[x]->sizes[0].size=1;
-	regs[x]->sizes[1].name=strdup("%si");
-	regs[x]->sizes[1].size=2;
-	regs[x]->sizes[2].name=strdup("%esi");
-	regs[x]->sizes[2].size=4;
-	regs[x]->sizes[3].name=strdup("%rsi");
-	regs[x]->sizes[3].size=8;
-	regs[x]->in_use=false;
-	regs[x]->depth=0;
-	regs[x]->use=INT;
-}
-
 char* get_reg_name(struct reg_t *reg, size_t size)
 {
 	int x;
@@ -96,24 +20,7 @@ char* reg_name(struct reg_t *a)
 {
 	return get_reg_name(a, a->size);
 }
-void free_reg_size(struct reg_size a) 
-{
-	free(a.name);
-}
 
-void free_all_registers()
-{
-	int x;
-	for (x=0; x<num_regs; x++) {
-		int y;
-		for (y=0; y<regs[x]->num_sizes; y++) {
-			free_reg_size(regs[x]->sizes[y]);
-		}
-		free(regs[x]->sizes);
-		free(regs[x]);
-	}
-	free(regs);
-}
 
 struct reg_t* get_ret_register(size_t s)
 {
@@ -131,21 +38,36 @@ struct reg_t* get_ret_register(size_t s)
 	return NULL;
 }
 
+struct depth_value {
+	int depth;
+	char *name;
+};
+
 struct reg_t* get_free_register(FILE *fd, size_t s)
 {
 	int x;
 	for (x=0; x<num_regs; x++) {
 		if (!regs[x]->in_use && regs[x]->use==INT) {
+			struct depth_value *current_depth=malloc(sizeof(struct depth_value));
+			current_depth->depth=depth;
+			current_depth->name=reg_name(regs[x]);
 			regs[x]->in_use=true;
 			regs[x]->size=s;
+			push((regs[x]->depths), current_depth);
 			return regs[x];
 		}
 	}
 
 	for (x=0; x<num_regs; x++) {
-		if(regs[x]->size==s && regs[x]->depth < depth && regs[x]->use==INT) {
+		struct depth_value *current_depth=malloc(sizeof(struct depth_value));
+		current_depth->depth=depth;
+		current_depth->name=reg_name(regs[x]);
+		if(regs[x]->size==s && current_depth->depth < depth && regs[x]->use==INT) {
 			fprintf(fd, "\tpushq %s\n", regs[x]->sizes[3].name);
-			regs[x]->depth++;
+			push((regs[x]->depths), current_depth);
+			int *new_depth=malloc(sizeof(int));
+			*new_depth=depth;
+			push((regs[x]->depths), new_depth);
 			return regs[x];
 		}
 	}
@@ -155,11 +77,13 @@ struct reg_t* get_free_register(FILE *fd, size_t s)
 
 void free_register(FILE *fd, struct reg_t *r)
 {
-	if (r->depth==0)
+	if (r->depths!=NULL && r->depths->next==NULL) {
+		free(pop(r->depths));
 		r->in_use=false;
-	else {
-		fprintf(fd, "\tpopq %s\n", r->sizes[3].name);
-		r->depth--;
+	} else {
+		struct depth_value *dv=pop(r->depths);
+		fprintf(fd, "\tpopq %s\n", dv->name);
+		free(dv);
 	}
 }
 
