@@ -23,7 +23,7 @@ void print_expr(char *pre, struct expr_t *e)
 			printf("%s()", e->attrs.function->name);
 		else if (e->kind==const_str)
 			printf("string literal: %s", e->attrs.cstr_val);
-	printf(", type: %s, type_size: %ld, pointer_depth: %ld\n", e->type->name, e->type->body->size, e->type->pointer_depth);
+	printf(", type: %s, type_size: %ld, pointer_depth: %ld\n", e->type->name, get_type_size(e->type), e->type->pointer_depth);
 	}
 
 	else if (e->kind==arg) {

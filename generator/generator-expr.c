@@ -71,11 +71,12 @@ void generate_post_unary_expression(FILE *fd, struct expr_t *e)
 		else if (!strcmp(e->attrs.un_op, "--"))
 			int_dec(fd, ret);
 
-		if (e->left->kind==pre_un_op && !strcmp(e->left->attrs.un_op, "*")) {
+		struct expr_t *left=e->left;
+		if (left->kind==pre_un_op && !strcmp(left->attrs.un_op, "*")) {
 			struct reg_t *rhs=get_free_register(fd, get_type_size(e->type));
 			struct reg_t *tmp=get_free_register(fd, get_type_size(e->type));
 			assign_reg(fd, ret, tmp);
-			generate_expression(fd, e->left->right);
+			generate_expression(fd, left->right);
 			assign_reg(fd, ret, rhs);
 			assign_reg(fd, tmp, ret);
 			free_register(fd, tmp);
@@ -83,8 +84,8 @@ void generate_post_unary_expression(FILE *fd, struct expr_t *e)
 			assign_dereference(fd, ret, rhs);
 
 			free_register(fd, rhs);
-		} else if (e->left->kind==var) {
-			assign_var(fd, ret, e->left->attrs.var);
+		} else if (left->kind==var) {
+			assign_var(fd, ret, left->attrs.var);
 		}
 		assign_reg(fd, lhs, ret);
 		place_comment(fd, e->attrs.un_op);
@@ -212,11 +213,12 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, "(");
 		/* TODO: figure out a good way to abstract away the direct use
 		 * of the mov command here. Printing opcodes is for handle-registers.c */
-		if (e->kind==pre_un_op && !strcmp(e->attrs.un_op, "*")) {
-			generate_expression(fd, e->right);
+		struct expr_t *left=e->left;
+		if (left->kind==pre_un_op && !strcmp(left->attrs.un_op, "*")) {
+			generate_expression(fd, left->right);
 			assign_dereference(fd, lhs, ret);
-		} else if (e->left->kind==var) {
-			assign_var(fd, lhs, e->left->attrs.var);
+		} else if (left->kind==var) {
+			assign_var(fd, lhs, left->attrs.var);
 		}
 		place_comment(fd, ")");
 		place_comment(fd, ")");

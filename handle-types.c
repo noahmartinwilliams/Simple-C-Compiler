@@ -4,6 +4,37 @@
 #include "generator/generator-globals.h"
 #include "types.h"
 
+size_t get_type_size(struct type_t *t);
+off_t get_offset_of_member(struct type_t *t, char *name)
+{
+	struct tbody_t *tb=t->body;
+	register int x;
+	register off_t o=0;
+	register int num_vars=tb->attrs.vars.num_vars;
+	size_t alignment=tb->attrs.vars.alignment;
+	for (x=0; x<num_vars; x++) {
+		if (!strcmp(tb->attrs.vars.vars[x]->name, name))
+			return o;
+		size_t s=get_type_size(tb->attrs.vars.vars[x]->type);
+		if (s<alignment)
+			o+=alignment;
+		else
+			o+=s;
+	}
+	return -1;
+}
+
+struct var_t* get_var_member(struct type_t *t, char *name)
+{
+	register int x=0;
+	struct tbody_t *tb=t->body;
+	register int num_vars=tb->attrs.vars.num_vars;
+	for (x=0; x<num_vars; x++) {
+		if (!strcmp(tb->attrs.vars.vars[x]->name, name))
+			return tb->attrs.vars.vars[x];
+	}
+	return NULL;
+}
 struct type_t* get_struct_or_union_attr_type(struct type_t *t, char *name)
 {
 	struct tbody_t *tb=t->body;

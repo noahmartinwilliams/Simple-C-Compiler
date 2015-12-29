@@ -68,7 +68,7 @@ void print_statem(char *pre, struct statem_t *s)
 
 		free(new_pre);
 	} else if (s->kind==declare) {
-		printf("%s|_statment kind: declare, var: %s, type: %s, pointer_depth: %d \n", pre, s->attrs.var->name, s->attrs.var->type->name, s->attrs.var->type->pointer_depth);
+		printf("%s|_statment kind: declare, var: %s, type: %s, pointer_depth: %d, size: %ld \n", pre, s->attrs.var->name, s->attrs.var->type->name, s->attrs.var->type->pointer_depth, get_type_size(s->attrs.var->type));
 	} else if (s->kind==_while) {
 		printf("%s|_statement kind: while loop\n", pre);
 		char *new_pre;

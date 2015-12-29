@@ -1,5 +1,5 @@
-#ifndef __GENERATOR/BACKEND/VARIABLES_H__
-#define __GENERATOR/BACKEND/VARIABLES_H__
+#ifndef __VARIABLES_H__
+#define __VARIABLES_H__
 #include "generator/generator-types.h"
 #include "types.h"
 #include <stdio.h>

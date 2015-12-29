@@ -15,6 +15,7 @@ struct tbody_t {
 		struct {
 			struct var_t **vars;
 			int num_vars;
+			size_t alignment;
 		} vars;
 	} attrs;
 };

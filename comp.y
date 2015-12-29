@@ -306,9 +306,14 @@ type: TYPE {
 	body->attrs.vars.vars=calloc(body->attrs.vars.num_vars, sizeof(struct var_t*));
 	size_t size=0;
 	int x;
+	body->attrs.vars.alignment=word_size;
 	for (x=0; x<$4->attrs.list.num; x++) {
 		struct var_t *var=$4->attrs.list.statements[x]->attrs.var;
-		size+=get_type_size(var->type);
+		int s=get_type_size(var->type);
+		if (s<body->attrs.vars.alignment)
+			size+=body->attrs.vars.alignment;
+		else
+			size+=s;
 		body->attrs.vars.vars[x]=var;
 		var->refcount=1;
 
@@ -321,6 +326,7 @@ type: TYPE {
 	body->is_union=false;
 	add_type(type);
 	$$=type;
+	current_type=type;
 	free($2);
 
 } | UNION IDENTIFIER '{' struct_var_declarations '}' {
@@ -573,16 +579,48 @@ assignable_expr: IDENTIFIER {
 	e->type=decrease_type_depth($2->type, 1);
 	$$=e;
 } | assignable_expr '.' IDENTIFIER {
-	struct expr_t *e=malloc(sizeof(struct expr_t));
 	if ($1->type->body->is_union) {
+		struct expr_t *e=malloc(sizeof(struct expr_t));
 		memcpy(e, $1, sizeof(struct expr_t));
 		e->type=get_struct_or_union_attr_type($1->type, $3);
+		free($3);
+		$$=e;
 	} else if ($1->type->body->is_struct) {
 		/* a.b ---> *(&a+offsetof(typeof(a), b)) */
+		/* TODO: ensure that a.b.c works properly */
+		struct expr_t *deref=malloc(sizeof(struct expr_t));
+		struct expr_t *addition=malloc(sizeof(struct expr_t));
+		struct expr_t *ref=malloc(sizeof(struct expr_t));
+		struct expr_t *constant=malloc(sizeof(struct expr_t));
 
+		deref->kind=ref->kind=pre_un_op;
+		addition->kind=bin_op;
+		constant->kind=const_int;
+		constant->left=constant->right=deref->left=ref->left=NULL;
+		constant->type=get_type_by_name("int");
+		constant->type->refcount++;
+
+		deref->right=addition;
+		deref->attrs.un_op=strdup("*");
+		ref->attrs.un_op=strdup("&");
+		deref->type=get_var_member($1->type, $3)->type;
+		deref->type->refcount++;
+
+		constant->attrs.cint_val=get_offset_of_member($1->type, $3);
+
+		ref->right=$1;
+		ref->type=increase_type_depth($1->type, 1);
+
+		addition->attrs.bin_op=strdup("+");
+		addition->left=ref;
+		addition->right=constant;
+		addition->type=ref->type;
+		ref->type->refcount++;
+
+		$1->type->refcount++;
+		$$=deref;
+		free($3);
 	}
-	free($3);
-	$$=e;
 };
 
 binary_expr:  noncomma_expression '*' noncomma_expression {
