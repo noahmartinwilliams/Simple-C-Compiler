@@ -78,16 +78,36 @@ static inline void generate_do_while_loop(FILE *fd, struct statem_t *s, struct r
 	push(loop_stack, l);
 
 	char *loop_start, *loop_end;
+	cond=s->attrs.do_while.condition;
+	block=s->attrs.do_while.block;
 	asprintf(&loop_start, "loop$start$%d", unique_num);
 	asprintf(&loop_end, "loop$end$%d", unique_num);
 
 	place_comment(fd, "do {");
 
 	place_label(fd, loop_start);
-	generate_statement(fd, s->attrs.do_while.block);
+	generate_statement(fd, block);
 
 	place_comment(fd, "} while (");
-	generate_expression(fd, s->attrs.do_while.condition);
+	#ifdef OPTIMIZE_DO_WHILE_CONSTANT_CONDITION
+	if (optimize_do_while_constant_condition && cond->kind==const_int && cond->attrs.cint_val!=0) {
+		place_comment(fd, "1) ;");
+		jmp(fd, loop_start);
+		place_label(fd, loop_end);
+		free(loop_start);
+		free(loop_end);
+		free(pop(loop_stack));
+		return;
+	} else if (optimize_do_while_constant_condition && cond->kind==const_int && cond->attrs.cint_val==0) {
+		place_comment(fd, "0) ;");
+		place_label(fd, loop_end);
+		free(loop_start);
+		free(loop_end);
+		free(pop(loop_stack));
+		return;
+	}
+	#endif
+	generate_expression(fd, cond);
 	compare_register_to_int(fd, retu, 0);
 	jmp_neq(fd, loop_start);
 

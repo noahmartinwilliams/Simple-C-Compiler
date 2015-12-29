@@ -68,7 +68,7 @@ bool evaluate_constant_expr(char *op, struct expr_t *a, struct expr_t *b, struct
 		e->kind=const_int;
 		e->left=NULL;
 		e->right=NULL;
-		long int c=a->attrs.cint_val, d=a->attrs.cint_val, f=0;
+		long int c=a->attrs.cint_val, d=b->attrs.cint_val, f=0;
 		if (!strcmp(op, "+")) {
 			f=c+d;
 		} else if (!strcmp(op, "-")) {

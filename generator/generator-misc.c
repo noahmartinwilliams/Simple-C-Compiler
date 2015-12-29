@@ -105,60 +105,7 @@ off_t get_var_offset(struct statem_t *s, off_t current_off)
 
 void generate_function(FILE *fd, struct func_t *f)
 {
-	fprintf(fd, "\t.text\n");
-	if (f->attributes & _static){
-		fprintf(fd, "\t.type %s, @function\n%s:\n", f->name, f->name);
-	} else {
-		fprintf(fd, "\t.globl %s\n\t.type %s, @function\n%s:\n", f->name, f->name, f->name);
-	}
-	fprintf(fd, "\tpushq %%rbp\n");
-	fprintf(fd, "\tmovq %%rsp, %%rbp\n");
-	if (!strcmp("main", f->name)) {
-		in_main=true;
-	} else
-		multiple_functions=true;
-
-	off_t o=get_var_offset(f->statement_list, 0);
-	int x, y=0;
-	/* TODO: adjust this to work with c calling convention for x86_64 */
-	for (x=0; x<f->num_arguments; x++) {
-		size_t size=get_type_size(f->arguments[x]->type);
-		if (size==word_size || size==pointer_size) {
-			o=o+pointer_size;
-			fprintf(fd, "\tsubq $%d, %%rsp\n", pointer_size);
-			fprintf(fd, "\tmovq %s, -%d(%%rbp)\n", get_next_call_register(INT), pointer_size);
-			f->arguments[x]->offset=-pointer_size;
-			y++;
-		} else {
-			f->arguments[x]->offset=8*y+16;
-			y++;
-		}
-	}
-
-	for (x=0; x<num_regs; x++) {
-		regs[x]->used_for_call=false;
-	}
-
-	if (o==0 || multiple_functions) {
-		current_stack_offset=0;
-		fprintf(fd, "\tsubq $16, %%rsp\n");
-		fprintf(fd, "\tmovl $0, -4(%%rbp)\n");
-	} else {
-		current_stack_offset=o;
-		expand_stack_space(fd, o);
-	}
-
-	generate_statement(fd, f->statement_list);
-	if (!strcmp(f->ret_type->name, "void"))
-		return_from_call(fd);
-
-	while (loop_stack!=NULL) {
-		struct stack_t *tmp=loop_stack->next;
-		free(loop_stack->element);
-		free(loop_stack);
-		loop_stack=tmp;
-	}
-	in_main=false;
+	make_function(fd, f);
 }
 
 char* prepare_var_assignment(FILE *fd, struct expr_t *dest)

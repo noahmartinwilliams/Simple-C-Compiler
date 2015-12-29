@@ -13,3 +13,7 @@ bool optimize_while_constant_condition=true;
 #ifdef OPTIMIZE_FOR_CONSTANT_CONDITION
 bool optimize_for_constant_condition=true;
 #endif
+
+#ifdef OPTIMIZE_DO_WHILE_CONSTANT_CONDITION
+bool optimize_do_while_constant_condition=true;
+#endif
