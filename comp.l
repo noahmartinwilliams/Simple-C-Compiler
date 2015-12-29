@@ -33,6 +33,7 @@ static inline void haiku_easter_egg(char *s)
 '.'	{ count(yytext); yylval.chr=yytext[1]; return CHAR_LITERAL; }
 "."	{ count(yytext); return '.'; }
 "..."	{ count(yytext); return MULTI_ARGS; }
+"inline"	{ count(yytext); return INLINE; }
 "union"	{ count(yytext); return UNION; }
 "static"	{ count(yytext); return STATIC; }
 "typedef"	{ count(yytext); return TYPEDEF; }
@@ -40,7 +41,7 @@ static inline void haiku_easter_egg(char *s)
 "for"	{ count(yytext); return FOR; }
 "goto"	{ count(yytext); return GOTO; }
 "extern"	{ count(yytext); return EXTERN; }
-"return"	{ count(yytext); return RET; }
+"return"	{ count(yytext); return RETURN; }
 "if"	{ count(yytext); return IF; }
 "else"	{ count(yytext); return ELSE; }
 "while"	{ count(yytext); return WHILE; }

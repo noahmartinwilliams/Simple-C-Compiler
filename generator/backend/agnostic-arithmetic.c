@@ -1,7 +1,7 @@
 #include "types.h"
-#include "generator-types.h"
+#include "generator/generator-types.h"
 #include <stdio.h>
-#include "generator-globals.h"
+#include "generator/generator-globals.h"
 
 void shift_left(FILE *fd, struct reg_t *src, struct reg_t *dest)
 {

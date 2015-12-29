@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
-#include "generator.h"
+#include "generator/generator.h"
 #include "globals.h"
 #include "handle-exprs.h"
 #include "handle-funcs.h"
@@ -13,7 +13,6 @@
 #include "printer.h"
 #include "print-tree.h"
 #include "types.h"
-#include "generator-globals.h"
 
 void yyerror(const char *s);
 extern int yydebug;
@@ -56,8 +55,8 @@ struct arguments_t {
 	char chr;
 }
 %define parse.error verbose
-%token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST RET STRUCT WHILE GE_TEST LE_TEST FOR INC_OP DO
-%token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF MULTI_ARGS STATIC
+%token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST RETURN STRUCT WHILE GE_TEST LE_TEST FOR INC_OP DO
+%token SHIF_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF MULTI_ARGS STATIC INLINE
 %token <str> STR_LITERAL 
 %token <type> TYPE
 %token <str> ASSIGN_OP
@@ -160,7 +159,7 @@ function_header: type IDENTIFIER '(' ')' {
 } | type IDENTIFIER '(' arg_declaration ')' {
 	struct func_t *f=malloc(sizeof(struct func_t));
 	f->name=strdup($2);
-	f->has_var_args=false;
+	init_func(f);
 	f->ret_type=$1;
 	$1->refcount++;
 	f->num_arguments=0;
@@ -176,6 +175,7 @@ function_header: type IDENTIFIER '(' ')' {
 	$$=$2;
 } | type IDENTIFIER '(' arg_declaration ',' MULTI_ARGS ')' {
 	struct func_t *f=malloc(sizeof(struct func_t));
+	init_func(f);
 	f->name=strdup($2);
 	f->ret_type=$1;
 	$1->refcount++;
@@ -191,6 +191,9 @@ function_header: type IDENTIFIER '(' ')' {
 	$$=f;
 } | STATIC function_header {
 	$2->attributes|=_static;
+	$$=$2;
+} | INLINE function_header {
+	$2->attributes|=_inline;
 	$$=$2;
 };
 
@@ -212,7 +215,7 @@ statement: expression ';' {
 	s->attrs._while.condition=$3;
 	s->attrs._while.block=$5;
 	$$=s;
-} | RET expression ';' {
+} | RETURN expression ';' {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=ret;
 	s->attrs.expr=$2;
@@ -449,6 +452,8 @@ noncomma_expression: CONST_INT {
 	e->left=NULL;
 	e->right=NULL;
 	e->attrs.function=get_func_by_name($1);
+	e->attrs.function->num_calls++;
+	parser_handle_inline_func(e->attrs.function->num_calls, e->attrs.function);
 	e->type=e->attrs.function->ret_type;
 	e->type->refcount++;
 	free($1);
@@ -459,6 +464,8 @@ noncomma_expression: CONST_INT {
 	e->right=$3;
 	e->left=NULL;
 	e->attrs.function=get_func_by_name($1);
+	e->attrs.function->num_calls++;
+	parser_handle_inline_func(e->attrs.function->num_calls, e->attrs.function);
 	e->type=e->attrs.function->ret_type;
 	e->type->refcount++;
 	free($1);

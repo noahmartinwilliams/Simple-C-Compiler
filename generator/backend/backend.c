@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "generator-globals.h"
-#include "generator-types.h"
-#include "generator.h"
+#include "generator/generator-globals.h"
+#include "generator/generator-types.h"
+#include "generator/generator.h"
 #include "globals.h"
 #include "types.h"
-#include "registers.h"
+#include "generator/backend/registers.h"
 
 
 void backend_make_global_var(FILE *fd, struct var_t *v)

@@ -2,11 +2,11 @@
 #include <string.h>
 #include <stdio.h>
 #include "types.h"
-#include "generator-globals.h"
-#include "generator-misc.h"
+#include "generator/generator-globals.h"
+#include "generator/generator-misc.h"
 #include "globals.h"
-#include "backend.h"
-#include "generator-types.h"
+#include "generator/backend/backend.h"
+#include "generator/generator-types.h"
 #include "handle-types.h"
 #include "handle-funcs.h"
 #include "stack.h"
@@ -214,12 +214,12 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, "(");
 		/* TODO: figure out a good way to abstract away the direct use
 		 * of the mov command here. Printing opcodes is for handle-registers.c */
-		 if (e->kind==pre_un_op && !strcmp(e->attrs.un_op, "*")) {
+		if (e->kind==pre_un_op && !strcmp(e->attrs.un_op, "*")) {
 			generate_expression(fd, e->right);
 			assign_dereference(fd, lhs, ret);
-		 } else if (e->left->kind==var) {
+		} else if (e->left->kind==var) {
 			assign_var(fd, lhs, e->left->attrs.var);
-		 }
+		}
 		place_comment(fd, ")");
 		place_comment(fd, ")");
 		free_register(fd, lhs);

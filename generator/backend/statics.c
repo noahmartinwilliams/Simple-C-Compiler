@@ -1,6 +1,6 @@
-#include "generator-globals.h"
+#include "generator/generator-globals.h"
 #include "types.h"
-#include "generator-types.h"
+#include "generator/generator-types.h"
 #include <stdio.h>
 
 void load_global_string(FILE *fd, char *str)

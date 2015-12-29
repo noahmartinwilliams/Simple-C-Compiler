@@ -2,15 +2,15 @@
 #include <string.h>
 #include <stdio.h>
 #include "types.h"
-#include "generator-globals.h"
-#include "generator-expr.h"
+#include "generator/generator-globals.h"
+#include "generator/generator-expr.h"
 #include "globals.h"
-#include "backend.h"
-#include "generator-types.h"
+#include "generator/backend/backend.h"
+#include "generator/generator-types.h"
 #include "handle-types.h"
 #include "handle-funcs.h"
 #include "stack.h"
-#include "generator-statem.h"
+#include "generator/generator-statem.h"
 
 char* generate_global_string(FILE *fd, char *str)
 {
@@ -77,30 +77,6 @@ void setup_generator()
 {
 	setup_types();
 	setup_registers();
-}
-
-
-off_t get_var_offset(struct statem_t *s, off_t current_off)
-{
-	off_t o=0;
-	if (s->kind==list) {
-		int x;
-		for (x=0; x<s->attrs.list.num; x++)
-			o+=get_var_offset(s->attrs.list.statements[x], current_off+o);
-	} else if (s->kind==declare) {
-		o=get_type_size(s->attrs.var->type);
-		s->attrs.var->offset=-(o+current_off);
-	} else if (s->kind==_if) {
-		o+=get_var_offset(s->attrs._if.block, current_off+o);
-	} else if (s->kind==_while) {
-		o+=get_var_offset(s->attrs._while.block, current_off+o);
-	} else if (s->kind==do_while) {
-		o+=get_var_offset(s->attrs.do_while.block, current_off+o);
-	} else if (s->kind==_for) {
-		o+=get_var_offset(s->attrs._for.block, current_off+o);
-	}
-
-	return o;
 }
 
 void generate_function(FILE *fd, struct func_t *f)

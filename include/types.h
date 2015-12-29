@@ -89,13 +89,15 @@ struct statem_t {
 
 struct func_t {
 	char *name;
-	enum { _extern, _static } attributes;
+	enum { _extern, _static, _inline } attributes;
 	struct statem_t *statement_list;
 	struct type_t *ret_type;
 	struct var_t **arguments;
 	int num_arguments;
-
 	bool has_var_args;
+	bool do_inline;
+
+	int num_calls;
 };
 
 #endif

@@ -42,3 +42,19 @@ void free_all_funcs()
 		free_func(funcs[x]);
 	free(funcs);
 }
+
+void init_func(struct func_t *f)
+{
+	f->attributes=0;
+	f->num_calls=0;
+	f->has_var_args=false;
+	f->do_inline=false;
+}
+
+void parser_handle_inline_func(int num_calls, struct func_t *f)
+{
+	if (num_calls < 2 && f->attributes & _inline) {
+		/* TODO: figure out better optimizations. */
+		f->do_inline=true;
+	}
+}

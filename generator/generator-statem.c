@@ -2,12 +2,12 @@
 #include <string.h>
 #include <stdio.h>
 #include "types.h"
-#include "generator-globals.h"
-#include "generator-expr.h"
-#include "generator-misc.h"
+#include "generator/generator-globals.h"
+#include "generator/generator-expr.h"
+#include "generator/generator-misc.h"
 #include "globals.h"
-#include "backend.h"
-#include "generator-types.h"
+#include "generator/backend/backend.h"
+#include "generator/generator-types.h"
 #include "handle-types.h"
 #include "handle-funcs.h"
 #include "stack.h"

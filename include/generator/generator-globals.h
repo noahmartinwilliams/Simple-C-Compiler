@@ -1,7 +1,8 @@
 #ifndef __GENERATOR_GLOBALS_H__
 #define __GENERATOR_GLOBALS_H__
-#include "stdbool.h"
-#include "stddef.h"
+#include <stdbool.h>
+#include <stddef.h>
+#include "generator/generator-types.h"
 
 extern int depth;
 extern bool in_main;
