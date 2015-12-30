@@ -5,24 +5,34 @@
 #include "globals.h"
 #include "print-tree.h"
 #include "types.h"
+#include "optimization-globals.h"
 
 void print_expr(char *pre, struct expr_t *e)
 {
 	if (e->kind!=arg) {
-		if (e->kind==const_int)
+		switch (e->kind) {
+		case const_int:
 			printf("%d", e->attrs.cint_val);
-		else if (e->kind==bin_op)
+			break;
+		case bin_op:
 			printf("%s", e->attrs.bin_op);
-		else if (e->kind==var)
+			break;
+		case var:
 			printf("%s", e->attrs.var->name);
-		else if (e->kind==pre_un_op)
+			break;
+		case pre_un_op:
 			printf("%s", e->attrs.un_op);
-		else if (e->kind==post_un_op)
+			break;
+		case post_un_op:
 			printf("%s", e->attrs.un_op);
-		else if (e->kind==funccall)
+			break;
+		case funccall:
 			printf("%s()", e->attrs.function->name);
-		else if (e->kind==const_str)
+			break;
+		case const_str:
 			printf("string literal: %s", e->attrs.cstr_val);
+			break;
+		}
 	printf(", type: %s, type_size: %ld, pointer_depth: %ld\n", e->type->name, get_type_size(e->type), e->type->pointer_depth);
 	}
 
@@ -37,20 +47,28 @@ void print_expr(char *pre, struct expr_t *e)
 
 void free_expr(struct expr_t *e)
 {
-	if (e->kind==bin_op && e->attrs.bin_op!=NULL) 
+	switch (e->kind) {
+	case bin_op:
 		free(e->attrs.bin_op);
+		break;
 
-	else if (e->kind==pre_un_op || e->kind==post_un_op)
+	case pre_un_op:
+	case post_un_op:
 		free(e->attrs.un_op);
+		break;
 
-	else if (e->kind==const_str)
+	case const_str:
 		free(e->attrs.cstr_val);
+		break;
 
-	else if (e->kind==arg)
+	case arg:
 		free_expr(e->attrs.argument);
+		break;
 
-	else if (e->kind==var)
+	case var:
 		free_var(e->attrs.var);
+		break;
+	}
 
 	if (e->left!=NULL)
 		free_expr(e->left);
@@ -62,8 +80,9 @@ void free_expr(struct expr_t *e)
 	free(e);
 }
 
-bool evaluate_constant_expr(char *op, struct expr_t *a, struct expr_t *b, struct expr_t *e)
+bool evaluate_constant_expr(char *op, struct expr_t *a, struct expr_t *b, struct expr_t **e2)
 {
+	struct expr_t *e=*e2;
 	if (a->kind==const_int && b->kind==const_int && evaluate_constants) {
 		e->kind=const_int;
 		e->left=NULL;
@@ -109,6 +128,14 @@ bool evaluate_constant_expr(char *op, struct expr_t *a, struct expr_t *b, struct
 		}
 		e->attrs.cint_val=f;
 		free_expr(a);
+		free_expr(b);
+		return true;
+	} else if (a->kind==const_int && b->kind!=const_int && a->attrs.cint_val==0 && optimize_dont_add_zero && !strcmp(op, "+")) {
+		*e2=b;
+		free_expr(a);
+		return true;
+	} else if (a->kind!=const_int && b->kind==const_int && b->attrs.cint_val==0 && optimize_dont_add_zero && !strcmp(op, "+")) {
+		*e2=a;
 		free_expr(b);
 		return true;
 	}

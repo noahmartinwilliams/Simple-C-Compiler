@@ -26,12 +26,13 @@ void generate_expression(FILE *fd, struct expr_t *e)
 	else if (e->kind==pre_un_op) {
 		generate_pre_unary_expression(fd, e);
 	} else if (e->kind==funccall) {
+		struct func_t *f=e->attrs.function;
 		place_comment(fd, "(");
-		place_comment(fd, e->attrs.function->name);
+		place_comment(fd, f->name);
 		place_comment(fd, "(");
-		start_call(fd, e->attrs.function);
+		start_call(fd, f);
 		if (e->attrs.function->num_arguments==0) {
-			call(fd, e->attrs.function);
+			call(fd, f);
 		} else {
 			struct expr_t *current_e=e->right;
 			struct reg_t *ret=get_ret_register(get_type_size(current_e->type));
@@ -40,7 +41,7 @@ void generate_expression(FILE *fd, struct expr_t *e)
 				add_argument(fd, ret, current_e->type);
 				current_e=current_e->right;
 			}
-			call(fd, e->attrs.function);
+			call(fd, f);
 		}
 		place_comment(fd, ")");
 		place_comment(fd, ")");
@@ -57,21 +58,22 @@ void generate_expression(FILE *fd, struct expr_t *e)
 void generate_post_unary_expression(FILE *fd, struct expr_t *e)
 {
 	depth++;
-	struct reg_t *ret=get_ret_register(get_type_size(e->type));
-	struct reg_t *lhs=get_free_register(fd, get_type_size(e->type));
+	register struct reg_t *ret=get_ret_register(get_type_size(e->type));
+	register struct reg_t *lhs=get_free_register(fd, get_type_size(e->type));
 	place_comment(fd, "(");
 	place_comment(fd, "(");
 	generate_expression(fd, e->left);
 	assign_reg(fd, ret, lhs);
 	place_comment(fd, ")");
 
-	if (!strcmp(e->attrs.un_op, "++") ||  !strcmp(e->attrs.un_op, "--")) {
-		if (!strcmp(e->attrs.un_op, "++"))
+	register char *op=e->attrs.un_op;
+	if (!strcmp(op, "++") ||  !strcmp(op, "--")) {
+		if (!strcmp(op, "++"))
 			int_inc(fd, ret);
-		else if (!strcmp(e->attrs.un_op, "--"))
+		else if (!strcmp(op, "--"))
 			int_dec(fd, ret);
 
-		struct expr_t *left=e->left;
+		register struct expr_t *left=e->left;
 		if (left->kind==pre_un_op && !strcmp(left->attrs.un_op, "*")) {
 			struct reg_t *rhs=get_free_register(fd, get_type_size(e->type));
 			struct reg_t *tmp=get_free_register(fd, get_type_size(e->type));
@@ -93,39 +95,36 @@ void generate_post_unary_expression(FILE *fd, struct expr_t *e)
 	place_comment(fd, ")");
 	free_register(fd, lhs);
 	depth--;
-
-
 }
 void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 {
 	depth++;
 	size_t s=get_type_size(e->right->type);
 
-	struct reg_t *ret=get_ret_register(s);
+	register struct reg_t *ret=get_ret_register(s);
+	register char *op=e->attrs.un_op;
 	place_comment(fd, "(");
-	place_comment(fd, e->attrs.un_op);
+	place_comment(fd, op);
 	place_comment(fd, "(");
 
-	if (!strcmp(e->attrs.un_op, "&")) {
-
+	if (!strcmp(op, "&")) {
 		get_address(fd, e->right);
 		place_comment(fd, ")");
-
 	} else {
 		generate_expression(fd, e->right);
 		place_comment(fd, ")");
-		if (!strcmp(e->attrs.un_op, "*"))
+		if (!strcmp(op, "*"))
 			dereference(fd, ret, pointer_size);
 
-		else if (!strcmp(e->attrs.un_op, "!"))
+		else if (!strcmp(op, "!"))
 			test_invert(fd, ret);
 
-		else if (!strcmp(e->attrs.un_op, "++")) {
+		else if (!strcmp(op, "++")) {
 			
 			int_inc(fd, ret);
 			if (e->right->kind==pre_un_op && !strcmp(e->right->attrs.un_op, "*")) {
-				struct reg_t *rhs=get_free_register(fd, pointer_size);
-				struct reg_t *tmp=get_free_register(fd, get_type_size(e->type));
+				register struct reg_t *rhs=get_free_register(fd, pointer_size);
+				register struct reg_t *tmp=get_free_register(fd, get_type_size(e->type));
 				assign_reg(fd, ret, tmp);
 
 				ret=get_ret_register(pointer_size);
@@ -143,7 +142,7 @@ void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 			} else if (e->right->kind==var)
 				assign_var(fd, ret, e->right->attrs.var);
 
-		} else if (!strcmp(e->attrs.un_op, "~")) 
+		} else if (!strcmp(op, "~")) 
 			invert(fd, ret);
 	}
 	place_comment(fd, ")");
@@ -195,7 +194,8 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 	depth++;
 	struct reg_t *ret=get_ret_register(get_type_size(e->type));
 	struct reg_t *lhs, *rhs;
-	if (!strcmp(e->attrs.bin_op, "=")) {
+	char *op=e->attrs.bin_op;
+	if (!strcmp(op, "=")) {
 		/* The reason for redoing rhs, and lhs in the else statement is that 
 		this way I can declare lhs AFTER I've generated the 
 		right hand side of the expression which leaves whatever
@@ -224,27 +224,28 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, ")");
 		free_register(fd, lhs);
 	} else {
-		lhs=get_free_register(fd, get_type_size(e->type));
-		rhs=get_free_register(fd, get_type_size(e->type));
-		if (!strcmp(e->attrs.bin_op, "==")) {
+		size_t size=get_type_size(e->type);
+		lhs=get_free_register(fd, size);
+		rhs=get_free_register(fd, size);
+		if (!strcmp(op, "==")) {
 			generate_comparison_expression(fd, e, jmp_eq, "is$eq$%d", "is$not$eq$%d", lhs);
 
-		} else if (!strcmp(e->attrs.bin_op, "<")) {
+		} else if (!strcmp(op, "<")) {
 			generate_comparison_expression(fd, e, jmp_lt, "is$lt$%d", "is$not$lt$%d", lhs);
 
-		} else if (!strcmp(e->attrs.bin_op, ">")) {
+		} else if (!strcmp(op, ">")) {
 			generate_comparison_expression(fd, e, jmp_gt, "is$gt$%d", "is$not$gt$%d", lhs);
 
-		} else if (!strcmp(e->attrs.bin_op, "!=")) {
+		} else if (!strcmp(op, "!=")) {
 			generate_comparison_expression(fd, e, jmp_neq, "is$ne$%d", "is$eq$%d", lhs);
 
-		} else if (!strcmp(e->attrs.bin_op, ">=")) {
+		} else if (!strcmp(op, ">=")) {
 			generate_comparison_expression(fd, e, jmp_ge, "is$ge$%d", "is$lt$%d", lhs);
 
-		} else if (!strcmp(e->attrs.bin_op, "<=")) {
+		} else if (!strcmp(op, "<=")) {
 			generate_comparison_expression(fd, e, jmp_le, "is$le$%d", "is$gt$%d", lhs);
 
-		} else if (!strcmp(e->attrs.bin_op, "+=")) {
+		} else if (!strcmp(op, "+=")) {
 			place_comment(fd, "Note: lhs, and rhs of assignment is swapped");
 			place_comment(fd, "(");
 			place_comment(fd, "(");
@@ -276,34 +277,33 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 			assign_reg(fd, ret, lhs);
 
 			place_comment(fd, ")");
-			place_comment(fd, e->attrs.bin_op);
+			place_comment(fd, op);
 			place_comment(fd, "(");
 
 			generate_expression(fd, e->right);
 
 			place_comment(fd, ")");
-			char *c=e->attrs.bin_op;
-			if (!strcmp(c, "+"))
+			if (!strcmp(op, "+"))
 				int_add(fd, lhs, ret);
-			else if (!strcmp(c, "-")) 
+			else if (!strcmp(op, "-")) 
 				int_sub(fd, lhs, ret);
-			else if (!strcmp(c, "/"))
+			else if (!strcmp(op, "/"))
 				int_div(fd, lhs, ret);
-			else if (!strcmp(c, "*"))
+			else if (!strcmp(op, "*"))
 				int_mul(fd, lhs, ret);
-			else if (!strcmp(c, "<<"))
+			else if (!strcmp(op, "<<"))
 				shift_left(fd, lhs, ret);
-			else if (!strcmp(c, ">>"))
+			else if (!strcmp(op, ">>"))
 				shift_right(fd, lhs, ret);
-			else if (!strcmp(c, "|"))
+			else if (!strcmp(op, "|"))
 				or(fd, lhs, ret);
-			else if (!strcmp(c, "&"))
+			else if (!strcmp(op, "&"))
 				and(fd, lhs, ret);
-			else if (!strcmp(c, "^"))
+			else if (!strcmp(op, "^"))
 				xor(fd, lhs, ret);
-			else if (!strcmp(c, "||"))
+			else if (!strcmp(op, "||"))
 				test_or(fd, lhs, ret);
-			else if (!strcmp(c, "&&"))
+			else if (!strcmp(op, "&&"))
 				test_and(fd, lhs, ret);
 			place_comment(fd, ")");
 		}

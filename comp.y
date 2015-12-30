@@ -27,7 +27,7 @@ static inline struct expr_t* make_bin_op(char *X, struct expr_t *Y, struct expr_
 	parser_type_cmp(&a, &b);
 	e->type=a->type;
 	e->type->refcount++;
-	if (!evaluate_constant_expr(X, a, b, e)) {
+	if (!evaluate_constant_expr(X, a, b, &e)) {
 		e->kind=bin_op;
 		e->left=a;
 		e->right=b;
@@ -305,13 +305,15 @@ type: TYPE {
 	body->attrs.vars.num_vars=$4->attrs.list.num;
 	body->attrs.vars.vars=calloc(body->attrs.vars.num_vars, sizeof(struct var_t*));
 	size_t size=0;
-	int x;
+	register int x;
 	body->attrs.vars.alignment=word_size;
+	struct statem_t **statements=$4->attrs.list.statements;
+	size_t alignment=body->attrs.vars.alignment;
 	for (x=0; x<$4->attrs.list.num; x++) {
-		struct var_t *var=$4->attrs.list.statements[x]->attrs.var;
+		struct var_t *var=statements[x]->attrs.var;
 		int s=get_type_size(var->type);
-		if (s<body->attrs.vars.alignment)
-			size+=body->attrs.vars.alignment;
+		if (s<alignment)
+			size+=alignment;
 		else
 			size+=s;
 		body->attrs.vars.vars[x]=var;
@@ -336,21 +338,24 @@ type: TYPE {
 	type->name=strdup($2);
 	type->body=malloc(sizeof(struct tbody_t));
 	type->body->refcount=1;
+
 	type->body->is_union=true;
 	type->body->is_struct=false;
-	int x;
-	size_t max_size=0;
+
 	type->body->attrs.vars.num_vars=0;
 	type->body->attrs.vars.vars=NULL;
+	register int x;
+	size_t max_size=0;
 	struct var_t **v=type->body->attrs.vars.vars;
 	int num_vars=type->body->attrs.vars.num_vars;
+	struct statem_t **statements=$4->attrs.list.statements;
 	for (x=0; x<$4->attrs.list.num; x++) {
 		size_t s=get_type_size($4->attrs.list.statements[x]->attrs.var->type);
 		num_vars++;
 		v=realloc(v, num_vars*sizeof(struct var_t*));
 		v[num_vars-1]=malloc(sizeof(struct var_t));
 
-		v[num_vars-1]=$4->attrs.list.statements[x]->attrs.var;
+		v[num_vars-1]=statements[x]->attrs.var;
 		v[num_vars-1]->refcount=1;
 		if (s>=max_size)
 			max_size=s;
@@ -479,7 +484,6 @@ noncomma_expression: CONST_INT {
 } | STR_LITERAL {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->type=increase_type_depth(get_type_by_name("char"), 1);
-	//e->type->refcount++;
 	e->kind=const_str;
 	e->right=NULL;
 	e->left=NULL;
@@ -579,13 +583,15 @@ assignable_expr: IDENTIFIER {
 	e->type=decrease_type_depth($2->type, 1);
 	$$=e;
 } | assignable_expr '.' IDENTIFIER {
-	if ($1->type->body->is_union) {
+	struct type_t *type=$1->type;
+	struct tbody_t *body=type->body;
+	if (body->is_union) {
 		struct expr_t *e=malloc(sizeof(struct expr_t));
 		memcpy(e, $1, sizeof(struct expr_t));
-		e->type=get_struct_or_union_attr_type($1->type, $3);
+		e->type=get_struct_or_union_attr_type(type, $3);
 		free($3);
 		$$=e;
-	} else if ($1->type->body->is_struct) {
+	} else if (body->is_struct) {
 		/* a.b ---> *(&a+offsetof(typeof(a), b)) */
 		/* TODO: ensure that a.b.c works properly */
 		struct expr_t *deref=malloc(sizeof(struct expr_t));
@@ -603,13 +609,13 @@ assignable_expr: IDENTIFIER {
 		deref->right=addition;
 		deref->attrs.un_op=strdup("*");
 		ref->attrs.un_op=strdup("&");
-		deref->type=get_var_member($1->type, $3)->type;
+		deref->type=get_var_member(type, $3)->type;
 		deref->type->refcount++;
 
-		constant->attrs.cint_val=get_offset_of_member($1->type, $3);
+		constant->attrs.cint_val=get_offset_of_member(type, $3);
 
 		ref->right=$1;
-		ref->type=increase_type_depth($1->type, 1);
+		ref->type=increase_type_depth(type, 1);
 
 		addition->attrs.bin_op=strdup("+");
 		addition->left=ref;
@@ -617,7 +623,7 @@ assignable_expr: IDENTIFIER {
 		addition->type=ref->type;
 		ref->type->refcount++;
 
-		$1->type->refcount++;
+		type->refcount++;
 		$$=deref;
 		free($3);
 	}
@@ -717,12 +723,14 @@ var_declaration_ident: IDENTIFIER {
 	e->type->refcount++;
 
 	e->left=malloc(sizeof(struct expr_t));
-	e->left->kind=var;
-	e->left->attrs.var=v;
-	e->left->left=NULL;
-	e->left->right=NULL;
-	e->left->type=current_type;
-	e->left->type->refcount++;
+
+	struct expr_t *left=e->left;
+	left->kind=var;
+	left->attrs.var=v;
+	left->left=NULL;
+	left->right=NULL;
+	left->type=current_type;
+	left->type->refcount++;
 
 	e->right=$3;
 

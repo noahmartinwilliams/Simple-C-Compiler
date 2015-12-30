@@ -18,4 +18,8 @@ extern bool optimize_for_constant_condition;
 extern bool optimize_do_while_constant_condition;
 #endif
 
+#ifdef OPTIMIZE_DONT_ADD_ZERO
+extern bool optimize_dont_add_zero;
+#endif
+
 #endif
