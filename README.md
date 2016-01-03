@@ -9,3 +9,4 @@ Things You Will Need To Compile This
 	*GNU Flex
 	*GNU Bison
 	*The GNU ar command
+	*The m4 command

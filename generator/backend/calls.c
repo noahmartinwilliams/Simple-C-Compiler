@@ -174,9 +174,11 @@ static off_t get_var_offset_expr(struct expr_t *e, off_t current_off)
 		o+=get_var_offset_expr(e->left, coo);
 		o+=get_var_offset_expr(e->right, coo);
 		break;
+
 	case pre_un_op:
 		o+=get_var_offset_expr(e->right, coo);
 		break;
+
 	case post_un_op:
 		o+=get_var_offset_expr(e->left, coo);
 		break;
@@ -185,6 +187,7 @@ static off_t get_var_offset_expr(struct expr_t *e, off_t current_off)
 		o+=get_var_offset_expr(e->right, coo);
 		o+=get_var_offset_expr(e->attrs.argument, coo+o);
 		break;
+
 	case funccall:
 		f=e->attrs.function;
 		if (f->do_inline) {
@@ -217,6 +220,7 @@ off_t get_var_offset(struct statem_t *s, off_t current_off)
 		o+=get_var_offset(s->attrs._while.block, current_off+o);
 	} else if (s->kind==do_while) {
 		o+=get_var_offset(s->attrs.do_while.block, current_off+o);
+		o+=get_var_offset_expr(s->attrs.do_while.condition, current_off+o);
 	} else if (s->kind==_for) {
 		o+=get_var_offset(s->attrs._for.block, current_off+o);
 	} else if (s->kind==expr) {

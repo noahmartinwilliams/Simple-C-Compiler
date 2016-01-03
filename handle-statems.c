@@ -30,8 +30,10 @@ void free_statem(struct statem_t *s)
 	} else if (s->kind==label || s->kind==_goto) {
 		free(s->attrs.label_name);
 	} else if (s->kind==_for) {
-		free_expr(s->attrs._for.initial);
-		free_expr(s->attrs._for.cond);
+		struct expr_t *initial=s->attrs._for.initial;
+		if (initial!=NULL)
+			free_expr(initial);
+
 		free_expr(s->attrs._for.update);
 		free_statem(s->attrs._for.block);
 	} else if (s->kind==do_while) {

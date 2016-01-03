@@ -94,8 +94,16 @@ void free_tbody(struct tbody_t *t)
 		return;
 
 	t->refcount--;
-	if (t->refcount==0)
+	if (t->refcount==0) {
+		if (t->is_struct || t->is_union) {
+			int x;
+			for (x=0; x<t->attrs.vars.num_vars; x++) {
+				free_var(t->attrs.vars.vars[x]);
+			}
+			free(t->attrs.vars.vars);
+		}
 		free(t);
+	}
 }
 
 void free_native_type(struct type_t *t)
@@ -126,9 +134,8 @@ void free_all_types()
 	int x;
 	for (x=0; x<num_types; x++) {
 		types[x]->native_type=false;
-		free(types[x]->body);
-		types[x]->body=NULL;
-		free_native_type(types[x]);
+		free_type(types[x]);
+		types[x]=NULL;
 	}
 	free(types);
 	types=NULL;

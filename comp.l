@@ -73,8 +73,8 @@ static inline void haiku_easter_egg(char *s)
 "/"	{ count(yytext); return '/'; }
 "*"	{ count(yytext); return '*'; }
 ";"	{ count(yytext); return ';'; }
-"{"	{ scope++; count(yytext); return '{'; }
-"}"	{ hide_current_scope(); scope--; count(yytext); return '}'; }
+"{"	{ scope_depth++; count(yytext); return '{'; }
+"}"	{ hide_current_scope(); scope_depth--; count(yytext); return '}'; }
 ","	{ count(yytext); return ','; }
 ":"	{ count(yytext); return ':'; }
 "&"	{ count(yytext); return '&'; }

@@ -18,6 +18,9 @@ test%: main
 	cp main tests/cc
 	$(MAKE) -s -C tests/ $@
 
+comp.y: cc.y statements.m4 for.m4 expressions.m4
+	m4 -I . cc.y >comp.y
+
 comp.tab.c include/comp.tab.h: comp.y
 	$(YACC) $^
 	mv comp.tab.h include/
@@ -35,5 +38,6 @@ clean:
 	rm main 2>/dev/null || true
 	rm *.a 2>/dev/null || true
 	rm comp.output || true
+	rm comp.y || true
 	$(MAKE) -C tests/ clean
 	$(MAKE) -C generator/ clean

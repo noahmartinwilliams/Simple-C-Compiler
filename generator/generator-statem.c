@@ -173,8 +173,13 @@ static inline void generate_for_loop(FILE *fd, struct statem_t *s, struct reg_t 
 {
 	cond=s->attrs._for.cond;
 	block=s->attrs._for.block;
+	struct expr_t *update=s->attrs._for.update;
+	struct expr_t *initial=s->attrs._for.initial;
+
 	place_comment(fd, "for (");
-	generate_expression(fd, s->attrs._for.initial);
+	if (initial!=NULL)
+		generate_expression(fd, initial);
+
 	place_comment(fd, "; ");
 
 	int *l=malloc(sizeof(int));
@@ -199,7 +204,7 @@ static inline void generate_for_loop(FILE *fd, struct statem_t *s, struct reg_t 
 		place_comment(fd, "1) {");
 		generate_statement(fd, block);
 
-		generate_expression(fd, s->attrs._for.update);
+		generate_expression(fd, update);
 		jmp(fd, loop_start);
 		place_comment(fd, "}");
 		place_label(fd, loop_end);
@@ -218,7 +223,9 @@ static inline void generate_for_loop(FILE *fd, struct statem_t *s, struct reg_t 
 
 	generate_statement(fd, block);
 
-	generate_expression(fd, s->attrs._for.update);
+	if (update!=NULL)
+		generate_expression(fd, update);
+
 	jmp(fd, loop_start);
 	place_comment(fd, "}");
 	place_label(fd, loop_end);

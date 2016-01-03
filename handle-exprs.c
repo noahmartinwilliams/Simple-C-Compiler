@@ -9,6 +9,11 @@
 
 void print_expr(char *pre, struct expr_t *e)
 {
+	if (e==NULL) {
+		printf("(nil)");
+		return;
+	} 
+
 	if (e->kind!=arg) {
 		switch (e->kind) {
 		case const_int:
@@ -47,6 +52,9 @@ void print_expr(char *pre, struct expr_t *e)
 
 void free_expr(struct expr_t *e)
 {
+	if (e==NULL)
+		return;
+
 	switch (e->kind) {
 	case bin_op:
 		free(e->attrs.bin_op);

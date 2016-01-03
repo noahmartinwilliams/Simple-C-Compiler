@@ -21,17 +21,20 @@ char* generate_global_string(FILE *fd, char *str)
 
 void setup_types()
 {
-	num_types=3;
+	num_types=4;
 	types=realloc(types, num_types*sizeof(struct type_t*));
 	types[num_types-1]=malloc(sizeof(struct type_t));
 	struct type_t *i=types[num_types-1];
+	struct tbody_t *b=NULL;
+
 	i->name=strdup("int");
 	i->pointer_depth=0;
 	i->body=malloc(sizeof(struct tbody_t));
-	i->body->size=int_size;
-	i->body->is_struct=false;
-	i->body->refcount=1;
-	i->body->is_union=false;
+	b=i->body;
+	b->size=int_size;
+	b->is_struct=false;
+	b->refcount=1;
+	b->is_union=false;
 	i->refcount=1;
 	i->native_type=true;
 
@@ -58,6 +61,19 @@ void setup_types()
 	i->body->is_union=false;
 	i->refcount=1;
 	i->native_type=true;
+
+	types[num_types-4]=malloc(sizeof(struct type_t));
+	i=types[num_types-4];
+	i->name=strdup("float");
+	i->pointer_depth=0;
+	i->body=malloc(sizeof(struct tbody_t));
+	b=i->body;
+	b->size=word_size;
+	b->is_struct=false;
+	b->refcount=1;
+	b->is_union=false;
+	i->refcount=1;
+	i->native_type=true;
 }
 
 void setup_generator()
@@ -75,7 +91,7 @@ char* prepare_var_assignment(FILE *fd, struct expr_t *dest)
 {
 	char *ret=NULL;
 	if (dest->kind==var) {
-		if (dest->attrs.var->scope!=0) {
+		if (dest->attrs.var->scope_depth!=0) {
 			asprintf(&ret, "%ld(%%rbp)", dest->attrs.var->offset);
 		}
 	}
@@ -91,6 +107,6 @@ void generate_global_vars(FILE *fd, struct statem_t *s)
 		}
 	} else if (s->kind==declare) {
 		backend_make_global_var(fd, s->attrs.var);
-		s->attrs.var->scope=0;
+		s->attrs.var->scope_depth=0;
 	}
 }

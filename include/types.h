@@ -46,7 +46,7 @@ struct expr_t {
 struct var_t {
 	char *name;
 	off_t offset;
-	int scope;
+	int scope_depth;
 	bool hidden;
 	struct type_t *type;
 	int refcount;

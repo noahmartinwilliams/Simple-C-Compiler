@@ -41,9 +41,9 @@ struct var_t* get_var_by_name(char *name)
 	struct var_t *highest_scope=NULL;
 	int max_scope=0;
 	for (x=0; x<num_vars; x++) {
-		if (vars[x]!=NULL && !strcmp(name, vars[x]->name) && vars[x]->scope<=scope && vars[x]->scope >= max_scope && !vars[x]->hidden) {
+		if (vars[x]!=NULL && !strcmp(name, vars[x]->name) && vars[x]->scope_depth<=scope_depth && vars[x]->scope_depth >= max_scope && !vars[x]->hidden) {
 			highest_scope=vars[x];
-			max_scope=highest_scope->scope;
+			max_scope=highest_scope->scope_depth;
 		}
 	}
 	return highest_scope;
@@ -53,7 +53,7 @@ void hide_current_scope()
 {
 	int x;
 	for (x=0; x<num_vars; x++) {
-		if (vars[x]!=NULL && vars[x]->scope==scope && vars[x]->hidden==false) {
+		if (vars[x]!=NULL && vars[x]->scope_depth==scope_depth && vars[x]->hidden==false) {
 			vars[x]->hidden=true;
 		}
 	}

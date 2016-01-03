@@ -13,6 +13,7 @@ void backend_make_global_var(FILE *fd, struct var_t *v)
 	fprintf(fd, "\t.comm %s, %d, %d\n", v->name, get_type_size(v->type), get_type_size(v->type));
 
 }
+
 static void inc_by_int(FILE *fd, int i, char *dest, size_t size)
 {
 	if (size==char_size)
@@ -42,7 +43,7 @@ void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 		fprintf(stderr, "Internal error: a NULL variable pointer was passed to assign_var\n");
 		exit(1);
 	}
-	if (dest->scope!=0) {
+	if (dest->scope_depth!=0) {
 		if (get_type_size(dest->type)==word_size)
 			fprintf(fd, "\tmovl %s, %ld(%%rbp)\n", reg_name(src), dest->offset);
 		else if (get_type_size(dest->type)==pointer_size)
@@ -55,7 +56,7 @@ void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 
 void read_var(FILE *fd, struct var_t *v)
 {
-	if (v->scope!=0) {
+	if (v->scope_depth!=0) {
 		if (get_type_size(v->type)==char_size)
 			fprintf(fd, "\tmovb %ld(%%rbp), %%al\n", v->offset);
 		if (get_type_size(v->type)==word_size)

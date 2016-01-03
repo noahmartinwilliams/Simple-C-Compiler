@@ -17,6 +17,9 @@ void generate_post_unary_expression(FILE *fd, struct expr_t *e);
 
 void generate_expression(FILE *fd, struct expr_t *e)
 {
+	if (e==NULL)
+		return;
+
 	if (e->kind==bin_op)
 		generate_binary_expression(fd, e);
 	else if (e->kind==var)

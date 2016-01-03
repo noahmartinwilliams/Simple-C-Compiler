@@ -22,7 +22,7 @@ int num_vars=0;
 struct func_t **funcs=NULL;
 int num_funcs=0;
 
-int scope=0;
+int scope_depth=0;
 
 #ifdef HAIKU_EASTER_EGG
 int number_of_syllables=0;
