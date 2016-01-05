@@ -2,7 +2,9 @@
 #include "types.h"
 #include <stdbool.h>
 
+#ifdef DEBUG
 bool print_trees=false;
+#endif
 int yydebug=0;
 
 char *current_line_str=NULL;

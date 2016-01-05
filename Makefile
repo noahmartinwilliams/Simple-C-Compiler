@@ -1,25 +1,33 @@
 INCLUDE=./include
 include include/config.mk
 
+main_debug:
+	$(MAKE) DEBUG=1 main
+
 main: comp.tab.c globals.o lex.yy.o handle.a generator.a optimization-globals.o
 	$(CMB)
 
 generator.a: generator/* generator/backend/*
 	$(MAKE) -C generator/ ../generator.a
 
-handle.a: handle-types.o handle-exprs.o handle-statems.o  handle-funcs.o handle-vars.o print-tree.o
+ifdef DEBUG
+handle.a: handle-types.o handle-exprs.o handle-statems.o handle-funcs.o handle-vars.o print-tree.o
 	$(AR)
+else
+handle.a: handle-types.o handle-exprs.o handle-statems.o handle-funcs.o handle-vars.o
+	$(AR)
+endif
 
-test: main
+test: main_debug
 	cp main tests/cc
 	$(MAKE) -s -C tests/ test
 
-test%: main
+test%: main_debug
 	cp main tests/cc
 	$(MAKE) -s -C tests/ $@
 
-comp.y: cc.y statements.m4 for.m4 expressions.m4
-	m4 -I . cc.y >comp.y
+comp.y: parser/* 
+	$(MAKE) -C parser/ ../comp.y
 
 comp.tab.c include/comp.tab.h: comp.y
 	$(YACC) $^

@@ -10,6 +10,7 @@ a function pointer that has void* as the second argument type. */
 struct tbody_t {
 	size_t size;
 	int refcount;
+	int base_pointer_depth;
 	bool is_struct, is_union;
 	union {
 		struct {
@@ -29,12 +30,13 @@ struct type_t {
 };
 
 struct expr_t {
-	enum { bin_op, pre_un_op, post_un_op, question, const_int, const_float, var, funccall, arg, const_str } kind;
+	enum { bin_op, pre_un_op, post_un_op, question, const_int, const_float, var, funccall, arg, const_str, const_size_t } kind;
 	struct expr_t *left, *right;
 	struct type_t *type;
 	union {
 		struct var_t *var;
 		long int cint_val;
+		size_t csize_t_val;
 		char *bin_op;
 		char *un_op;
 		char *cstr_val;

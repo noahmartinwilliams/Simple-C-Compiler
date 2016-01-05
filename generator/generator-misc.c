@@ -64,11 +64,11 @@ void setup_types()
 
 	types[num_types-4]=malloc(sizeof(struct type_t));
 	i=types[num_types-4];
-	i->name=strdup("float");
+	i->name=strdup("size_t");
 	i->pointer_depth=0;
 	i->body=malloc(sizeof(struct tbody_t));
 	b=i->body;
-	b->size=word_size;
+	b->size=sizeof(size_t);
 	b->is_struct=false;
 	b->refcount=1;
 	b->is_union=false;

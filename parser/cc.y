@@ -42,6 +42,54 @@ struct arguments_t {
 	struct var_t **vars;
 	int num_vars;
 };
+
+static inline struct statem_t* declare_var(struct type_t *t, char *name, struct expr_t *e)
+{
+	struct var_t *v=malloc(sizeof(struct var_t));
+
+	v->refcount=4;
+	v->type=t;
+	v->type->refcount++;
+	v->name=strdup(name);
+	v->scope_depth=scope_depth;
+	v->hidden=false;
+	free(name);
+	add_var(v);
+
+	struct statem_t *block=malloc(sizeof(struct statem_t));
+	struct statem_t *declaration=malloc(sizeof(struct statem_t));
+
+	declaration->kind=declare;
+	declaration->attrs.var=v;
+
+	block->kind=list;
+	block->attrs.list.num=2;
+
+	int num=2;
+	block->attrs.list.statements=calloc(2, sizeof(struct statem_t*));
+
+	struct statem_t *expression=block->attrs.list.statements[1]=malloc(sizeof(struct statem_t));
+	expression->kind=expr;
+	struct expr_t *assignment=expression->attrs.expr=malloc(sizeof(struct expr_t));
+	assignment->kind=bin_op;
+	assignment->attrs.bin_op=strdup("=");
+	assignment->type=t;
+	t->refcount+=2;
+
+	struct expr_t *var_holder=malloc(sizeof(struct expr_t));
+	var_holder->kind=var;
+	var_holder->type=t;
+	t->refcount++;
+	var_holder->left=var_holder->right=NULL;
+	var_holder->attrs.var=v;
+	assignment->left=var_holder;
+	assignment->right=e;
+
+	/*TODO add type checking. */
+	block->attrs.list.statements[0]=declaration;
+
+	return block;
+}
 %}
 %union {
 	long int l;
@@ -56,7 +104,7 @@ struct arguments_t {
 }
 %define parse.error verbose
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST RETURN STRUCT WHILE GE_TEST LE_TEST FOR INC_OP DO
-%token SHIFT_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF MULTI_ARGS STATIC INLINE
+%token SHIFT_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF MULTI_ARGS STATIC INLINE SIZEOF
 %token <str> STR_LITERAL 
 %token <type> TYPE
 %token <str> ASSIGN_OP
@@ -66,11 +114,12 @@ struct arguments_t {
 %token UNION
 %type <vars> arg_declaration
 %type <expr> noncomma_expression expression binary_expr assignable_expr prefix_expr call_arg_list postfix_expr
-%type <statem> statement statement_list var_declaration var_declaration_list var_declaration_ident struct_var_declarations
+%type <statem> statement statement_list var_declaration struct_var_declarations
 %type <type> type 
-%type <l> multiple_stars
+%type <type> type_with_stars
 %type <func> function function_header
 %type <statem> for_loop
+%type <statem> var_declaration_start
 
 %right '=' ASSIGN_OP
 %right '!' '~' INC_OP DEC_OP
@@ -106,7 +155,7 @@ file_entry:  function {
 	free($1->arguments);
 	$1->arguments=NULL;
 	multiple_functions=true;
-} | TYPEDEF type IDENTIFIER ';' {
+} | TYPEDEF type_with_stars IDENTIFIER ';' {
 	struct type_t *t=malloc(sizeof(struct type_t));
 	memcpy(t, $2, sizeof(struct type_t));
 	t->refcount=1;
@@ -117,61 +166,50 @@ file_entry:  function {
 	add_type(t);
 };
 
-arg_declaration: type var_declaration_ident {
+arg_declaration: type_with_stars IDENTIFIER{
 	struct arguments_t *a=malloc(sizeof(struct arguments_t));
 	a->vars=calloc(1, sizeof(struct var_t*));
-	a->vars[0]=$2->attrs.list.statements[0]->attrs.var;
-	a->vars[0]->scope_depth=1;
-	a->vars[0]->hidden=false;
-	a->vars[0]->refcount+=2;
+	a->vars[0]=malloc(sizeof(struct var_t));
+	struct var_t *v=a->vars[0];
+	v->name=strdup($2);
+	v->type=$1;
+	v->type->refcount++;
+	v->scope_depth=1;
+	v->hidden=false;
+	v->refcount+=2;
 	a->num_vars=1;
-	add_var(a->vars[0]);
-	free_statem($2);
+	add_var(v);
+	free($2);
 	$$=a;
-} | arg_declaration ',' type var_declaration_ident {
+} | arg_declaration ',' type_with_stars IDENTIFIER {
 	struct arguments_t *a=$1;
 	a->num_vars++;
 	a->vars=realloc(a->vars, a->num_vars*sizeof(struct var_t*));
 	int n=a->num_vars-1;
-	a->vars[n]=$4->attrs.list.statements[0]->attrs.var;
-	a->vars[n]->scope_depth=1;
-	a->vars[n]->hidden=false;
-	a->vars[n]->type->refcount++;
-	a->vars[n]->refcount+=2;
-	add_var(a->vars[n]);
-	free_statem($4);
+	a->vars[n]=malloc(sizeof(struct var_t));
+	struct var_t *v=a->vars[n];
+	v->scope_depth=1;
+	v->hidden=false;
+	v->refcount=2;
+	v->name=strdup($4);
+	v->type=$3;
+	v->type->refcount++;
+	add_var(v);
+	free($4);
 	free_type($3);
 	$$=a;
 };
 
-multiple_stars: '*' '*' {
-	$$=2;
-} | multiple_stars '*' {
-	$$=$1+1;
-}
+type_with_stars: type | type_with_stars '*' {
+	$$=increase_type_depth($1, 1);
+};
 
-function_header: type multiple_stars IDENTIFIER '(' ')' {
-	struct func_t *f=malloc(sizeof(struct func_t));
-	init_func(f);
-	f->name=strdup($3);
-	f->has_var_args=false;
-	f->ret_type=increase_type_depth($1, $2);
-	$1->refcount++;
-	f->num_arguments=0;
-	f->arguments=NULL;
-	f->statement_list=NULL;
-	free(current_function);
-	current_function=strdup(f->name);
-	free($3);
-	$$=f;
-} | type IDENTIFIER '(' ')' {
+function_header: type_with_stars IDENTIFIER '(' ')' {
 	struct func_t *f=malloc(sizeof(struct func_t));
 	init_func(f);
 	f->name=strdup($2);
 	f->has_var_args=false;
 	f->ret_type=$1;
-	$1->refcount++;
-	free_type(current_type);
 	f->num_arguments=0;
 	f->arguments=NULL;
 	f->statement_list=NULL;
@@ -179,13 +217,12 @@ function_header: type multiple_stars IDENTIFIER '(' ')' {
 	current_function=strdup(f->name);
 	free($2);
 	$$=f;
-}| type IDENTIFIER '(' arg_declaration ')' {
+} | type_with_stars IDENTIFIER '(' arg_declaration ')' {
 	struct func_t *f=malloc(sizeof(struct func_t));
 	f->name=strdup($2);
 	init_func(f);
 	f->ret_type=$1;
 	$1->refcount++;
-	f->num_arguments=0;
 	f->arguments=$4->vars;
 	f->num_arguments=$4->num_vars;
 	free($4);
@@ -196,7 +233,7 @@ function_header: type multiple_stars IDENTIFIER '(' ')' {
 } | EXTERN function_header {
 	$2->attributes|=_extern;
 	$$=$2;
-} | type IDENTIFIER '(' arg_declaration ',' MULTI_ARGS ')' {
+} | type_with_stars IDENTIFIER '(' arg_declaration ',' MULTI_ARGS ')' {
 	struct func_t *f=malloc(sizeof(struct func_t));
 	init_func(f);
 	f->name=strdup($2);
@@ -292,7 +329,7 @@ type: TYPE {
 
 } | UNION IDENTIFIER '{' struct_var_declarations '}' {
 	struct type_t *type=malloc(sizeof(struct type_t));
-	type->refcount=1;
+	type->refcount=2;
 	type->pointer_depth=0;
 	type->name=strdup($2);
 	type->body=malloc(sizeof(struct tbody_t));
@@ -325,6 +362,7 @@ type: TYPE {
 	type->body->size=max_size;
 	current_type=type;
 	current_type->refcount++;
+	add_type(type);
 	free($2);
 	$$=type;
 };
@@ -397,110 +435,151 @@ call_arg_list: noncomma_expression {
 	$$=$1;
 };
 
-var_declaration_ident: IDENTIFIER { 
-	struct statem_t *s=malloc(sizeof(struct statem_t));
-	s->kind=declare;
 
-	struct var_t *v=malloc(sizeof(struct var_t));
-	v->scope_depth=scope_depth;
-	v->name=strdup($1);
-	v->type=current_type;
-	v->type->refcount++;
-	v->refcount=2;
-	add_var(v);
-	s->attrs.var=v;
+var_declaration: var_declaration_start ';' {
+	$$=$1;
+} ;
 
-	struct statem_t *l=malloc(sizeof(struct statem_t));
-	l->kind=list;
-	l->attrs.list.num=1;
-	l->attrs.list.statements=malloc(sizeof(struct statem_t*));
-	l->attrs.list.statements[0]=s;
-
-	free($1);
-	$$=l;
-} | IDENTIFIER '=' expression {
-	struct var_t *v=malloc(sizeof(struct var_t));
-	v->scope_depth=scope_depth; 
-	v->refcount=3;
-	v->name=strdup($1);
-	v->type=current_type;
-	v->type->refcount++;
-	add_var(v);
-
+var_declaration_start: type_with_stars IDENTIFIER {
 	struct statem_t *declaration=malloc(sizeof(struct statem_t));
 	declaration->kind=declare;
-	declaration->attrs.var=v;
+	struct var_t *v=declaration->attrs.var=malloc(sizeof(struct var_t));
 
-	struct statem_t *expression=malloc(sizeof(struct statem_t));
-	expression->kind=expr;
-	expression->attrs.expr=malloc(sizeof(struct expr_t));
+	v->type=$1;
+	$1->refcount++;
+	v->name=strdup($2);
+	free($2);
+	v->refcount=2;
+	v->scope_depth=scope_depth;
+	v->hidden=false;
+	add_var(v);
+	$$=declaration;
+} | type_with_stars IDENTIFIER '=' expression { 
+	struct statem_t *block=malloc(sizeof(struct statem_t));
+	struct statem_t *declaration;
+	struct expr_t *assignment;
+	struct var_t *v;
+	block->attrs.list.statements=calloc(2, sizeof(struct statem_t*));
+	block->attrs.list.num=2;
+	block->attrs.list.statements[1]=malloc(sizeof(struct statem_t));
+	block->attrs.list.statements[1]->kind=expr;
+	assignment=block->attrs.list.statements[1]->attrs.expr=malloc(sizeof(struct expr_t));
+	declaration=block->attrs.list.statements[0]=malloc(sizeof(struct statem_t));
+	block->kind=list;
 
-	struct expr_t *e=expression->attrs.expr;
-	e->kind=bin_op;
-	e->attrs.bin_op=strdup("=");
-	e->type=current_type;
-	e->type->refcount++;
+	declaration->kind=declare;
 
-	e->left=malloc(sizeof(struct expr_t));
 
-	struct expr_t *left=e->left;
-	left->kind=var;
-	left->attrs.var=v;
-	left->left=NULL;
-	left->right=NULL;
-	left->type=current_type;
-	left->type->refcount++;
+	assignment->kind=bin_op;
+	assignment->attrs.bin_op=strdup("=");
+	assignment->right=$4;
+	assignment->type=$1;
 
-	e->right=$3;
+	assignment->left=malloc(sizeof(struct expr_t));
+	assignment->left->kind=var;
+	assignment->left->left=assignment->left->right=NULL;
+	assignment->left->type=$1;
+	$1->refcount+=2;
 
-	struct statem_t *l=malloc(sizeof(struct statem_t));
-	l->kind=list;
-	l->attrs.list.num=2;
-	l->attrs.list.statements=calloc(2, sizeof(struct statem_t*));
-	l->attrs.list.statements[0]=declaration;
-	l->attrs.list.statements[1]=expression;
 
-	free($1);
-	$$=l;
-} | '*' IDENTIFIER {
+	v=declaration->attrs.var=assignment->left->attrs.var=malloc(sizeof(struct var_t));
 
-	struct statem_t *s=malloc(sizeof(struct statem_t));
-	s->kind=declare;
+
+	v->name=strdup($2);
+	free($2);
+	v->scope_depth=scope_depth;
+	v->hidden=false;
+	v->refcount=4;
+	add_var(v);
+	v->type=$1;
+	$1->refcount++;
+	$$=block;
+
+} | var_declaration_start ',' IDENTIFIER '=' expression {
+	struct statem_t *block=malloc(sizeof(struct statem_t));
+	block->kind=list;
+
+	block->attrs.list.num=3;
+	struct statem_t **statements=block->attrs.list.statements=calloc(3, sizeof(struct statem_t*));
+
+	statements[0]=$1;
+	struct statem_t *declaration=statements[1]=malloc(sizeof(struct statem_t));
+	declaration->kind=declare;
+	struct expr_t *holder=malloc(sizeof(struct expr_t));
+	holder->left=holder->right=NULL;
+	holder->type=$5->type;
+	$5->type->refcount++;
+	holder->kind=var;
+	struct var_t *v=holder->attrs.var=declaration->attrs.var=malloc(sizeof(struct var_t));
+	v->name=strdup($3);
+	free($3);
+
+	v->scope_depth=scope_depth;
+	v->hidden=false;
+	v->type=current_type;
+	current_type->refcount++;
+	v->refcount=4;
+
+	statements[1]=declaration;
+	add_var(v);
+
+	struct statem_t *assignment=statements[2]=malloc(sizeof(struct statem_t));
+	assignment->kind=expr;
+
+	struct expr_t *expr=assignment->attrs.expr=malloc(sizeof(struct expr_t));
+	expr->kind=bin_op;
+	expr->attrs.bin_op=strdup("=");
+	expr->left=holder;
+	expr->right=$5;
+	expr->type=$5->type;
+	$5->type->refcount++;
+
+	$$=block;
+
+} | var_declaration_start ',' IDENTIFIER {
+	struct statem_t *block=malloc(sizeof(struct statem_t));
+	block->kind=list;
+	block->attrs.list.statements=calloc(2, sizeof(struct statem_t*));
+	block->attrs.list.statements[1]=malloc(sizeof(struct statem_t));
+	block->attrs.list.statements[1]->kind=declare;
+	block->attrs.list.num=2;
+	struct var_t *v=block->attrs.list.statements[1]->attrs.var=malloc(sizeof(struct var_t));
+	block->attrs.list.statements[0]=$1;
+	v->name=strdup($3);
+	free($3);
+	v->refcount=2;
+	v->type=current_type;
+	current_type->refcount++;
+
+	v->scope_depth=scope_depth;
+	v->hidden=false;
+	add_var(v);
+	$$=block;
+} | var_declaration_start ',' '*' IDENTIFIER {
+	struct statem_t *block=malloc(sizeof(struct statem_t));
+	block->kind=list;
+	block->attrs.list.num=2;
+	block->attrs.list.statements=calloc(2, sizeof(struct statem_t*));
+	block->attrs.list.statements[0]=$1;
+	block->attrs.list.statements[1]=malloc(sizeof(struct statem_t));
+
+	struct statem_t *declaration=block->attrs.list.statements[1];
+
+	declaration->kind=declare;
 
 	struct var_t *v=malloc(sizeof(struct var_t));
-	v->refcount=2;
-	v->scope_depth=scope_depth; 
-	v->name=strdup($2);
 	v->type=increase_type_depth(current_type, 1);
+	v->name=strdup($4);
+	free($4);
+
+	v->scope_depth=scope_depth;
+	v->hidden=false;
+	v->refcount=2;
+
 	add_var(v);
-	s->attrs.var=v;
 
-	struct statem_t *l=malloc(sizeof(struct statem_t));
-	l->kind=list;
-	l->attrs.list.num=1;
-	l->attrs.list.statements=malloc(sizeof(struct statem_t*));
-	l->attrs.list.statements[0]=s;
-
-	free($2);
-	$$=l;
-};
-
-
-var_declaration_list: var_declaration_ident {
-	$$=$1;
-} | var_declaration_list ',' var_declaration_ident {
-	struct statem_t *s=$3;
-
-	$1->attrs.list.num++;
-	$1->attrs.list.statements=realloc($1->attrs.list.statements, $1->attrs.list.num*sizeof(struct statem_t*));
-	$1->attrs.list.statements[$1->attrs.list.num-1]=s;
-	$$=$1;
-};
-
-var_declaration: type var_declaration_list ';' {
-	$$=$2;
-	free_type(current_type);
-	current_type=NULL;
+	declaration->attrs.var=v;
+	$$=block;
 };
 %%
 void yyerror(const char *s)

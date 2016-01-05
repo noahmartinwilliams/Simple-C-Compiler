@@ -3,9 +3,11 @@
 #include "types.h"
 #include <stdbool.h>
 
+#ifdef DEBUG
+extern bool print_trees;
+#endif 
+
 extern int current_line;
-
-
 extern int current_char;
 extern char *current_file;
 extern struct type_t **types;
@@ -15,6 +17,7 @@ extern struct var_t **vars;
 extern int num_vars;
 extern struct func_t **funcs;
 extern int num_funcs;
+
 #ifdef HAIKU_EASTER_EGG
 extern int number_of_syllables;
 extern int current_haiku_line;
@@ -22,6 +25,6 @@ extern int current_haiku_line;
 
 extern char *current_function;
 extern char *current_line_str;
-extern bool print_trees;
 extern int scope_depth;
+
 #endif

@@ -43,7 +43,15 @@ noncomma_expression: CONST_INT {
 	e->attrs.cstr_val=generate_global_string(output, $1);
 	free($1);
 	$$=e;
-} | postfix_expr ;
+} | postfix_expr | SIZEOF '(' type ')' {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=const_size_t;
+	e->attrs.csize_t_val=get_type_size($3);
+	e->type=get_type_by_name("size_t");
+	e->type->refcount++;
+	e->left=e->right=NULL;
+	$$=e;
+};
 
 postfix_expr: assignable_expr INC_OP {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
