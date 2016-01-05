@@ -33,10 +33,10 @@ struct expr_t {
 	enum { bin_op, pre_un_op, post_un_op, question, const_int, const_float, var, funccall, arg, const_str, const_size_t } kind;
 	struct expr_t *left, *right;
 	struct type_t *type;
+	bool has_gotos;
 	union {
 		struct var_t *var;
 		long int cint_val;
-		size_t csize_t_val;
 		char *bin_op;
 		char *un_op;
 		char *cstr_val;
@@ -56,6 +56,7 @@ struct var_t {
 
 struct statem_t {
 	enum { expr, list, declare, _while, ret, _if, _break, _continue, label, _goto, _for, do_while } kind;
+	bool has_gotos;
 	union {
 		char *label_name;
 		struct expr_t *expr;

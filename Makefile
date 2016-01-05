@@ -26,14 +26,14 @@ test%: main_debug
 	cp main tests/cc
 	$(MAKE) -s -C tests/ $@
 
-comp.y: parser/* 
+comp.y: parser/*
 	$(MAKE) -C parser/ ../comp.y
 
 comp.tab.c include/comp.tab.h: comp.y
 	$(YACC) $^
 	mv comp.tab.h include/
 
-lex.yy.c: comp.l
+lex.yy.c: comp.l include/types.h
 	$(LEX) $^
 
 clena: 

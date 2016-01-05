@@ -131,7 +131,7 @@ static inline void generate_if_statement(FILE *fd, struct statem_t *s, struct re
 		generate_statement(fd, block);
 		place_comment(fd, "}");
 		return;
-	} else if (optimize_if_constant_condition && cond->kind==const_int && cond->attrs.cint_val==0) {
+	} else if (optimize_if_constant_condition && cond->kind==const_int && cond->attrs.cint_val==0 && !block->has_gotos) {
 		place_comment(fd, "0) {}");
 		if (else_block!=NULL) {
 			place_comment(fd, "else {");

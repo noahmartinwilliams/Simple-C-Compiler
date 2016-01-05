@@ -11,5 +11,5 @@ CMB=$(CC) $^ -o $@
 LEX=flex
 LD=ld
 
-%.o: %.c
+%.o: %.c $(INCLUDE)types.h
 	$(CMP)

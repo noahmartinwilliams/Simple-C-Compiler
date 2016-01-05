@@ -5,6 +5,7 @@ for_loop:  FOR '(' ';' ';' expression ')' statement {
 	s->attrs._for.initial=s->attrs._for.cond=NULL;
 	s->attrs._for.update=$5;
 	s->attrs._for.block=$7;
+	s->has_gotos=s->attrs._for.block->has_gotos;
 	$$=s;
 } | FOR '(' ';' expression ';' ')' statement {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
@@ -12,6 +13,7 @@ for_loop:  FOR '(' ';' ';' expression ')' statement {
 	s->attrs._for.initial=s->attrs._for.update=NULL;
 	s->attrs._for.cond=$4;
 	s->attrs._for.block=$7;
+	s->has_gotos=s->attrs._for.block->has_gotos;
 	$$=s;
 } | FOR '(' ';' expression ';' expression ')' statement {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
@@ -20,6 +22,7 @@ for_loop:  FOR '(' ';' ';' expression ')' statement {
 	s->attrs._for.cond=$4;
 	s->attrs._for.update=$6;
 	s->attrs._for.block=$8;
+	s->has_gotos=s->attrs._for.block->has_gotos;
 	$$=s;
 } | FOR '(' expression ';' ';' ')' statement { 
 	struct statem_t *s=malloc(sizeof(struct statem_t));
@@ -27,6 +30,7 @@ for_loop:  FOR '(' ';' ';' expression ')' statement {
 	s->attrs._for.initial=$3;
 	s->attrs._for.cond=s->attrs._for.update=NULL;
 	s->attrs._for.block=$7;
+	s->has_gotos=s->attrs._for.block->has_gotos;
 	$$=s;
 } | FOR '(' expression ';' ';' expression ')' statement {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
@@ -45,6 +49,7 @@ for_loop:  FOR '(' ';' ';' expression ')' statement {
 
 	s->attrs._for.update=$6;
 	s->attrs._for.block=$8;
+	s->has_gotos=s->attrs._for.block->has_gotos;
 	$$=s;
 } | FOR '(' expression ';' expression ';' ')' statement {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
@@ -53,6 +58,7 @@ for_loop:  FOR '(' ';' ';' expression ')' statement {
 	s->attrs._for.cond=$5;
 	s->attrs._for.update=NULL;
 	s->attrs._for.block=$8;
+	s->has_gotos=s->attrs._for.block->has_gotos;
 	$$=s;
 } | FOR '(' expression ';' expression ';' expression ')' statement {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
@@ -61,5 +67,6 @@ for_loop:  FOR '(' ';' ';' expression ')' statement {
 	s->attrs._for.cond=$5;
 	s->attrs._for.update=$7;
 	s->attrs._for.block=$9;
+	s->has_gotos=s->attrs._for.block->has_gotos;
 	$$=s;
 }; 

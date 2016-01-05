@@ -1,3 +1,27 @@
+call_arg_list: noncomma_expression {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=arg;
+	e->left=NULL;
+	e->right=NULL;
+	e->type=$1->type;
+	e->type->refcount++;
+	e->attrs.argument=$1;
+	$$=e;
+} | call_arg_list ',' noncomma_expression {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	struct expr_t *tmp=$1;
+	for (; tmp->right!=NULL; tmp=tmp->right) {
+	}
+	e->kind=arg;
+	e->type=$3->type;
+	e->type->refcount++;
+	e->right=NULL;
+	e->left=NULL;
+	e->attrs.argument=$3;
+	tmp->right=e;
+	$$=$1;
+};
+
 expression: noncomma_expression ;
 noncomma_expression: CONST_INT {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
@@ -43,10 +67,10 @@ noncomma_expression: CONST_INT {
 	e->attrs.cstr_val=generate_global_string(output, $1);
 	free($1);
 	$$=e;
-} | postfix_expr | SIZEOF '(' type ')' {
+} | postfix_expr | SIZEOF '(' type_with_stars ')' {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=const_size_t;
-	e->attrs.csize_t_val=get_type_size($3);
+	e->attrs.cint_val=get_type_size($3);
 	e->type=get_type_by_name("size_t");
 	e->type->refcount++;
 	e->left=e->right=NULL;

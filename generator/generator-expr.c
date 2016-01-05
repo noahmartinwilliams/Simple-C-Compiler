@@ -26,6 +26,8 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		read_var(fd, e->attrs.var);
 	else if (e->kind==const_int)
 		assign_constant(fd, e);
+	else if (e->kind==const_size_t)
+		assign_constant(fd, e);
 	else if (e->kind==pre_un_op) {
 		generate_pre_unary_expression(fd, e);
 	} else if (e->kind==funccall) {

@@ -176,7 +176,7 @@ arg_declaration: type_with_stars IDENTIFIER{
 	v->type->refcount++;
 	v->scope_depth=1;
 	v->hidden=false;
-	v->refcount+=2;
+	v->refcount=2;
 	a->num_vars=1;
 	add_var(v);
 	free($2);
@@ -213,6 +213,7 @@ function_header: type_with_stars IDENTIFIER '(' ')' {
 	f->num_arguments=0;
 	f->arguments=NULL;
 	f->statement_list=NULL;
+	f->do_inline=false;
 	free(current_function);
 	current_function=strdup(f->name);
 	free($2);
@@ -411,29 +412,6 @@ struct_var_declarations: type IDENTIFIER ';' {
 	$$=$1;
 };
 
-call_arg_list: noncomma_expression {
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->kind=arg;
-	e->left=NULL;
-	e->right=NULL;
-	e->type=$1->type;
-	e->type->refcount++;
-	e->attrs.argument=$1;
-	$$=e;
-} | call_arg_list ',' noncomma_expression {
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	struct expr_t *tmp=$1;
-	for (; tmp->right!=NULL; tmp=tmp->right) {
-	}
-	e->kind=arg;
-	e->type=$3->type;
-	e->type->refcount++;
-	e->right=NULL;
-	e->left=NULL;
-	e->attrs.argument=$3;
-	tmp->right=e;
-	$$=$1;
-};
 
 
 var_declaration: var_declaration_start ';' {

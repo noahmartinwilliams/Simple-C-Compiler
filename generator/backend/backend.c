@@ -126,6 +126,8 @@ void assign_constant(FILE *fd, struct expr_t *e)
 		fprintf(fd, "\tmovb $%ld, %%al\n", e->attrs.cint_val);
 	else if (get_type_size(e->type)==word_size)
 		fprintf(fd, "\tmovl $%ld, %%eax\n", e->attrs.cint_val);
+	else if (get_type_size(e->type)==pointer_size)
+		fprintf(fd, "\tmovq $%ld, %%rax\n", e->attrs.cint_val);
 	else {
 		fprintf(stderr, "Internal Error: unknown size: %ld passed to assign_constant\n", get_type_size(e->type));
 		exit(1);
