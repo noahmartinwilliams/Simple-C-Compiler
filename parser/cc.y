@@ -123,7 +123,7 @@ static inline struct statem_t* declare_var(struct type_t *t, char *name, struct 
 
 %right '=' ASSIGN_OP
 %right '!' '~' INC_OP DEC_OP
-%left '?'
+%left '?' ':'
 %left TEST_OR
 %left TEST_AND
 %left '|'
@@ -141,8 +141,10 @@ static inline struct statem_t* declare_var(struct type_t *t, char *name, struct 
 file: file_entry | file file_entry ;
 file_entry:  function {
 	add_func($1);
+	#ifdef DEBUG
 	if (print_trees)
 		print_f($1);
+	#endif
 	if (!$1->do_inline)
 		generate_function(output, $1);
 } | var_declaration {
