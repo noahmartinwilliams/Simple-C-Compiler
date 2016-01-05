@@ -123,6 +123,7 @@ static inline struct statem_t* declare_var(struct type_t *t, char *name, struct 
 
 %right '=' ASSIGN_OP
 %right '!' '~' INC_OP DEC_OP
+%left '?'
 %left TEST_OR
 %left TEST_AND
 %left '|'

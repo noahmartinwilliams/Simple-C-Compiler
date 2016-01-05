@@ -276,6 +276,38 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 
 			place_comment(fd, ")");
 			place_comment(fd, ")");
+		} else if (!strcmp(op, "?")) {
+			unique_num++;
+			place_comment(fd, "(");
+			place_comment(fd, "(");
+			generate_expression(fd, e->left);
+			assign_reg(fd, ret, lhs);
+			place_comment(fd, ")");
+			place_comment(fd, "?");
+
+			char *then, *_else;
+			asprintf(&then, "expression$then$%d", unique_num);
+			asprintf(&_else, "expression$else$%d", unique_num);
+
+			compare_register_to_int(fd, ret, 0);
+			jmp_eq(fd, _else);
+			place_comment(fd, "(");
+			place_comment(fd, "(");
+			generate_expression(fd, e->right->left);
+			jmp(fd, then);
+			place_comment(fd, ")");
+
+			place_comment(fd, ":");
+			place_comment(fd, "(");
+			place_label(fd, _else);
+			generate_expression(fd, e->right->right);
+			place_comment(fd, ")");
+			place_label(fd, then);
+			place_comment(fd, ")");
+			place_comment(fd, ")");
+
+			free(then);
+			free(_else);
 		} else { 
 			place_comment(fd, "(");
 			place_comment(fd, "(");

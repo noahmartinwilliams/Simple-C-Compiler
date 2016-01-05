@@ -75,6 +75,24 @@ noncomma_expression: CONST_INT {
 	e->type->refcount++;
 	e->left=e->right=NULL;
 	$$=e;
+} | noncomma_expression '?' noncomma_expression ':' noncomma_expression {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=bin_op;
+	e->attrs.bin_op=strdup("?");
+	e->type=$3->type;
+	e->type->refcount++;
+
+	e->left=$1;
+	struct expr_t *e2=e->right=malloc(sizeof(struct expr_t));
+	
+	e2->kind=bin_op;
+	e2->attrs.bin_op=strdup(":");
+	e2->left=$3;
+	e2->right=$5;
+	e2->type=e->type;
+	e->type->refcount++;
+
+	$$=e;
 };
 
 postfix_expr: assignable_expr INC_OP {

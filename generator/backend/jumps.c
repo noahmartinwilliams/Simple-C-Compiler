@@ -48,3 +48,27 @@ void jmp_ge(FILE *fd, char *name)
 	fprintf(fd, "\tje %s\n", name);
 	fprintf(fd, "\tjg %s\n", name);
 }
+
+void compare_registers(FILE *fd, struct reg_t *a, struct reg_t *b)
+{
+	if (a->size==char_size)
+		fprintf(fd, "\tcmpb %s, %s\n", reg_name(a), reg_name(b));
+
+	else if (a->size==word_size)
+		fprintf(fd, "\tcmpl %s, %s\n", reg_name(a), reg_name(b));
+
+	else if (a->size==pointer_size)
+		fprintf(fd, "\tcmpq %s, %s\n", reg_name(a), reg_name(b));
+}
+
+void compare_register_to_int(FILE *fd, struct reg_t *a, int i)
+{
+	if (a->size==char_size)
+		fprintf(fd, "\tcmpb $%d, %s\n", i, reg_name(a));
+
+	else if (a->size==word_size)
+		fprintf(fd, "\tcmpl $%d, %s\n", i, reg_name(a));
+	
+	else if (a->size==pointer_size)
+		fprintf(fd, "\tcmpq $%d, %s\n", i, reg_name(a));
+}
