@@ -141,6 +141,15 @@ prefix_expr: '&' assignable_expr {
 	e->type=$2->type;
 	e->type->refcount++;
 	$$=e;
+} | '-' noncomma_expression {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=pre_un_op;
+	e->type=$2->type;
+	e->type->refcount++;
+	e->left=NULL;
+	e->right=$2;
+	e->attrs.un_op=strdup("-");
+	$$=e;
 };
 
 assignable_expr: IDENTIFIER {

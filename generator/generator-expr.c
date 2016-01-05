@@ -149,6 +149,8 @@ void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 
 		} else if (!strcmp(op, "~")) 
 			invert(fd, ret);
+		else if (!strcmp(op, "-"))
+			int_neg(fd, ret);
 	}
 	place_comment(fd, ")");
 	depth--;
@@ -201,6 +203,7 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 	struct reg_t *lhs, *rhs;
 	char *op=e->attrs.bin_op;
 	if (!strcmp(op, "=")) {
+		struct expr_t *left=e->left;
 		/* The reason for redoing rhs, and lhs in the else statement is that 
 		this way I can declare lhs AFTER I've generated the 
 		right hand side of the expression which leaves whatever
@@ -218,7 +221,6 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, "(");
 		/* TODO: figure out a good way to abstract away the direct use
 		 * of the mov command here. Printing opcodes is for handle-registers.c */
-		struct expr_t *left=e->left;
 		if (left->kind==pre_un_op && !strcmp(left->attrs.un_op, "*")) {
 			generate_expression(fd, left->right);
 			assign_dereference(fd, lhs, ret);

@@ -106,3 +106,34 @@ void int_dec(FILE *fd, struct reg_t *r)
 		exit(1);
 	}
 }
+
+void int_neg(FILE *fd, struct reg_t *r)
+{
+	size_t s=r->size;
+	if (r->use!=RET) {
+		if (s==char_size) {
+			fprintf(fd, "\tnegb %s\n", reg_name(r));
+			fprintf(fd, "\tmovb %s, %%al\n", reg_name(r));
+		} else if (s==word_size) {
+			fprintf(fd, "\tnegl %s\n", reg_name(r));
+			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(r));
+		} else if (s==pointer_size) {
+			fprintf(fd, "\tnegq %s\n", reg_name(r));
+			fprintf(fd, "\tmovq %s, %%rax\n", reg_name(r));
+		} else {
+			fprintf(fd, "Internal error: %d size passed to int_neg\n", s);
+			exit(1);
+		}
+	} else {
+		if (s==char_size)
+			fprintf(fd, "\tnegb %s\n", reg_name(r));
+		else if (s==word_size)
+			fprintf(fd, "\tnegl %s\n", reg_name(r));
+		else if (s==pointer_size)
+			fprintf(fd, "\tnegq %s\n", reg_name(r));
+		else {
+			fprintf(fd, "Internal error: %d size passed to int_neg\n", s);
+			exit(1);
+		}
+	}
+}
