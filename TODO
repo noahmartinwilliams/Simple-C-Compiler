@@ -1,0 +1,100 @@
+*Solve this issue for, while, and do while
+	if (0) {
+		label:
+		code...
+	}
+	goto label;
+*further text the /* */ comment system.
+*modify if, if else, while, do while, expression statements, return statements, and for statements to properly take gotos from their expressions.
+*add typedefs with pointers as base type.
+*add default keyword.
+*test break statements in switch statements.
+*add arrays.
+*add enumerations.
+*add putting structures within structures.
+*add functions with pointer return types.
+*add returning of structures to function calls.
+*add passing of structures to function calls.
+*add returning of unions from function calls
+*add passing of unions to function calls.
+*add returning of enumerations from function calls.
+*add passing of enumerations to function calls.
+*add offsetof keyword.
+*add alignas keyword.
+*add preprocessor statements.
+*add bit fields to data structures.
+*add const keyword.
+*add register keyword.
+*add floating point math.
+*add arithmetic assignment operators.
+*add new bit manipulation operators that I came up with.
+*add duff's device optimization.
+*add static local variables.
+*add static global variables.
+*add pointer arithmetic.
+*add __uint8_t, __uint16_t, __uint32_t, __uint64_t, __int8_t, __int16_t, __int32_t, __int64_t, _Bool, float, and double data types.
+*add alignof keyword.
+*add type conversion.
+*add automagic type conversion.
+*add comma, and % operators.
+*add __nosideeffects keyword
+*add volatile keyword.
+*add function pointers.
+*add typedefs for function pointers.
+*add argument declarations for function pointers.
+*add local variable function pointers.
+*add global variable function pointers.
+*add calling function pointers.
+*add type checking.
+*add argument type checking.
+*add stack offset calculations with stack pointer.
+*add long, short, signed, and unsigned keywords.
+*add statement expressions.
+*fix up TODOs.
+*get memory management cleared up.
+*add asm keyword.
+*add hexadecimal, binary, and octal number formats.
+*add until, and unless keywords.
+*add passing of arrays to functions.
+*add returning of arrays from functions.
+*add ability to pass any arbitrary number of arguments to function.
+*add escaping characters to character quoting.
+*add escaping characters to strings.
+*add assigning structure attributes when they're first declared using that cool curly brace syntax.
+*add assigning one data structure to another.
+*add keyword for deciding which segment a thing goes in.
+*add ability to have function pointers as data structure members.
+*add ability to have function pointers as union structure members.
+*add putting structures within structures, and accessing their attributes.
+*add variable argument passing system.
+*add restrict keyword.
+*figure out dynamic linker.
+*have c compiler call up assembler, and preprocessor itself.
+*add helpful command line options.
+*add array typedefs.
+*add making struct typedefs.
+*add making union typedefs.
+*add making enum typedefs.
+*add return type checking.
+*add __force_inline.
+*add typeof keyword.
+*add ability to generate assembly code, then count the number of lines to see how well the optimization trick worked.
+*allow for automagic header generation, and update.
+*add := operator.
+
+Optimizations:
+	*multiplication by two might be better with left shifting.
+	*for (;;) { break; } should be ignored (except for if there's a label after the break).
+	*do whole program optimizing at link time.
+
+Parser ideas:
+	*make it possible to get a list of functions, types, and global variables.
+	*make it possible to change the name of the attribute accessed for every instance of a given structure.
+
+*Start labeling the versions of this thing.
+*operators to add:
+	x->y
+	char* assign(struct expr_t *dest, struct expr_t *src)
+	*always eval src first.
+	*returns thing to put in movl %s, %s where first %s is expression value, and second is returned by assign
+	*rax should be pointer to place to put thing
