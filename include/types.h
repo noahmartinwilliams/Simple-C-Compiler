@@ -55,12 +55,18 @@ struct var_t {
 };
 
 struct statem_t {
-	enum { expr, list, declare, _while, ret, _if, _break, _continue, label, _goto, _for, do_while } kind;
+	enum { expr, list, declare, _while, ret, _if, _break, _continue, label, _goto, _for, do_while, _switch, _case, _default } kind;
 	bool has_gotos;
 	union {
 		char *label_name;
 		struct expr_t *expr;
 		struct var_t *var;
+
+		struct {
+			struct statem_t *block;
+			struct expr_t *condition;
+			char *label;
+		} _case;
 
 		struct {
 			struct statem_t **statements;
@@ -88,6 +94,11 @@ struct statem_t {
 			struct expr_t *initial, *cond, *update;
 			struct statem_t *block;
 		} _for;
+
+		struct {
+			struct statem_t *cases;
+			struct expr_t *tester;
+		} _switch;
 	} attrs;
 };
 

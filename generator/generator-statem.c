@@ -235,8 +235,51 @@ static inline void generate_for_loop(FILE *fd, struct statem_t *s, struct reg_t 
 	free(pop(loop_stack));
 }
 
+static inline void generate_switch_statement(FILE *fd, struct statem_t *s, struct reg_t *retu, struct expr_t *cond, struct statem_t *block) 
+{
+	int *l=malloc(sizeof(int));
+	unique_num++;
+	*l=unique_num;
+	push(loop_stack, l);
+	char *loop_start, *loop_end;
+	asprintf(&loop_start, "loop$start$%d", unique_num);
+	asprintf(&loop_end, "loop$end$%d", unique_num);
+	place_label(fd, loop_start);
+
+	block=s->attrs._switch.cases;
+	cond=s->attrs._switch.tester;
+	struct reg_t *input=get_free_register(fd, get_type_size(cond->type));
+
+	place_comment(fd, "switch (");
+	generate_expression(fd, cond);
+	assign_reg(fd, retu, input);
+	place_comment(fd, ") {");
+
+	int x;
+	int num=block->attrs.list.num;
+	struct statem_t **statements=block->attrs.list.statements;
+	for (x=0; x<num; x++) {
+		unique_num++;
+		place_comment(fd, "case ");
+		generate_expression(fd, statements[x]->attrs._case.condition);
+		asprintf(&(statements[x]->attrs._case.label), "switch$case$%d", unique_num);
+		compare_registers(fd, retu, input);
+		jmp_eq(fd, statements[x]->attrs._case.label);
+	}
+
+	for (x=0; x<num; x++) {
+		place_label(fd, statements[x]->attrs._case.label);
+		generate_statement(fd, statements[x]->attrs._case.block);
+		free(statements[x]->attrs._case.label);
+	}
+	place_comment(fd, "}");
+	free(loop_start);
+	free(loop_end);
+	free(pop(loop_stack));
+}
 void generate_statement(FILE *fd, struct statem_t *s)
 {
+	depth++;
 	struct reg_t *retu=get_ret_register(word_size);
 	struct expr_t *cond;
 	struct statem_t *block;
@@ -290,5 +333,8 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		generate_for_loop(fd, s, retu, cond, block);
 	} else if (s->kind==do_while) {
 		generate_do_while_loop(fd, s, retu, cond, block);
+	} else if (s->kind==_switch) {
+		generate_switch_statement(fd, s, retu, cond, block);
 	}
+	depth--;
 }

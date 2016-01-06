@@ -1,3 +1,17 @@
+statement_list: statement { 
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=list;
+	s->attrs.list.statements=calloc(1, sizeof(struct statem_t));
+	s->attrs.list.statements[0]=$1;
+	s->attrs.list.num=1;
+	$$=s;
+} | statement_list statement {
+	$1->attrs.list.num++;
+	$1->attrs.list.statements=realloc($1->attrs.list.statements, $1->attrs.list.num*sizeof(struct statem_t*));
+	$1->attrs.list.statements[$1->attrs.list.num-1]=$2;
+	$$=$1;
+};
+
 statement: expression ';' {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=expr;
@@ -68,4 +82,33 @@ statement: expression ';' {
 	s->attrs.do_while.condition=$5;
 	s->attrs.do_while.block=$2;
 	$$=s;
+} | SWITCH '(' expression ')' '{' switch_list '}' {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=_switch;
+	s->has_gotos=$6->has_gotos;
+	s->attrs._switch.cases=$6;
+	s->attrs._switch.tester=$3;
+	$$=s;
 };
+
+switch_list: switch_element {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=list;
+	s->attrs.list.num=1;
+	s->attrs.list.statements=calloc(1, sizeof(struct statem_t));
+	s->attrs.list.statements[0]=$1;
+	$$=s;
+} | switch_list switch_element {
+	$1->attrs.list.num++;
+	$1->attrs.list.statements=realloc($1->attrs.list.statements, $1->attrs.list.num*sizeof(struct statem_t*));
+	$1->attrs.list.statements[$1->attrs.list.num-1]=$2;
+	$$=$1;
+} ;
+
+switch_element: CASE expression ':' statement_list {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=_case;
+	s->attrs._case.block=$4;
+	s->attrs._case.condition=$2;
+	$$=s;
+}

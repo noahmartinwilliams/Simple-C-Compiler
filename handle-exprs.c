@@ -7,6 +7,7 @@
 #include "types.h"
 #include "optimization-globals.h"
 
+#ifdef DEBUG
 void print_expr(char *pre, struct expr_t *e)
 {
 	if (e==NULL) {
@@ -49,6 +50,7 @@ void print_expr(char *pre, struct expr_t *e)
 		free(new_pre);
 	} 	
 }
+#endif
 
 void free_expr(struct expr_t *e)
 {

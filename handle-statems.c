@@ -1,7 +1,10 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#ifdef DEBUG
 #include "print-tree.h"
+#include "printer.h"
+#endif
 #include "handle-types.h"
 #include "globals.h"
 #include "handle-exprs.h"
@@ -41,7 +44,29 @@ void free_statem(struct statem_t *s)
 		free_statem(s->attrs.do_while.block);
 	} else if (s->kind==declare) 
 		free_var(s->attrs.var);
+	else if (s->kind==_case) {
+		free_expr(s->attrs._case.condition);
+		free_statem(s->attrs._case.block);
+	} else if (s->kind==_switch) {
+		free_statem(s->attrs._switch.cases);
+		free_expr(s->attrs._switch.tester);
+	}
 	free(s);
+}
+
+#ifdef DEBUG
+static inline char* fill_with_branches(char *pre, int num_branches)
+{
+	int x;
+	char *new_pre;
+	asprintf(&new_pre, "%s ", pre);
+	for (x=1; x<num_branches; x++) {
+		char *new_pre2;
+		asprintf(&new_pre2, "%s|", new_pre);
+		free(new_pre);
+		new_pre=new_pre2;
+	}
+	return new_pre;
 }
 
 void print_statem(char *pre, struct statem_t *s)
@@ -50,16 +75,14 @@ void print_statem(char *pre, struct statem_t *s)
 	if (s->kind==expr) {
 		printf("%s|_statement kind: expression\n", pre);
 		asprintf(&new_pre, "%s ", pre);
-		print_tree((__printer_function_t) &print_expr, s->attrs.expr, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+		print_e2(new_pre, s->attrs.expr);
 		free(new_pre);
 	} else if (s->kind==list) {
 		printf("%s|_statement kind: list\n", pre);
-		char *new_pre=calloc(2*s->attrs.list.num, sizeof(char));
+		char *new_pre;
 		int x;
-		for (x=0; x<2*s->attrs.list.num; x+=2) {
-			new_pre[x]=' ';
-			new_pre[x+1]='|';
-		}
+		new_pre=fill_with_branches(pre, s->attrs.list.num);
+
 		for (x=0; x<s->attrs.list.num; x++) {
 			new_pre[2*s->attrs.list.num-2*x-1]='\0';
 			char *tmp;
@@ -75,29 +98,30 @@ void print_statem(char *pre, struct statem_t *s)
 		printf("%s|_statement kind: while loop\n", pre);
 		char *new_pre;
 		asprintf(&new_pre, "%s |", pre);
-		print_tree((__printer_function_t) &print_expr, s->attrs._while.condition, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+		print_e2(new_pre, s->attrs._while.condition);
 		free(new_pre);
+
 		asprintf(&new_pre, "%s ", pre);
 		print_statem(new_pre, s->attrs._while.block);
 		free(new_pre);
 	} else if (s->kind==ret) {
 		printf("%s|_statement kind: return\n", pre);
 		asprintf(&new_pre, "%s ", pre);
-		print_tree((__printer_function_t) &print_expr, s->attrs.expr, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+		print_e2(new_pre, s->attrs.expr);
 		free(new_pre);
 	} else if (s->kind==_if) {
 		printf("%s|_statement kind: if statement\n", pre);
 		char *new_pre;
 		if (s->attrs._if.else_block==NULL) {
 			asprintf(&new_pre, "%s |", pre);
-			print_tree((__printer_function_t) &print_expr, s->attrs._if.condition, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+			print_e2(new_pre, s->attrs._if.condition);
 			free(new_pre);
 			asprintf(&new_pre, "%s ", pre);
 			print_statem(new_pre, s->attrs._if.block);
 			free(new_pre);
 		} else {
 			asprintf(&new_pre, "%s | | ", pre);
-			print_tree((__printer_function_t) &print_expr, s->attrs._if.condition, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+			print_e2(new_pre, s->attrs._if.condition);
 			free(new_pre);
 
 			asprintf(&new_pre, "%s | ", pre);
@@ -120,30 +144,59 @@ void print_statem(char *pre, struct statem_t *s)
 	} else if (s->kind==_for) {
 		printf("%s|_ for \n", pre);
 		char *new_pre=NULL;
-		asprintf(&new_pre, "%s | | | | ", pre);
-		print_tree((__printer_function_t) &print_expr, s->attrs._for.initial, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+		asprintf(&new_pre, "%s | | | ", pre);
+		print_e2(new_pre, s->attrs._for.initial);
 		free(new_pre);
 		
-		asprintf(&new_pre, "%s | | | ", pre);
-		print_tree((__printer_function_t) &print_expr, s->attrs._for.cond, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
-
-		free(new_pre);
-
 		asprintf(&new_pre, "%s | | ", pre);
-		print_tree((__printer_function_t) &print_expr, s->attrs._for.update, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+		print_e2(new_pre, s->attrs._for.cond);
+
 		free(new_pre);
 
 		asprintf(&new_pre, "%s | ", pre);
+		print_e2(new_pre, s->attrs._for.update);
+		free(new_pre);
+
+		asprintf(&new_pre, "%s ", pre);
 		print_statem(new_pre, s->attrs._for.block);
 		free(new_pre);
 	} else if (s->kind==do_while ) {
 		printf("%s|_statement kind: do while loop\n", pre);
 		char *new_pre;
 		asprintf(&new_pre, "%s |", pre);
-		print_tree((__printer_function_t) &print_expr, s->attrs.do_while.condition, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
+		print_e2(new_pre, s->attrs.do_while.condition);
 		free(new_pre);
+
 		asprintf(&new_pre, "%s ", pre);
 		print_statem(new_pre, s->attrs.do_while.block);
 		free(new_pre);
+	} else if (s->kind==_switch) {
+		printf("%s|_ switch\n", pre);
+
+		int x;
+		int num=s->attrs._switch.cases->attrs.list.num;
+		char *new_pre=fill_with_branches(pre, num+1);
+		print_e2(new_pre, s->attrs._switch.tester);
+		free(new_pre);
+
+		new_pre=fill_with_branches(pre, s->attrs._switch.cases->attrs.list.num);
+
+		struct statem_t **statements=s->attrs._switch.cases->attrs.list.statements;
+		for (x=0; x<num; x++) {
+			char *new_pre2;
+			printf("%s|_ case \n", new_pre);
+			asprintf(&new_pre2, "%s |", new_pre);
+
+			print_e2(new_pre2, statements[x]->attrs._case.condition);
+			free(new_pre2);
+			asprintf(&new_pre2, "%s ", new_pre);
+			print_statem(new_pre2, statements[x]->attrs._case.block);
+			free(new_pre);
+			free(new_pre2);
+
+			new_pre=fill_with_branches(pre, (num-x)-1);
+		}
+		free(new_pre);
 	}
 }
+#endif

@@ -4,8 +4,9 @@ include include/config.mk
 main_debug:
 	$(MAKE) DEBUG=1 main
 
-main: comp.tab.c globals.o lex.yy.o handle.a generator.a optimization-globals.o
+main: main.c comp.tab.o globals.o lex.yy.o handle.a generator.a optimization-globals.o
 	$(CMB)
+	cp $@ cc
 
 generator.a: generator/* generator/backend/*
 	$(MAKE) -C generator/ ../generator.a
@@ -47,5 +48,6 @@ clean:
 	rm *.a 2>/dev/null || true
 	rm comp.output || true
 	rm comp.y || true
+	rm cc || true
 	$(MAKE) -C tests/ clean
 	$(MAKE) -C generator/ clean
