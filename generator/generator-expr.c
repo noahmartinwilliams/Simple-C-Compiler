@@ -222,8 +222,11 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		/* TODO: figure out a good way to abstract away the direct use
 		 * of the mov command here. Printing opcodes is for handle-registers.c */
 		if (left->kind==pre_un_op && !strcmp(left->attrs.un_op, "*")) {
+			place_comment(fd, "*");
+			place_comment(fd, "(");
 			generate_expression(fd, left->right);
 			assign_dereference(fd, lhs, ret);
+			place_comment(fd, ")");
 		} else if (left->kind==var) {
 			assign_var(fd, lhs, left->attrs.var);
 		}

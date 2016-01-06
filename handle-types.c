@@ -52,7 +52,17 @@ struct type_t* get_type_by_name(char *name)
 {
 	int x;
 	for (x=0; x<num_types; x++) {
-		if (!strcmp(name, types[x]->name))
+		if (!strcmp(name, types[x]->name) && !types[x]->body->is_struct)
+			return types[x];
+	}
+	return NULL;
+}
+
+struct type_t* get_struct_by_name(char *name)
+{
+	register int x;
+	for (x=0; x<num_types; x++) {
+		if (!strcmp(name, types[x]->name) && types[x]->body->is_struct)
 			return types[x];
 	}
 	return NULL;

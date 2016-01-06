@@ -33,6 +33,7 @@ static inline void haiku_easter_egg(char *s)
 '.'	{ count(yytext); yylval.chr=yytext[1]; return CHAR_LITERAL; }
 \/\/.*$	{ count(yytext); }
 "."	{ count(yytext); return '.'; }
+"->"	{ count(yytext); return POINTER_OP; }
 "..."	{ count(yytext); return MULTI_ARGS; }
 "sizeof"	{ count(yytext); return SIZEOF; }
 "inline"	{ count(yytext); return INLINE; }

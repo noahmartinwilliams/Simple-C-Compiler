@@ -26,6 +26,19 @@ void free_var(struct var_t *v)
 	free(v);
 }
 
+struct expr_t* setup_var_expr(struct var_t *v)
+{
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=var;
+	e->attrs.var=v;
+	v->refcount++;
+	e->type=v->type;
+	e->type->refcount++;
+
+	e->left=e->right=NULL;
+	return e;
+}
+
 void free_all_vars()
 {
 	int x;

@@ -105,6 +105,7 @@ static inline struct statem_t* declare_var(struct type_t *t, char *name, struct 
 %define parse.error verbose
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST RETURN STRUCT WHILE GE_TEST LE_TEST FOR INC_OP DO
 %token SHIFT_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF MULTI_ARGS STATIC INLINE SIZEOF
+%token POINTER_OP
 %token <str> STR_LITERAL 
 %token <type> TYPE
 %token <str> ASSIGN_OP
@@ -133,7 +134,7 @@ static inline struct statem_t* declare_var(struct type_t *t, char *name, struct 
 %left SHIFT_LEFT SHIFT_RIGHT
 %left '+' '-'
 %left '*' '/'
-%left '(' ')' '.'
+%left '(' ')' '.' POINTER_OP
 %nonassoc IFX
 %nonassoc ELSE
 
@@ -167,7 +168,7 @@ file_entry:  function {
 	t->body->refcount++;
 	free($3);
 	add_type(t);
-};
+} | type ';' ;
 
 arg_declaration: type_with_stars IDENTIFIER{
 	struct arguments_t *a=malloc(sizeof(struct arguments_t));
@@ -226,6 +227,7 @@ function_header: type_with_stars IDENTIFIER '(' ')' {
 	f->name=strdup($2);
 	init_func(f);
 	f->ret_type=$1;
+	f->do_inline=false;
 	$1->refcount++;
 	f->arguments=$4->vars;
 	f->num_arguments=$4->num_vars;
@@ -296,7 +298,7 @@ type: TYPE {
 } | STRUCT IDENTIFIER '{' struct_var_declarations '}' {
 	/* TODO: check to see if there's already a struct prototyped by this name, and use that instead if it exists. */
 	struct type_t *type=malloc(sizeof(struct type_t));
-	type->refcount=1;
+	type->refcount=2;
 	type->name=strdup($2);
 	type->pointer_depth=0;
 	type->body=malloc(sizeof(struct tbody_t));
@@ -369,6 +371,11 @@ type: TYPE {
 	add_type(type);
 	free($2);
 	$$=type;
+} | STRUCT IDENTIFIER {
+	free_type(current_type);
+	$$=current_type=get_struct_by_name($2);
+	$$->refcount+=2;
+	free($2);
 };
 
 struct_var_declarations: type IDENTIFIER ';' {
@@ -414,8 +421,6 @@ struct_var_declarations: type IDENTIFIER ';' {
 	free($3);
 	$$=$1;
 };
-
-
 
 var_declaration: var_declaration_start ';' {
 	$$=$1;
@@ -561,7 +566,42 @@ var_declaration_start: type_with_stars IDENTIFIER {
 
 	declaration->attrs.var=v;
 	$$=block;
-};
+} | var_declaration_start ',' '*' IDENTIFIER '=' expression {
+	struct statem_t *block=malloc(sizeof(struct statem_t));
+	block->kind=list;
+
+	block->attrs.list.num=3;
+	block->attrs.list.statements=calloc(3, sizeof(struct statem_t*));
+
+	block->attrs.list.statements[0]=$1;
+
+	struct statem_t *declaration=block->attrs.list.statements[1]=malloc(sizeof(struct statem_t));
+	declaration->kind=declare;
+
+	struct var_t *v=malloc(sizeof(struct var_t));
+	v->type=current_type;
+	v->type->refcount++;
+	v->refcount=2;
+
+	v->name=strdup($4);
+	free($4);
+
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->type=v->type;
+	v->type->refcount++;
+
+	e->left=setup_var_expr(v);
+	e->right=$6;
+	e->kind=bin_op;
+	e->attrs.bin_op=strdup("=");
+
+	declaration->attrs.var=v;
+
+	struct statem_t *expression=block->attrs.list.statements[2]=malloc(sizeof(struct statem_t));
+	expression->kind=expr;
+	expression->attrs.expr=e;
+	$$=block;
+} ;
 %%
 void yyerror(const char *s)
 {

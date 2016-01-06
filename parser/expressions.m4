@@ -239,6 +239,35 @@ assignable_expr: IDENTIFIER {
 		$$=deref;
 		free($3);
 	}
+} | assignable_expr POINTER_OP IDENTIFIER {
+	/* a->b ---> *(a+offsetof(typeof(a), b)) */
+	struct expr_t *pointer=malloc(sizeof(struct expr_t));
+	struct expr_t *var=$1;
+	struct expr_t *addition=malloc(sizeof(struct expr_t));
+	struct expr_t *offset=malloc(sizeof(struct expr_t));
+
+	offset->kind=const_int;
+	offset->type=increase_type_depth(get_type_by_name("int"), 1);
+	addition->kind=bin_op;
+	addition->type=var->type;
+	var->type->refcount++;
+	pointer->kind=pre_un_op;
+	pointer->type=get_struct_or_union_attr_type($1->type, $3);
+
+	pointer->left=offset->left=offset->right=NULL;
+
+	addition->attrs.bin_op=strdup("+");
+	offset->attrs.cint_val=get_offset_of_member($1->type, $3);
+	pointer->attrs.un_op=strdup("*");
+	
+	pointer->right=addition;
+
+	addition->left=var;
+	addition->right=offset;
+
+	free($3);
+
+	$$=pointer;
 };
 
 binary_expr:  noncomma_expression '*' noncomma_expression {

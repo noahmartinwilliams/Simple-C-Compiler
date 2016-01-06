@@ -77,8 +77,15 @@ void dereference(FILE *fd, struct reg_t *reg, size_t size)
 
 void assign_dereference(FILE *fd, struct reg_t *assign_from, struct reg_t *assign_to)
 {
-	if (assign_from->size==word_size)
+
+	if (assign_from->size==char_size)
+		fprintf(fd, "\tmovb %s, (%s)\n", reg_name(assign_from), reg_name(assign_to));
+	else if (assign_from->size==word_size)
 		fprintf(fd, "\tmovl %s, (%s)\n", reg_name(assign_from), reg_name(assign_to));
 	else if (assign_from->size==pointer_size)
 		fprintf(fd, "\tmovq %s, (%s)\n", reg_name(assign_from), reg_name(assign_to));
+	else {
+		fprintf(stderr, "Internal error: %ld size passed to assign_dereference. No size handler found.\n", assign_from->size);
+		exit(1);
+	}
 }

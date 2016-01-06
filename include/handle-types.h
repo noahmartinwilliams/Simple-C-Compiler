@@ -16,4 +16,5 @@ extern void free_native_type(struct type_t *t);
 
 extern off_t get_offset_of_member(struct type_t *t, char *name);
 extern struct var_t* get_var_member(struct type_t *t, char *name);
+extern struct type_t* get_struct_by_name(char *name);
 #endif
