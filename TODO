@@ -4,7 +4,9 @@
 		code...
 	}
 	goto label;
-*further text the /* */ comment system.
+*add declaring of pointers with greater than one pointer depth.
+*further test the /* */ comment system.
+*Test switch statements within switch statements.
 *modify if, if else, while, do while, expression statements, return statements, and for statements to properly take gotos from their expressions.
 *add typedefs with pointers as base type.
 *add default keyword.
@@ -32,7 +34,7 @@
 *add static local variables.
 *add static global variables.
 *add pointer arithmetic.
-*add __uint8_t, __uint16_t, __uint32_t, __uint64_t, __int8_t, __int16_t, __int32_t, __int64_t, _Bool, float, and double data types.
+*add ptrdiff_t, off_t, __uint8_t, __uint16_t, __uint32_t, __uint64_t, __int8_t, __int16_t, __int32_t, __int64_t, _Bool, float, and double data types.
 *add alignof keyword.
 *add type conversion.
 *add automagic type conversion.
@@ -93,7 +95,6 @@ Parser ideas:
 
 *Start labeling the versions of this thing.
 *operators to add:
-	x->y
 	char* assign(struct expr_t *dest, struct expr_t *src)
 	*always eval src first.
 	*returns thing to put in movl %s, %s where first %s is expression value, and second is returned by assign

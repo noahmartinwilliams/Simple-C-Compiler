@@ -11,13 +11,19 @@ struct tbody_t {
 	size_t size;
 	int refcount;
 	int base_pointer_depth;
-	bool is_struct, is_union;
+	bool is_struct, is_union, is_func_pointer;
 	union {
 		struct {
 			struct var_t **vars;
 			int num_vars;
 			size_t alignment;
 		} vars;
+
+		struct {
+			struct type_t *return_type;
+			struct type_t **arguments;
+			int num_arguments;
+		} func_ptr;
 	} attrs;
 };
 
@@ -30,7 +36,7 @@ struct type_t {
 };
 
 struct expr_t {
-	enum { bin_op, pre_un_op, post_un_op, question, const_int, const_float, var, funccall, arg, const_str, const_size_t } kind;
+	enum { bin_op, pre_un_op, post_un_op, question, const_int, const_float, var, funccall, arg, const_str, const_size_t, func_val, func_ptr_call } kind;
 	struct expr_t *left, *right;
 	struct type_t *type;
 	bool has_gotos;

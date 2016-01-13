@@ -17,6 +17,7 @@ void generate_post_unary_expression(FILE *fd, struct expr_t *e);
 
 void generate_expression(FILE *fd, struct expr_t *e)
 {
+	struct reg_t *ret;
 	if (e==NULL)
 		return;
 
@@ -40,7 +41,7 @@ void generate_expression(FILE *fd, struct expr_t *e)
 			call(fd, f);
 		} else {
 			struct expr_t *current_e=e->right;
-			struct reg_t *ret=get_ret_register(get_type_size(current_e->type));
+			ret=get_ret_register(get_type_size(current_e->type));
 			while (current_e!=NULL) {
 				generate_expression(fd, current_e->attrs.argument);
 				add_argument(fd, ret, current_e->type);
@@ -55,6 +56,34 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		load_global_string(fd, e->attrs.cstr_val);
 	} else if (e->kind==post_un_op) {
 		generate_post_unary_expression(fd, e);
+	} else if (e->kind==func_ptr_call) {
+		ret=get_ret_register(pointer_size);
+		read_var(fd, e->attrs.var);
+		struct reg_t *holder=get_free_register(fd, pointer_size);
+		place_comment(fd, "(");
+		place_comment(fd, e->attrs.var->name);
+		assign_reg(fd, ret, holder);
+		place_comment(fd, "(");
+		start_func_ptr_call(fd, ret);
+		if (e->attrs.function->num_arguments==0) {
+			call_function_pointer(fd, holder);
+		} else {
+			struct expr_t *current_e=e->right;
+			while (current_e!=NULL) {
+				generate_expression(fd, current_e->attrs.argument);
+				add_argument(fd, ret, current_e->type);
+				current_e=current_e->right;
+			}
+			call_function_pointer(fd, holder);
+		}
+		place_comment(fd, ")");
+		place_comment(fd, ")");
+		/*TODO: Figure out how to handle struct return values */
+	} else if (e->kind==func_val) {
+		ret=get_ret_register(pointer_size);
+		place_comment(fd, "(");
+		load_function_ptr(fd, e->attrs.function, ret);
+		place_comment(fd, ")");
 	}
 
 	get_ret_register(get_type_size(e->type)); /* Sometimes a sub-expression will change the size of the return register. */

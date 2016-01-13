@@ -44,7 +44,40 @@ struct_var_declarations: type IDENTIFIER ';' {
 
 var_declaration: var_declaration_start ';' {
 	$$=$1;
-} ;
+} | type_with_stars '(' '*' IDENTIFIER ')' '(' arg_declaration ')' ';' {
+	struct var_t *v=malloc(sizeof(struct var_t));
+	struct type_t *t=v->type=malloc(sizeof(struct type_t));
+	struct tbody_t *tb=t->body=malloc(sizeof(struct tbody_t));
+	tb->size=pointer_size;
+	tb->is_func_pointer=true;
+
+	tb->refcount=t->refcount=v->refcount=1;
+	tb->attrs.func_ptr.return_type=$1;
+	t->pointer_depth=1;
+	t->native_type=false;
+
+	v->name=strdup($4);
+	free($4);
+
+	t->body->is_struct=t->body->is_union=false;
+
+	t->body->attrs.func_ptr.arguments=calloc($7->num_vars, $7->num_vars*sizeof(struct type_t));
+
+	int x;
+	for (x=0; x<$7->num_vars; x++) {
+		t->body->attrs.func_ptr.arguments[x]=$7->vars[x]->type;
+		$7->vars[x]->type->refcount++;
+		free_var($7->vars[x]);
+	}
+
+	struct statem_t *declaration=malloc(sizeof(struct statem_t));
+	declaration->kind=declare;
+	declaration->attrs.var=v;
+	v->scope_depth=scope_depth;
+	v->hidden=false;
+	add_var(v);
+	$$=declaration;
+};
 
 var_declaration_start: type_with_stars IDENTIFIER {
 	struct statem_t *declaration=malloc(sizeof(struct statem_t));

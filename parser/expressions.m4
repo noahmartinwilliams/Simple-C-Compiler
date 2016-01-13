@@ -47,15 +47,27 @@ noncomma_expression: CONST_INT {
 	free($1);
 	$$=e;
 } | IDENTIFIER '(' call_arg_list ')' {
+	struct var_t *v=get_var_by_name($1);
 	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->kind=funccall;
-	e->right=$3;
-	e->left=NULL;
-	e->attrs.function=get_func_by_name($1);
-	e->attrs.function->num_calls++;
-	parser_handle_inline_func(e->attrs.function->num_calls, e->attrs.function);
-	e->type=e->attrs.function->ret_type;
-	e->type->refcount++;
+	if (v!=NULL && v->type->body->is_func_pointer) {
+		e->kind=func_ptr_call;
+		e->right=$3;
+		e->left=NULL;
+		e->type=v->type->body->attrs.func_ptr.return_type;
+		e->type->refcount++;
+		e->attrs.var=v;
+		v->refcount++;
+		e->has_gotos=$3->has_gotos;
+	} else {
+		e->kind=funccall;
+		e->right=$3;
+		e->left=NULL;
+		e->attrs.function=get_func_by_name($1);
+		e->attrs.function->num_calls++;
+		parser_handle_inline_func(e->attrs.function->num_calls, e->attrs.function);
+		e->type=e->attrs.function->ret_type;
+		e->type->refcount++;
+	}
 	free($1);
 	$$=e;
 } | STR_LITERAL {
@@ -172,20 +184,34 @@ prefix_expr: '&' assignable_expr {
 
 assignable_expr: IDENTIFIER {
 	struct var_t *v=get_var_by_name($1);
-	free($1);
 	if (v==NULL) {
-		yyerror("Unkown var");
-		exit(1);
+		struct func_t *f=get_func_by_name($1);
+		if (f==NULL) {
+			yyerror("Unkown var");
+			exit(1);
+		}
+		free($1);
+		struct expr_t *e=malloc(sizeof(struct expr_t));
+		e->kind=func_val;
+		e->type=increase_type_depth(get_type_by_name("void"), 1);
+		/*TODO: fix this to be more sophisticated later on. */
+
+		e->left=e->right=NULL;
+		e->has_gotos=false;
+		e->attrs.function=f;
+		$$=e;
+	} else {
+		free($1);
+		struct expr_t *e=malloc(sizeof(struct expr_t));
+		e->left=NULL;
+		e->right=NULL;
+		e->kind=var;
+		e->attrs.var=v;
+		e->type=v->type;
+		e->type->refcount++;
+		v->refcount++;
+		$$=e;
 	}
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->left=NULL;
-	e->right=NULL;
-	e->kind=var;
-	e->attrs.var=v;
-	e->type=v->type;
-	e->type->refcount++;
-	v->refcount++;
-	$$=e;
 } | '*' assignable_expr {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=pre_un_op;

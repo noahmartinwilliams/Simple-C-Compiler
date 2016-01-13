@@ -77,6 +77,26 @@ static char* get_next_call_register(enum reg_use r)
 	return rname;
 
 }
+
+void start_func_ptr_call(FILE *fd, struct reg_t *r)
+{
+	reset_used_for_call();
+	/* TODO: adapt this for function calls within function calls */
+
+	int x;
+	for (x=0; x<num_regs; x++) {
+		int y;
+		size_t biggest_size=0;
+		for (y=0; y<regs[x]->num_sizes; y++)
+			if (regs[x]->sizes[y].size>biggest_size)
+				biggest_size=regs[x]->sizes[y].size;
+		if (regs[x]->in_use) {
+			fprintf(fd, "\tpushq %s\n", get_reg_name(regs[x], biggest_size));
+			push(pushed_registers, regs[x]);
+		}
+	}
+
+}
 void start_call(FILE *fd, struct func_t *f)
 {
 	if (f->do_inline) {
@@ -116,6 +136,28 @@ void add_argument(FILE *fd, struct reg_t *reg, struct type_t *t )
 
 	if (strcmp(name, next))
 		fprintf(fd, "\tmovq %s, %s\n", name, next);
+}
+
+void call_function_pointer(FILE *fd, struct reg_t *r)
+{
+	fprintf(fd, "\tcall *%s\n", get_reg_name(r, pointer_size));
+	int x;
+	for (x=0; x<num_regs; x++) {
+		regs[x]->used_for_call=false;
+	}
+
+	if (pushed_registers==NULL)
+		return;
+
+	struct reg_t *r2=pop(pushed_registers);
+	for (; pushed_registers!=NULL; r2=pop(pushed_registers)) {
+		int y;
+		size_t biggest_size=0;
+		for (y=0; y<r2->num_sizes; y++)
+			if (r2->sizes[y].size>biggest_size)
+				biggest_size=r2->sizes[y].size;
+		fprintf(fd, "\tpopq %s\n", get_reg_name(r2, biggest_size));
+	}
 }
 
 void call(FILE *fd, struct func_t *f)
@@ -287,3 +329,7 @@ void make_function(FILE *fd, struct func_t *f)
 	in_main=false;
 }
 
+void load_function_ptr(FILE *fd, struct func_t *f, struct reg_t *r)
+{
+	fprintf(fd, "\tmovq $%s, %s\n", f->name, reg_name(r));
+}

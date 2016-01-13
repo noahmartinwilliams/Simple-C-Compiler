@@ -98,6 +98,7 @@ int get_type_index_by_name(char *name)
 	return -1;
 }
 
+void free_type(struct type_t *t);
 void free_tbody(struct tbody_t *t)
 {
 	if (t==NULL)
@@ -111,6 +112,13 @@ void free_tbody(struct tbody_t *t)
 				free_var(t->attrs.vars.vars[x]);
 			}
 			free(t->attrs.vars.vars);
+		} else if (t->is_func_pointer) {
+			free_type(t->attrs.func_ptr.return_type);
+			int x;
+			for (x=0; x<t->attrs.func_ptr.num_arguments; x++) {
+				free_type(t->attrs.func_ptr.arguments[x]);
+			}
+			free(t->attrs.func_ptr.arguments);
 		}
 		free(t);
 	}
