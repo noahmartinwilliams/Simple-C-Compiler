@@ -8,16 +8,11 @@ main: main.c comp.tab.o globals.o lex.yy.o handle.a generator.a optimization-glo
 	$(CMB)
 	cp $@ cc
 
-generator.a: generator/* generator/backend/*
-	$(MAKE) -C generator/ ../generator.a
+generator.a: phase-3-generator/* phase-3-generator/backend/*
+	$(MAKE) -C phase-3-generator/ ../generator.a
 
-ifdef DEBUG
-handle.a: handle-types.o handle-exprs.o handle-statems.o handle-funcs.o handle-vars.o print-tree.o
-	$(AR)
-else
-handle.a: handle-types.o handle-exprs.o handle-statems.o handle-funcs.o handle-vars.o
-	$(AR)
-endif
+handle.a: phase-2-parser/* 
+	$(MAKE) -C phase-2-parser/ ../handle.a
 
 test: main_debug
 	cp main tests/cc
@@ -27,15 +22,15 @@ test%: main_debug
 	cp main tests/cc
 	$(MAKE) -s -C tests/ $@
 
-comp.y: parser/*
-	$(MAKE) -C parser/ ../comp.y
+comp.y: phase-2-parser/*
+	$(MAKE) -C phase-2-parser/ ../comp.y
 
 comp.tab.c include/comp.tab.h: comp.y
 	$(YACC) $^
 	mv comp.tab.h include/
 
-lex.yy.c: comp.l include/types.h
-	$(LEX) $^
+lex.yy.c: phase-1-lexer/*
+	$(MAKE) -C phase-1-lexer/ ../lex.yy.c
 
 clena: 
 	$(MAKE) clean
@@ -50,4 +45,5 @@ clean:
 	rm comp.y || true
 	rm cc || true
 	$(MAKE) -C tests/ clean
-	$(MAKE) -C generator/ clean
+	$(MAKE) -C phase-3-generator/ clean
+	$(MAKE) -C phase-2-parser/ clean
