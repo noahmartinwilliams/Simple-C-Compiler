@@ -3,7 +3,7 @@ ifdef DEBUG
 YACC=bison -d --report=all --verbose --debug
 CC=gcc -I $(INCLUDE) -ggdb -D DEBUG
 else
-YACC=bison -d --report=all --verbose
+YACC=bison -d
 CC=gcc -I $(INCLUDE)
 endif
 CMP=$(CC) -c $^ -o $@
