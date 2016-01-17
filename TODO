@@ -5,7 +5,6 @@
 	}
 	goto label;
 *add declaring of pointers with greater than one pointer depth.
-*further test the /* */ comment system.
 *Test switch statements within switch statements.
 *modify if, if else, while, do while, expression statements, return statements, and for statements to properly take gotos from their expressions.
 *add typedefs with pointers as base type.
@@ -44,7 +43,6 @@
 *add function pointers.
 *add typedefs for function pointers.
 *add argument declarations for function pointers.
-*add local variable function pointers.
 *add global variable function pointers.
 *add calling function pointers.
 *add type checking.

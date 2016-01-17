@@ -24,6 +24,23 @@ FILE *output;
 static inline struct expr_t* make_bin_op(char *X, struct expr_t *Y, struct expr_t *Z)
 {
 	/* TODO: Make sure that integers added to pointers get multiplied by the size of the pointer base type */
+	if (!strcmp(X, "|=")) {
+		struct expr_t *assignment=malloc(sizeof(struct expr_t));
+		struct expr_t *or=malloc(sizeof(struct expr_t));
+		assignment->kind=or->kind=bin_op;
+		assignment->attrs.bin_op=strdup("=");
+		assignment->type=Y->type;
+		Y->type->refcount+=2;
+		assignment->left=Y;
+		assignment->right=or;
+
+		or->attrs.bin_op=strdup("|");
+		or->type=assignment->type;
+
+		or->left=copy_expression(Y);
+		or->right=Z;
+		return assignment;
+	}
 	struct expr_t *e=malloc(sizeof(struct expr_t)); 
 	struct expr_t *a=Y, *b=Z;
 	parser_type_cmp(&a, &b);
@@ -35,6 +52,7 @@ static inline struct expr_t* make_bin_op(char *X, struct expr_t *Y, struct expr_
 		e->right=b;
 		e->attrs.bin_op=strdup(X);
 	}
+
 	return e;
 }
 

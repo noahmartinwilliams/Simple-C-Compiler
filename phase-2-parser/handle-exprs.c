@@ -90,6 +90,43 @@ void free_expr(struct expr_t *e)
 	free(e);
 }
 
+struct expr_t* copy_expression(struct expr_t *e)
+{
+	if (e==NULL)
+		return NULL;
+
+	struct expr_t *ret=malloc(sizeof(struct expr_t));
+	memcpy(ret, e, sizeof(struct expr_t));
+	ret->left=copy_expression(e->left);
+	ret->right=copy_expression(e->right);
+
+	ret->type->refcount++;
+
+	switch (ret->kind) {
+	case bin_op:
+		ret->attrs.bin_op=strdup(e->attrs.bin_op);
+		break;
+	case pre_un_op:
+	case post_un_op:
+		ret->attrs.un_op=strdup(e->attrs.un_op);
+		break;
+
+	case const_str:
+		ret->attrs.cstr_val=strdup(e->attrs.cstr_val);
+		break;
+
+	case arg:
+		ret->attrs.argument=copy_expression(e->attrs.argument);
+		break;
+	
+	case var:
+		ret->attrs.var->refcount++;
+		break;
+
+	}
+	return ret;
+}
+
 bool evaluate_constant_expr(char *op, struct expr_t *a, struct expr_t *b, struct expr_t **e2)
 {
 	struct expr_t *e=*e2;

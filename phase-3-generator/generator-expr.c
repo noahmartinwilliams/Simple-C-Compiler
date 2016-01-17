@@ -225,12 +225,14 @@ static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*co
 
 }
 
+
 void generate_binary_expression(FILE *fd, struct expr_t *e)
 {
 	depth++;
 	struct reg_t *ret=get_ret_register(get_type_size(e->type));
 	struct reg_t *lhs, *rhs;
 	char *op=e->attrs.bin_op;
+
 	if (!strcmp(op, "=")) {
 		struct expr_t *left=e->left;
 		/* The reason for redoing rhs, and lhs in the else statement is that 
@@ -248,8 +250,6 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, ")");
 		place_comment(fd, "=");
 		place_comment(fd, "(");
-		/* TODO: figure out a good way to abstract away the direct use
-		 * of the mov command here. Printing opcodes is for handle-registers.c */
 		if (left->kind==pre_un_op && !strcmp(left->attrs.un_op, "*")) {
 			place_comment(fd, "*");
 			place_comment(fd, "(");
