@@ -4,6 +4,7 @@
 #include "generator/generator-types.h"
 #include <stdio.h>
 
+extern void int_num(FILE *fd, struct reg_t *r, struct reg_t *r2);
 extern void int_neg(FILE *fd, struct reg_t *r);
 extern void int_inc(FILE *fd, struct reg_t *r);
 extern void int_mul(FILE *fd, struct reg_t *a, struct reg_t *b);

@@ -135,44 +135,46 @@ bool evaluate_constant_expr(char *op, struct expr_t *a, struct expr_t *b, struct
 		e->left=NULL;
 		e->right=NULL;
 		long int c=a->attrs.cint_val, d=b->attrs.cint_val, f=0;
-		if (!strcmp(op, "+")) {
+		if (!strcmp(op, "+"))
 			f=c+d;
-		} else if (!strcmp(op, "-")) {
+		else if (!strcmp(op, "-"))
 			f=c-d;
-		} else if (!strcmp(op, "/")) {
+		else if (!strcmp(op, "/")) 
 			f=c/d;
 			/* NOTE: This might cause problems in the future if
 			it's cross-compiling, and the target architecture
 			handles integer rounding differently */
-		} else if (!strcmp(op, "*")) {
+		else if (!strcmp(op, "*"))
 			f=c*d;
-		} else if (!strcmp(op, "==")) {
+		else if (!strcmp(op, "=="))
 			f=c==d;
-		} else if (!strcmp(op, "<")) {
+		else if (!strcmp(op, "<"))
 			f=c<d;
-		} else if (!strcmp(op, ">")) {
+		else if (!strcmp(op, ">"))
 			f=c>d;
-		} else if (!strcmp(op, "!=")) {
+		else if (!strcmp(op, "!="))
 			f=c!=d;
-		} else if (!strcmp(op, ">=")) {
+		else if (!strcmp(op, ">="))
 			f=c>=d;
-		} else if (!strcmp(op, "<=")) {
+		else if (!strcmp(op, "<="))
 			f=c<=d;
-		} else if (!strcmp(op, "<<")) {
+		else if (!strcmp(op, "<<"))
 			f=c<<d;
-		} else if (!strcmp(op, ">>")) {
+		else if (!strcmp(op, ">>"))
 			f=c>>d;
-		} else if (!strcmp(op, "|")) {
+		else if (!strcmp(op, "|"))
 			f=c|d;
-		} else if (!strcmp(op, "&")) {
+		else if (!strcmp(op, "&"))
 			f=c&d;
-		} else if (!strcmp(op, "^")) {
+		else if (!strcmp(op, "^"))
 			f=c^d;
-		} else if (!strcmp(op, "||")) {
+		else if (!strcmp(op, "||"))
 			f=c||d;
-		} else if (!strcmp(op, "&&")) {
+		else if (!strcmp(op, "&&"))
 			f=c&&d;
-		}
+		else if (!strcmp(op, "%"))
+			f=c%d;
+	
 		e->attrs.cint_val=f;
 		free_expr(a);
 		free_expr(b);

@@ -6,6 +6,44 @@
 #include "generator/generator.h"
 #include "globals.h"
 #include "types.h"
+#include "generator/backend/backend.h"
+#include "generator/backend/registers.h"
+
+void int_num(FILE *fd, struct reg_t *a, struct reg_t *b)
+{
+	if (a->size==word_size) {
+		if (a->use!=RET && b->use!=RET) {
+			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(a));
+			fprintf(fd, "\tidivl %s\n",  reg_name(b));
+		} else if (a->use!=RET && b->use==RET) {
+			fprintf(fd, "\tpushq %%rdx\n");
+			fprintf(fd, "\tpushq %%rax\n");
+			fprintf(fd, "\tpushq %%rbx\n");
+			if (strcmp(reg_name(a), "%ebx")) {
+				fprintf(fd, "\tmovl %%eax, %%ebx\n");
+				fprintf(fd, "\tmovl %s, %%eax\n", reg_name(a));
+			} else {
+				fprintf(fd, "\tpushq %%rcx\n");
+				fprintf(fd, "\tmovl %%ebx, %%ecx\n");
+				fprintf(fd, "\tmovl %%eax, %%ebx\n");
+				fprintf(fd, "\tmovl %%ecx, %%eax\n");
+				fprintf(fd, "\tpopq %%rcx\n");
+			}
+			fprintf(fd, "\tcltd\n");
+			fprintf(fd, "\tidivl %%ebx\n");
+			fprintf(fd, "\tpopq %%rbx\n");
+			fprintf(fd, "\tpopq %%rax\n");
+			fprintf(fd, "\tmovl %%edx, %%eax\n");
+			fprintf(fd, "\tpopq %%rdx\n");
+			/* T.T my eyes are bleeding. */
+		} else if (a->use==RET && b->use!=RET) {
+			fprintf(fd, "\tidivl %s\n", reg_name(b));
+		}
+	} else {
+		fprintf(stderr, "Internal error: int_num passed size: %ld. No size handler found.\n", a->size);
+		exit(1);
+	}
+}
 
 void int_add(FILE *fd, struct reg_t *a, struct reg_t *b)
 {

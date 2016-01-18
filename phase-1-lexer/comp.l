@@ -59,6 +59,7 @@ static inline void haiku_easter_egg(char *s)
 "--"	{ count(yytext); return DEC_OP; }
 "++"	{ count(yytext); return INC_OP; }
 "!"	{ count(yytext); return '!'; }
+"%"	{ count(yytext); return '%'; }
 "||"	{ count(yytext); return TEST_OR; }
 "&&"	{ count(yytext); return TEST_AND; }
 "^"	{ count(yytext); return '^'; }

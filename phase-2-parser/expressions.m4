@@ -343,4 +343,6 @@ binary_expr:  noncomma_expression '*' noncomma_expression {
 	$$=make_bin_op("&&", $1, $3);
 } | noncomma_expression EQ_TEST noncomma_expression {
 	$$=make_bin_op("==", $1, $3);
-} ;
+} | noncomma_expression '%' noncomma_expression {
+	$$=make_bin_op("%", $1, $3);
+};

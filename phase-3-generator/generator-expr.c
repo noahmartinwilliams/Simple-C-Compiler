@@ -376,6 +376,8 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 				test_or(fd, lhs, ret);
 			else if (!strcmp(op, "&&"))
 				test_and(fd, lhs, ret);
+			else if (!strcmp(op, "%"))
+				int_num(fd, lhs, ret);
 			place_comment(fd, ")");
 		}
 		free_register(fd, rhs);

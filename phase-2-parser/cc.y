@@ -156,7 +156,7 @@ static inline struct statem_t* declare_var(struct type_t *t, char *name, struct 
 %left '<' LE_TEST '>' GE_TEST EQ_TEST NE_TEST
 %left SHIFT_LEFT SHIFT_RIGHT
 %left '+' '-'
-%left '*' '/'
+%left '*' '/' '%'
 %left '(' ')' '.' POINTER_OP
 %nonassoc IFX
 %nonassoc ELSE
