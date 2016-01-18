@@ -27,9 +27,22 @@ void test2()
 		exit(4);
 }
 
+void test3()
+{
+	int x=0;
+	x^=1;
+	if (x!=1)
+		exit(5);
+	
+	x^=1;
+	if (x!=0)
+		exit (6);
+}
+
 int main()
 {
 	test1();
 	test2();
+	test3();
 	return 0;
 }
