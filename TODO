@@ -4,7 +4,6 @@
 		code...
 	}
 	goto label;
-*Test switch statements within switch statements.
 *modify if, if else, while, do while, expression statements, return statements, and for statements to properly take gotos from their expressions.
 *add typedefs with pointers as base type.
 *add default keyword.
@@ -12,7 +11,6 @@
 *add arrays.
 *add enumerations.
 *add putting structures within structures.
-*add functions with pointer return types.
 *add returning of structures to function calls.
 *add passing of structures to function calls.
 *add returning of unions from function calls
@@ -33,17 +31,14 @@
 *add static global variables.
 *add pointer arithmetic.
 *add ptrdiff_t, off_t, __uint8_t, __uint16_t, __uint32_t, __uint64_t, __int8_t, __int16_t, __int32_t, __int64_t, _Bool, float, and double data types.
-*add alignof keyword.
 *add type conversion.
 *add automagic type conversion.
-*add comma, and % operators.
+*add comma operator.
 *add __nosideeffects keyword
 *add volatile keyword.
-*add function pointers.
 *add typedefs for function pointers.
 *add argument declarations for function pointers.
 *add global variable function pointers.
-*add calling function pointers.
 *add type checking.
 *add argument type checking.
 *add stack offset calculations with stack pointer.

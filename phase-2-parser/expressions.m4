@@ -105,6 +105,17 @@ noncomma_expression: CONST_INT {
 	e->type->refcount++;
 
 	$$=e;
+} | ALIGNOF '(' type ')' {
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=const_int;
+	e->left=e->right=NULL;
+	e->type=get_type_by_name("int");
+	e->type->refcount++;
+
+	e->has_gotos=false;
+	e->attrs.cint_val=get_alignof($3);
+	free_type($3);
+	$$=e;
 };
 
 postfix_expr: assignable_expr INC_OP {

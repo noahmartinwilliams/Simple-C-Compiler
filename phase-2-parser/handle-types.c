@@ -201,3 +201,7 @@ struct type_t* decrease_type_depth(struct type_t *t, int n)
 	return new;
 }
 
+size_t get_alignof(struct type_t *t)
+{
+	return t->body->attrs.vars.alignment;
+}

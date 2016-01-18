@@ -35,6 +35,7 @@ static inline void haiku_easter_egg(char *s)
 "."	{ count(yytext); return '.'; }
 "->"	{ count(yytext); return POINTER_OP; }
 "..."	{ count(yytext); return MULTI_ARGS; }
+"__alignof__"	{ count(yytext); return ALIGNOF; }
 "switch"	{ count(yytext); return SWITCH; }
 "case"	{ count(yytext); return CASE; }
 "default"	{ count(yytext); return DEFAULT; }

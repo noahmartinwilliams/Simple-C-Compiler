@@ -127,7 +127,7 @@ static inline struct statem_t* declare_var(struct type_t *t, char *name, struct 
 %define parse.error verbose
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST RETURN STRUCT WHILE GE_TEST LE_TEST FOR INC_OP DO
 %token SHIFT_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF MULTI_ARGS STATIC INLINE SIZEOF
-%token POINTER_OP DEFAULT SWITCH CASE
+%token POINTER_OP DEFAULT SWITCH CASE ALIGNOF
 %token <str> STR_LITERAL 
 %token <type> TYPE
 %token <str> ASSIGN_OP
