@@ -39,10 +39,19 @@ void test3()
 		exit (6);
 }
 
+void test4()
+{
+	int x=5;
+	x%=4;
+	if (x!=1)
+		exit(7);
+}
+
 int main()
 {
 	test1();
 	test2();
 	test3();
+	test4();
 	return 0;
 }
