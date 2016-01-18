@@ -7,6 +7,7 @@ include ../include/config.mk
 backend.a: backend/*
 	$(MAKE) -C backend/ ../backend.a
 
+.PHONY:
 clean:
 	$(MAKE) -C backend/ clean
 	rm lex.yy.c 2>/dev/null || true

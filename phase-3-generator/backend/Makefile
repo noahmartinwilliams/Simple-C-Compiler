@@ -4,6 +4,7 @@ include ../../include/config.mk
 ../backend.a: backend.o jumps.o int-arithmetic.o registers.o agnostic-arithmetic.o statics.o calls.o variables.o
 	$(AR)
 
+.PHONY:
 clean:
 	rm lex.yy.c 2>/dev/null || true
 	rm comp.tab.c 2>/dev/null || true

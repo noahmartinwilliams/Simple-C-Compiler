@@ -285,6 +285,7 @@ void generate_statement(FILE *fd, struct statem_t *s)
 	struct statem_t *block;
 	if (s->kind==expr) {
 		generate_expression(fd, s->attrs.expr);
+		place_comment(fd, ";");
 	} else if (s->kind==list) {
 		int x;
 		for (x=0; x<s->attrs.list.num; x++) {
@@ -295,7 +296,7 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		place_comment(fd, "(");
 		generate_expression(fd, s->attrs.expr);
 		return_from_call(fd);
-		place_comment(fd, ")");
+		place_comment(fd, ") ;");
 	} else if (s->kind==declare) {
 		return;
 	} else if (s->kind==_if) {

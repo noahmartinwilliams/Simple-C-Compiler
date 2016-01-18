@@ -4,7 +4,6 @@
 		code...
 	}
 	goto label;
-*add declaring of pointers with greater than one pointer depth.
 *Test switch statements within switch statements.
 *modify if, if else, while, do while, expression statements, return statements, and for statements to properly take gotos from their expressions.
 *add typedefs with pointers as base type.

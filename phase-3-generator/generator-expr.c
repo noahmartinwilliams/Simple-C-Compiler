@@ -247,12 +247,9 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		lhs=get_free_register(fd, get_type_size(e->type));
 
 		assign_reg(fd, ret, lhs);
-		place_comment(fd, ")");
-		place_comment(fd, "=");
-		place_comment(fd, "(");
+		place_comment(fd, ") = (");
 		if (left->kind==pre_un_op && !strcmp(left->attrs.un_op, "*")) {
-			place_comment(fd, "*");
-			place_comment(fd, "(");
+			place_comment(fd, "* (");
 			generate_expression(fd, left->right);
 			assign_dereference(fd, lhs, ret);
 			place_comment(fd, ")");
@@ -284,38 +281,13 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		} else if (!strcmp(op, "<=")) {
 			generate_comparison_expression(fd, e, jmp_le, "is$le$%d", "is$gt$%d", lhs);
 
-		} else if (!strcmp(op, "+=")) {
-			place_comment(fd, "Note: lhs, and rhs of assignment is swapped");
-			place_comment(fd, "(");
-			place_comment(fd, "(");
-
-			generate_expression(fd, e->right);
-			assign_reg(fd, ret, lhs);
-
-			place_comment(fd, ")");
-			place_comment(fd, "+=");
-			place_comment(fd, "(");
-
-			generate_expression(fd, e->left);
-			int_add(fd, ret, lhs);
-
-			if (e->left->kind==pre_un_op && !strcmp(e->left->attrs.un_op, "*")) {
-				assign_reg(fd, ret, lhs);
-				generate_expression(fd, e->left);
-				assign_dereference(fd, lhs, ret);
-			} else if (e->left->kind==var)
-				assign_var(fd, ret, e->left->attrs.var);
-
-			place_comment(fd, ")");
-			place_comment(fd, ")");
-		} else if (!strcmp(op, "?")) {
+		}  else if (!strcmp(op, "?")) {
 			unique_num++;
 			place_comment(fd, "(");
 			place_comment(fd, "(");
 			generate_expression(fd, e->left);
 			assign_reg(fd, ret, lhs);
-			place_comment(fd, ")");
-			place_comment(fd, "?");
+			place_comment(fd, ") ?");
 
 			char *then, *_else;
 			asprintf(&then, "expression$then$%d", unique_num);
@@ -329,8 +301,7 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 			jmp(fd, then);
 			place_comment(fd, ")");
 
-			place_comment(fd, ":");
-			place_comment(fd, "(");
+			place_comment(fd, ": (");
 			place_label(fd, _else);
 			generate_expression(fd, e->right->right);
 			place_comment(fd, ")");

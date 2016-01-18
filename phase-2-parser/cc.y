@@ -144,6 +144,7 @@ static inline struct statem_t* declare_var(struct type_t *t, char *name, struct 
 %type <statem> for_loop
 %type <statem> var_declaration_start
 %type <statem> switch_element switch_list
+%type <l> stars
 
 %right '=' ASSIGN_OP
 %right '!' '~' INC_OP DEC_OP

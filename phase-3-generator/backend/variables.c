@@ -26,7 +26,6 @@ static void inc_by_int(FILE *fd, int i, char *dest, size_t size)
 
 void get_address(FILE *fd, struct expr_t *_var)
 {
-	place_comment(fd, "& (");
 	depth++;
 	struct reg_t *ret=get_ret_register(_var->type->body->size);
 	if (_var->kind==var) {
@@ -34,7 +33,6 @@ void get_address(FILE *fd, struct expr_t *_var)
 		inc_by_int(fd, _var->attrs.var->offset, get_reg_name(ret, pointer_size), pointer_size);
 	}
 	depth--;
-	place_comment(fd, "(");
 }
 
 void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)

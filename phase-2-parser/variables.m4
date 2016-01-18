@@ -1,3 +1,9 @@
+stars: '*' {
+	$$=1;
+} | stars '*' {
+	$$=$1 + 1;
+} ;
+
 struct_var_declarations: type IDENTIFIER ';' {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	s->kind=list;
@@ -19,7 +25,7 @@ struct_var_declarations: type IDENTIFIER ';' {
 	v->name=strdup($2);
 	free($2);
 	$$=s;
-} | struct_var_declarations type IDENTIFIER ';' {
+} | struct_var_declarations type_with_stars IDENTIFIER ';' {
 	$1->attrs.list.num++;
 	int num_statements=$1->attrs.list.num;
 	struct statem_t **statements=$1->attrs.list.statements;
@@ -44,7 +50,7 @@ struct_var_declarations: type IDENTIFIER ';' {
 
 var_declaration: var_declaration_start ';' {
 	$$=$1;
-} | type_with_stars '(' '*' IDENTIFIER ')' '(' arg_declaration ')' ';' {
+} | type_with_stars '(' stars IDENTIFIER ')' '(' arg_declaration ')' ';' {
 	struct var_t *v=malloc(sizeof(struct var_t));
 	struct type_t *t=v->type=malloc(sizeof(struct type_t));
 	struct tbody_t *tb=t->body=malloc(sizeof(struct tbody_t));
@@ -53,7 +59,7 @@ var_declaration: var_declaration_start ';' {
 
 	tb->refcount=t->refcount=v->refcount=1;
 	tb->attrs.func_ptr.return_type=$1;
-	t->pointer_depth=1;
+	t->pointer_depth=$3;
 	t->native_type=false;
 
 	v->name=strdup($4);
@@ -194,7 +200,7 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	v->hidden=false;
 	add_var(v);
 	$$=block;
-} | var_declaration_start ',' '*' IDENTIFIER {
+} | var_declaration_start ',' stars IDENTIFIER {
 	struct statem_t *block=malloc(sizeof(struct statem_t));
 	block->kind=list;
 	block->attrs.list.num=2;
@@ -207,7 +213,7 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	declaration->kind=declare;
 
 	struct var_t *v=malloc(sizeof(struct var_t));
-	v->type=increase_type_depth(current_type, 1);
+	v->type=increase_type_depth(current_type, $3);
 	v->name=strdup($4);
 	free($4);
 
@@ -219,7 +225,7 @@ var_declaration_start: type_with_stars IDENTIFIER {
 
 	declaration->attrs.var=v;
 	$$=block;
-} | var_declaration_start ',' '*' IDENTIFIER '=' expression {
+} | var_declaration_start ',' stars IDENTIFIER '=' expression {
 	struct statem_t *block=malloc(sizeof(struct statem_t));
 	block->kind=list;
 
@@ -232,7 +238,7 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	declaration->kind=declare;
 
 	struct var_t *v=malloc(sizeof(struct var_t));
-	v->type=current_type;
+	v->type=increase_type_depth(current_type, $3);
 	v->type->refcount++;
 	v->refcount=2;
 

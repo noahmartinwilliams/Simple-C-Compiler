@@ -14,5 +14,6 @@ endif
 ../comp.y: cc.y statements.m4 for.m4 expressions.m4 functions.m4 variables.m4 types.m4 ../include/types.h 
 	$(M4) $< >$@
 
+.PHONY:
 clean:
 	rm *.o || true
