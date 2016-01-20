@@ -19,12 +19,14 @@ extern struct type_t *current_type;
 extern void yyparse();
 extern FILE* yyin;
 extern FILE *output;
+char *backend_name=NULL;
 int main(int argc, char *argv[])
 {
-	if (argc<2) {
+	if (argc<3) {
 		fprintf(stderr, "Usage: %s output_file.s input_file.c \n", argv[0]);
 		exit(1);
 	}
+	backend_name=strdup(argv[3]);
 	current_file=argv[2];
 	yyin=fopen(argv[2], "r");
 	output=fopen(argv[1], "w+");

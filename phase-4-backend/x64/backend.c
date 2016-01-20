@@ -1,15 +1,24 @@
+#define IN_BACKEND
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "generator/generator-globals.h"
+#include "handle-types.h"
 #include "generator/generator-types.h"
 #include "generator/generator.h"
+#include "generator/generator-globals.h"
+#include "backend/agnostic-arithmetic.h"
+#include "backend/int-arithmetic.h"
+#include "backend/variables.h"
+#include "backend/registers.h"
+#include "backend/calls.h"
+#include "backend/jumps.h"
 #include "globals.h"
 #include "types.h"
-#include "generator/backend/registers.h"
+#include "backend/globals.h"
 
 void setup_backend()
 {
+
 	num_regs+=14;
 	regs=realloc(regs, num_regs*sizeof(struct reg_t*));
 

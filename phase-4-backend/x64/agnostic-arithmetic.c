@@ -1,3 +1,4 @@
+#define IN_BACKEND
 #include "types.h"
 #include "generator/generator-types.h"
 #include <stdio.h>

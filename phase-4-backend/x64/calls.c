@@ -1,12 +1,12 @@
+#define IN_BACKEND
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "generator/generator-globals.h"
-#include "generator/generator-types.h"
-#include "generator/generator.h"
 #include "globals.h"
 #include "types.h"
-#include "generator/backend/registers.h"
+#include "backend/backend.h"
+#include "backend/registers.h"
 #include "stack.h"
 
 static struct stack_t *pushed_registers=NULL;
@@ -101,6 +101,7 @@ void start_func_ptr_call(FILE *fd, struct reg_t *r)
 	/* TODO: adapt this for function calls within function calls */
 	push_registers(fd);
 }
+
 void start_call(FILE *fd, struct func_t *f)
 {
 	if (f->do_inline) {
@@ -161,11 +162,6 @@ void call_function_pointer(FILE *fd, struct reg_t *r)
 void call(FILE *fd, struct func_t *f)
 {
 
-	if (f->do_inline) {
-		generate_statement(fd, f->statement_list);
-		doing_inline=false;
-		return;
-	}
 	fprintf(fd, "\tcall %s\n", f->name);
 
 	pop_registers(fd);
@@ -173,10 +169,6 @@ void call(FILE *fd, struct func_t *f)
 
 void return_from_call(FILE *fd)
 {
-	if (doing_inline) {
-		return;
-	}
-
 	if (in_main && multiple_functions) {
 		fprintf(fd, "\tleave\n\tret\n");
 	} else {
@@ -186,74 +178,6 @@ void return_from_call(FILE *fd)
 	}
 }
 
-off_t get_var_offset(struct statem_t *s, off_t current_off);
-static off_t get_var_offset_expr(struct expr_t *e, off_t current_off)
-{
-	if (e==NULL)
-		return 0;
-
-	off_t o=0, coo=current_off+o;
-	struct func_t *f;
-	switch(e->kind) {
-	case bin_op:
-		o+=get_var_offset_expr(e->left, coo);
-		o+=get_var_offset_expr(e->right, coo);
-		break;
-
-	case pre_un_op:
-		o+=get_var_offset_expr(e->right, coo);
-		break;
-
-	case post_un_op:
-		o+=get_var_offset_expr(e->left, coo);
-		break;
-	
-	case arg:
-		o+=get_var_offset_expr(e->right, coo);
-		o+=get_var_offset_expr(e->attrs.argument, coo+o);
-		break;
-
-	case funccall:
-		f=e->attrs.function;
-		if (f->do_inline) {
-			o+=get_var_offset(f->statement_list, coo);
-			int x;
-			for (x=0; x<f->num_arguments; x++) {
-				o+=get_type_size(f->arguments[x]->type);
-				f->arguments[x]->offset=-o;
-			}
-		}
-		break;
-	}
-
-	return o;
-}
-
-off_t get_var_offset(struct statem_t *s, off_t current_off)
-{
-	off_t o=0;
-	if (s->kind==list) {
-		int x;
-		for (x=0; x<s->attrs.list.num; x++)
-			o+=get_var_offset(s->attrs.list.statements[x], current_off+o);
-	} else if (s->kind==declare) {
-		o=get_type_size(s->attrs.var->type);
-		s->attrs.var->offset=-(o+current_off);
-	} else if (s->kind==_if) {
-		o+=get_var_offset(s->attrs._if.block, current_off+o);
-	} else if (s->kind==_while) {
-		o+=get_var_offset(s->attrs._while.block, current_off+o);
-	} else if (s->kind==do_while) {
-		o+=get_var_offset(s->attrs.do_while.block, current_off+o);
-		o+=get_var_offset_expr(s->attrs.do_while.condition, current_off+o);
-	} else if (s->kind==_for) {
-		o+=get_var_offset(s->attrs._for.block, current_off+o);
-	} else if (s->kind==expr) {
-		o+=get_var_offset_expr(s->attrs.expr, current_off+o);
-	}
-
-	return o;
-}
 
 void make_function(FILE *fd, struct func_t *f)
 {
@@ -299,8 +223,8 @@ void make_function(FILE *fd, struct func_t *f)
 		expand_stack_space(fd, o);
 	}
 
-	generate_statement(fd, f->statement_list);
-	if (!strcmp(f->ret_type->name, "void"))
+	//generate_statement(fd, f->statement_list);
+	/* if (!strcmp(f->ret_type->name, "void"))
 		return_from_call(fd);
 
 	while (loop_stack!=NULL) {
@@ -308,7 +232,7 @@ void make_function(FILE *fd, struct func_t *f)
 		free(loop_stack->element);
 		free(loop_stack);
 		loop_stack=tmp;
-	}
+	}*/
 	in_main=false;
 }
 

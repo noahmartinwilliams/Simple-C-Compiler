@@ -1,9 +1,11 @@
+#define IN_BACKEND
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "generator/generator-globals.h"
 #include "generator/generator-types.h"
 #include "generator/generator.h"
+#include "backend/registers.h"
 #include "globals.h"
 #include "types.h"
 

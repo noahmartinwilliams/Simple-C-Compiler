@@ -1,11 +1,14 @@
+#define IN_BACKEND
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "generator/generator-globals.h"
 #include "generator/generator-types.h"
-#include "generator/generator.h"
 #include "globals.h"
 #include "types.h"
+
+struct reg_t **regs=NULL;
+int num_regs=0;
 
 char* get_reg_name(struct reg_t *reg, size_t size)
 {
@@ -20,7 +23,6 @@ char* reg_name(struct reg_t *a)
 {
 	return get_reg_name(a, a->size);
 }
-
 
 struct reg_t* get_ret_register(size_t s)
 {
@@ -43,7 +45,7 @@ struct depth_value {
 	char *name;
 };
 
-struct reg_t* get_free_register(FILE *fd, size_t s)
+struct reg_t* get_free_register (FILE *fd, size_t s, int depth)
 {
 	int x;
 	for (x=0; x<num_regs; x++) {

@@ -1,9 +1,11 @@
+#define IN_BACKEND
 #include "generator/generator-globals.h"
 #include "types.h"
 #include "generator/generator-types.h"
 #include <stdio.h>
 
-void load_global_string(FILE *fd, char *str)
+extern int unique_num;
+void load_global_string (FILE *fd, char *str)
 {
 	fprintf(fd, "\tmovq $%s, %%rax\n", str);
 }

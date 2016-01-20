@@ -10,5 +10,6 @@ extern void add_argument(FILE *fd, struct reg_t *reg, struct type_t *t );
 extern void call(FILE *fd, struct func_t *f);
 extern void return_from_call(FILE *fd);
 extern void make_function(FILE *fd, struct func_t *f);
+extern void call_function_pointer(FILE *fd, struct reg_t *r);
 
 #endif

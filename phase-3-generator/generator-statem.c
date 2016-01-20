@@ -6,7 +6,6 @@
 #include "generator/generator-expr.h"
 #include "generator/generator-misc.h"
 #include "globals.h"
-#include "generator/backend/backend.h"
 #include "generator/generator-types.h"
 #include "handle-types.h"
 #include "handle-funcs.h"
@@ -248,7 +247,7 @@ static inline void generate_switch_statement(FILE *fd, struct statem_t *s, struc
 
 	block=s->attrs._switch.cases;
 	cond=s->attrs._switch.tester;
-	struct reg_t *input=get_free_register(fd, get_type_size(cond->type));
+	struct reg_t *input=get_free_register(fd, get_type_size(cond->type), depth);
 
 	place_comment(fd, "switch (");
 	generate_expression(fd, cond);

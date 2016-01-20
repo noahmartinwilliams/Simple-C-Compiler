@@ -1,8 +1,11 @@
 INCLUDE=../../include
 include ../../include/config.mk
 
-../backend.a: backend.o jumps.o int-arithmetic.o registers.o agnostic-arithmetic.o statics.o calls.o variables.o
-	$(AR)
+../libx64-backend.so: backend.o jumps.o int-arithmetic.o registers.o agnostic-arithmetic.o statics.o calls.o variables.o globals.o
+	$(SHARE)
+
+%.o: %.c
+	$(CMP)
 
 .PHONY:
 clean:

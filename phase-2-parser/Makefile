@@ -16,4 +16,4 @@ endif
 
 .PHONY:
 clean:
-	rm *.o || true
+	rm *.o 2>/dev/null || true

@@ -1,11 +1,13 @@
+#define IN_BACKEND
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "generator/generator-globals.h"
 #include "generator/generator-types.h"
 #include "generator/generator.h"
-#include "generator/backend/registers.h"
+#include "handle-types.h"
+#include "backend/registers.h"
 #include "globals.h"
+#include "backend/registers.h"
 #include "types.h"
 
 void backend_make_global_var(FILE *fd, struct var_t *v)
@@ -26,13 +28,11 @@ static void inc_by_int(FILE *fd, int i, char *dest, size_t size)
 
 void get_address(FILE *fd, struct expr_t *_var)
 {
-	depth++;
-	struct reg_t *ret=get_ret_register(_var->type->body->size);
+	struct reg_t *ret=get_ret_register(pointer_size);
 	if (_var->kind==var) {
 		fprintf(fd, "\tmovq %%rbp, %s\n", get_reg_name(ret, pointer_size));
 		inc_by_int(fd, _var->attrs.var->offset, get_reg_name(ret, pointer_size), pointer_size);
 	}
-	depth--;
 }
 
 void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
@@ -41,6 +41,7 @@ void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 		fprintf(stderr, "Internal error: a NULL variable pointer was passed to assign_var\n");
 		exit(1);
 	}
+
 	if (dest->scope_depth!=0) {
 		if (get_type_size(dest->type)==word_size)
 			fprintf(fd, "\tmovl %s, %ld(%%rbp)\n", reg_name(src), dest->offset);

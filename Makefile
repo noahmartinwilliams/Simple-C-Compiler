@@ -1,14 +1,26 @@
 INCLUDE=./include
 include include/config.mk
 
-main: main.c comp.tab.o globals.o lex.yy.o handle.a generator.a optimization-globals.o
-	$(CMB)
+main2: main phase-4-backend/libx64-backend.so
+	echo "done"
+
+main: main.c comp.tab.o globals.o lex.yy.o handle.a generator.a optimization-globals.o loader.o exported.o
+	$(CMB) -ldl
 	cp $@ cc
 
-main_debug:
-	$(MAKE) DEBUG=1 main
+exported.o: phase-4-backend/*
+	$(MAKE) -C phase-4-backend/ ../exported.o
 
-generator.a: phase-3-generator/* phase-3-generator/backend/*
+main_debug:
+	$(MAKE) DEBUG=1 main2
+
+loader.o: phase-4-backend/*
+	$(MAKE) -C phase-4-backend/ ../loader.o
+
+phase-4-backend/libx64-backend.so: phase-4-backend/* phase-4-backend/x64/*
+	$(MAKE) -C phase-4-backend/ libx64-backend.so
+
+generator.a: phase-3-generator/* 
 	$(MAKE) -C phase-3-generator/ ../generator.a
 
 handle.a: phase-2-parser/* 
@@ -45,6 +57,9 @@ clean:
 	rm comp.output 2>/dev/null || true
 	rm comp.y 2>/dev/null || true
 	rm cc 2>/dev/null || true
+	rm *.so 2>/dev/null || true
+	rm *.so 2>/dev/null || true
 	$(MAKE) -C tests/ clean
 	$(MAKE) -C phase-3-generator/ clean
 	$(MAKE) -C phase-2-parser/ clean
+	$(MAKE) -C phase-4-backend/ clean

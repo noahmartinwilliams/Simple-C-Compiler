@@ -5,7 +5,6 @@
 #include "generator/generator-globals.h"
 #include "generator/generator-misc.h"
 #include "globals.h"
-#include "generator/backend/backend.h"
 #include "generator/generator-types.h"
 #include "handle-types.h"
 #include "handle-funcs.h"
@@ -38,7 +37,11 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, "(");
 		start_call(fd, f);
 		if (e->attrs.function->num_arguments==0) {
-			call(fd, f);
+			if (f->do_inline) {
+				generate_statement(fd, f->statement_list);
+			} else {
+				call(fd, f);
+			}
 		} else {
 			struct expr_t *current_e=e->right;
 			ret=get_ret_register(get_type_size(current_e->type));
@@ -59,7 +62,7 @@ void generate_expression(FILE *fd, struct expr_t *e)
 	} else if (e->kind==func_ptr_call) {
 		ret=get_ret_register(pointer_size);
 		read_var(fd, e->attrs.var);
-		struct reg_t *holder=get_free_register(fd, pointer_size);
+		struct reg_t *holder=get_free_register(fd, pointer_size, depth);
 		place_comment(fd, "(");
 		place_comment(fd, e->attrs.var->name);
 		assign_reg(fd, ret, holder);
@@ -93,7 +96,7 @@ void generate_post_unary_expression(FILE *fd, struct expr_t *e)
 {
 	depth++;
 	register struct reg_t *ret=get_ret_register(get_type_size(e->type));
-	register struct reg_t *lhs=get_free_register(fd, get_type_size(e->type));
+	register struct reg_t *lhs=get_free_register(fd, get_type_size(e->type), depth);
 	place_comment(fd, "(");
 	place_comment(fd, "(");
 	generate_expression(fd, e->left);
@@ -109,8 +112,8 @@ void generate_post_unary_expression(FILE *fd, struct expr_t *e)
 
 		register struct expr_t *left=e->left;
 		if (left->kind==pre_un_op && !strcmp(left->attrs.un_op, "*")) {
-			struct reg_t *rhs=get_free_register(fd, get_type_size(e->type));
-			struct reg_t *tmp=get_free_register(fd, get_type_size(e->type));
+			struct reg_t *rhs=get_free_register(fd, get_type_size(e->type), depth);
+			struct reg_t *tmp=get_free_register(fd, get_type_size(e->type), depth);
 			assign_reg(fd, ret, tmp);
 			generate_expression(fd, left->right);
 			assign_reg(fd, ret, rhs);
@@ -157,8 +160,8 @@ void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 			
 			int_inc(fd, ret);
 			if (e->right->kind==pre_un_op && !strcmp(e->right->attrs.un_op, "*")) {
-				register struct reg_t *rhs=get_free_register(fd, pointer_size);
-				register struct reg_t *tmp=get_free_register(fd, get_type_size(e->type));
+				register struct reg_t *rhs=get_free_register(fd, pointer_size, depth);
+				register struct reg_t *tmp=get_free_register(fd, get_type_size(e->type), depth);
 				assign_reg(fd, ret, tmp);
 
 				ret=get_ret_register(pointer_size);
@@ -244,7 +247,7 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, "(");
 
 		generate_expression(fd, e->right);
-		lhs=get_free_register(fd, get_type_size(e->type));
+		lhs=get_free_register(fd, get_type_size(e->type), depth);
 
 		assign_reg(fd, ret, lhs);
 		place_comment(fd, ") = (");
@@ -261,8 +264,8 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		free_register(fd, lhs);
 	} else {
 		size_t size=get_type_size(e->type);
-		lhs=get_free_register(fd, size);
-		rhs=get_free_register(fd, size);
+		lhs=get_free_register(fd, size, depth);
+		rhs=get_free_register(fd, size, depth);
 		if (!strcmp(op, "==")) {
 			generate_comparison_expression(fd, e, jmp_eq, "is$eq$%d", "is$not$eq$%d", lhs);
 

@@ -1,3 +1,4 @@
+#define IN_BACKEND
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,8 +7,8 @@
 #include "generator/generator.h"
 #include "globals.h"
 #include "types.h"
-#include "generator/backend/backend.h"
-#include "generator/backend/registers.h"
+#include "backend/backend.h"
+#include "backend/registers.h"
 
 void int_num(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
@@ -60,7 +61,6 @@ void int_add(FILE *fd, struct reg_t *a, struct reg_t *b)
 			fprintf(fd, "\tmovq %s, %%rax\n", get_reg_name(b, pointer_size));
 	}
 }
-
 
 void int_sub(FILE *fd, struct reg_t *b, struct reg_t *a)
 {
