@@ -10,3 +10,9 @@ Things You Will Need To Compile This
 	*GNU Bison
 	*The GNU ar command
 	*The m4 command
+	*Bash
+	*Sed
+How To Compile
+==============
+	Just run: make
+	For the tests run: make test
