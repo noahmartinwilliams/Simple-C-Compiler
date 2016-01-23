@@ -1,7 +1,7 @@
 INCLUDE=../include
 include ../include/config.mk
 
-../generator.a: generator-misc.o generator-globals.o  generator-expr.o generator-statem.o
+../generator.a: misc.o globals.o expr.o statem.o
 	$(AR)
 
 .PHONY:

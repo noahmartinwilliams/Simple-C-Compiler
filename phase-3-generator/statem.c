@@ -291,6 +291,7 @@ static inline void generate_switch_statement(FILE *fd, struct statem_t *s, struc
 		generate_statement(fd, statement->attrs._default.def);
 		free(statement->attrs._default.label);
 	}
+	place_label(fd, loop_end);
 	place_comment(fd, "}");
 	free(loop_start);
 	free(loop_end);
@@ -298,6 +299,9 @@ static inline void generate_switch_statement(FILE *fd, struct statem_t *s, struc
 }
 void generate_statement(FILE *fd, struct statem_t *s)
 {
+	if (s==NULL)
+		return; 
+
 	depth++;
 	struct reg_t *retu=get_ret_register(word_size);
 	struct expr_t *cond;
