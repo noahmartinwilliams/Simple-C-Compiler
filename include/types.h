@@ -105,6 +105,11 @@ struct statem_t {
 			struct statem_t *cases;
 			struct expr_t *tester;
 		} _switch;
+
+		struct {
+			struct statem_t *def;
+			char *label;
+		} _default;
 	} attrs;
 };
 

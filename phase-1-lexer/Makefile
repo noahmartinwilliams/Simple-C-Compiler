@@ -1,7 +1,12 @@
 INCLUDE=../include
 include ../include/config.mk
 
-../lex.yy.c: comp.l ../include/types.h
-	$(LEX) $^
-	mv lex.yy.c ..
+../lex.yy.o: lex.yy.c
+	$(CMP)
 
+lex.yy.c: comp.l $(INCLUDE)/*
+	$(LEX) $<
+
+.PHONY:
+clean:
+	rm lex.yy.c 2>/dev/null || true

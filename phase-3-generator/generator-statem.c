@@ -257,19 +257,39 @@ static inline void generate_switch_statement(FILE *fd, struct statem_t *s, struc
 	int x;
 	int num=block->attrs.list.num;
 	struct statem_t **statements=block->attrs.list.statements;
+	bool found_default=false;
+	struct statem_t *statement;
+	struct statem_t *def=NULL;
 	for (x=0; x<num; x++) {
+		statement=statements[x];
 		unique_num++;
-		place_comment(fd, "case ");
-		generate_expression(fd, statements[x]->attrs._case.condition);
-		asprintf(&(statements[x]->attrs._case.label), "switch$case$%d", unique_num);
-		compare_registers(fd, retu, input);
-		jmp_eq(fd, statements[x]->attrs._case.label);
+		if (statements[x]->kind==_case) {
+			place_comment(fd, "case: ");
+			generate_expression(fd, statements[x]->attrs._case.condition);
+			asprintf(&(statement->attrs._case.label), "switch$case$%d", unique_num);
+			compare_registers(fd, retu, input);
+			jmp_eq(fd, statement->attrs._case.label);
+		} else  {
+			found_default=true;
+			place_comment(fd, "default: ");
+			asprintf(&(statement->attrs._default.label), "switch$default$%d", unique_num);
+			jmp(fd, statement->attrs._default.label);
+			def=statement;
+		}
 	}
 
 	for (x=0; x<num; x++) {
-		place_label(fd, statements[x]->attrs._case.label);
-		generate_statement(fd, statements[x]->attrs._case.block);
-		free(statements[x]->attrs._case.label);
+		statement=statements[x];
+		if (statement->kind==_case) {
+			place_label(fd, statement->attrs._case.label);
+			generate_statement(fd, statement->attrs._case.block);
+			free(statement->attrs._case.label);
+		}
+	}
+	if (found_default) {
+		place_label(fd, def->attrs._default.label);
+		generate_statement(fd, statement->attrs._default.def);
+		free(statement->attrs._default.label);
 	}
 	place_comment(fd, "}");
 	free(loop_start);
@@ -283,8 +303,9 @@ void generate_statement(FILE *fd, struct statem_t *s)
 	struct expr_t *cond;
 	struct statem_t *block;
 	if (s->kind==expr) {
+		place_comment(fd, "(");
 		generate_expression(fd, s->attrs.expr);
-		place_comment(fd, ";");
+		place_comment(fd, ");");
 	} else if (s->kind==list) {
 		int x;
 		for (x=0; x<s->attrs.list.num; x++) {
@@ -295,7 +316,7 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		place_comment(fd, "(");
 		generate_expression(fd, s->attrs.expr);
 		return_from_call(fd);
-		place_comment(fd, ") ;");
+		place_comment(fd, ");");
 	} else if (s->kind==declare) {
 		return;
 	} else if (s->kind==_if) {
@@ -326,7 +347,6 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		jmp(fd, s->attrs.label_name);
 	} else if (s->kind==label) {
 		place_comment(fd, s->attrs.label_name);
-		place_comment(fd, ":");
 
 		place_label(fd, s->attrs.label_name);
 	} else if (s->kind==_for) {

@@ -111,4 +111,9 @@ switch_element: CASE expression ':' statement_list {
 	s->attrs._case.block=$4;
 	s->attrs._case.condition=$2;
 	$$=s;
+} | DEFAULT ':' statement_list {
+	struct statem_t *s=malloc(sizeof(struct statem_t));
+	s->kind=_default;
+	s->attrs._default.def=$3;
+	$$=s;
 }

@@ -50,7 +50,8 @@ void free_statem(struct statem_t *s)
 	} else if (s->kind==_switch) {
 		free_statem(s->attrs._switch.cases);
 		free_expr(s->attrs._switch.tester);
-	}
+	} else if (s->kind==_default)
+		free_statem(s->attrs._default.def);
 	free(s);
 }
 
@@ -184,13 +185,20 @@ void print_statem(char *pre, struct statem_t *s)
 		struct statem_t **statements=s->attrs._switch.cases->attrs.list.statements;
 		for (x=0; x<num; x++) {
 			char *new_pre2;
-			printf("%s|_ case \n", new_pre);
-			asprintf(&new_pre2, "%s |", new_pre);
+			if (statements[x]->kind==_case) {
+				printf("%s|_ case \n", new_pre);
+				asprintf(&new_pre2, "%s |", new_pre);
 
-			print_e2(new_pre2, statements[x]->attrs._case.condition);
-			free(new_pre2);
-			asprintf(&new_pre2, "%s ", new_pre);
-			print_statem(new_pre2, statements[x]->attrs._case.block);
+				print_e2(new_pre2, statements[x]->attrs._case.condition);
+				free(new_pre2);
+				asprintf(&new_pre2, "%s ", new_pre);
+				print_statem(new_pre2, statements[x]->attrs._case.block);
+			} else {
+				printf("%s|_ default \n", new_pre);
+
+				asprintf(&new_pre2, "%s ", new_pre);
+				print_statem(new_pre2, statements[x]->attrs._default.def);
+			}
 			free(new_pre);
 			free(new_pre2);
 

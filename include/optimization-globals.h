@@ -1,6 +1,7 @@
 #ifndef __OPTIMIZATION_GLOBALS_H__
 #define __OPTIMIZATION_GLOBALS_H__
 #include "optimizations.h"
+#include <stdbool.h>
 
 #ifdef OPTIMIZE_IF_CONSTANT_CONDITION
 extern bool optimize_if_constant_condition;

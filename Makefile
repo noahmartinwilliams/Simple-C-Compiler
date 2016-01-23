@@ -41,8 +41,8 @@ comp.tab.c include/comp.tab.h: comp.y
 	$(YACC) $^
 	mv comp.tab.h include/
 
-lex.yy.c: phase-1-lexer/*
-	$(MAKE) -C phase-1-lexer/ ../lex.yy.c
+lex.yy.o: phase-1-lexer/*
+	$(MAKE) -C phase-1-lexer/ ../lex.yy.o
 
 .PHONY:
 clena: 

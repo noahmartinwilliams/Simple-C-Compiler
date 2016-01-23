@@ -14,3 +14,6 @@ variables
 awesome-ideas
 opcodes
 yacc-parts
+phase-4-backend/exported.c
+include/generator/backend-exported.h
+include/loader-macro.h
