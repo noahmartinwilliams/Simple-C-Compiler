@@ -19,7 +19,7 @@ char* generate_global_string(FILE *fd, char *str)
 
 void setup_types()
 {
-	num_types=4;
+	num_types=5;
 	types=realloc(types, num_types*sizeof(struct type_t*));
 	types[num_types-1]=malloc(sizeof(struct type_t));
 	struct type_t *i=types[num_types-1];
@@ -27,24 +27,27 @@ void setup_types()
 
 	i->name=strdup("int");
 	i->pointer_depth=0;
-	i->body=malloc(sizeof(struct tbody_t));
-	b=i->body;
+	b=i->body=malloc(sizeof(struct tbody_t));
 	b->size=int_size;
 	b->is_struct=false;
 	b->refcount=1;
+	b->is_func_pointer=false;
 	b->is_union=false;
 	i->refcount=1;
 	i->native_type=true;
+	b->core_type=_INT;
 
 	types[num_types-2]=malloc(sizeof(struct type_t));
 	i=types[num_types-2];
 	i->name=strdup("char");
 	i->pointer_depth=0;
-	i->body=malloc(sizeof(struct tbody_t));
-	i->body->size=char_size;
-	i->body->is_struct=false;
-	i->body->refcount=1;
-	i->body->is_union=false;
+	b=i->body=malloc(sizeof(struct tbody_t));
+	b->size=char_size;
+	b->is_struct=false;
+	b->core_type=_INT;
+	b->is_func_pointer=false;
+	b->refcount=1;
+	b->is_union=false;
 	i->refcount=1;
 	i->native_type=true;
 
@@ -52,32 +55,49 @@ void setup_types()
 	i=types[num_types-3];
 	i->name=strdup("void");
 	i->pointer_depth=0;
-	i->body=malloc(sizeof(struct tbody_t));
-	i->body->size=0;
-	i->body->is_struct=false;
-	i->body->refcount=1;
-	i->body->is_union=false;
+	b=i->body=malloc(sizeof(struct tbody_t));
+	b->size=0;
+	b->is_struct=false;
+	b->is_func_pointer=false;
+	b->refcount=1;
+	b->is_union=false;
 	i->refcount=1;
 	i->native_type=true;
+	b->core_type=_INT;
 
 	types[num_types-4]=malloc(sizeof(struct type_t));
 	i=types[num_types-4];
 	i->name=strdup("size_t");
 	i->pointer_depth=0;
-	i->body=malloc(sizeof(struct tbody_t));
-	b=i->body;
+	b=i->body=malloc(sizeof(struct tbody_t));
 	b->size=sizeof(size_t);
 	b->is_struct=false;
+	b->is_func_pointer=false;
 	b->refcount=1;
 	b->is_union=false;
 	i->refcount=1;
 	i->native_type=true;
+	b->core_type=_INT;
+
+	types[num_types-5]=malloc(sizeof(struct type_t));
+	i=types[num_types-5];
+	i->name=strdup("float");
+	i->pointer_depth=0;
+	b=i->body=malloc(sizeof(struct tbody_t));
+	b->size=float_size;
+	b->is_struct=false;
+	b->is_func_pointer=false;
+	b->refcount=1;
+	b->is_union=false;
+	i->refcount=1;
+	i->native_type=true;
+	b->core_type=_FLOAT;
 }
 
 void setup_generator()
 {
-	setup_types();
 	setup_backend();
+	setup_types();
 }
 
 void generate_function(FILE *fd, struct func_t *f)

@@ -66,6 +66,7 @@ struct reg_t* get_free_register (FILE *fd, size_t s, int depth)
 		current_depth->name=reg_name(regs[x]);
 		if(regs[x]->size==s && current_depth->depth < depth && regs[x]->use==INT) {
 			fprintf(fd, "\tpushq %s\n", regs[x]->sizes[3].name);
+			current_stack_offset+=pointer_size; /*TODO: fix this for future architecutres */
 			push((regs[x]->depths), current_depth);
 			int *new_depth=malloc(sizeof(int));
 			*new_depth=depth;
@@ -85,6 +86,7 @@ void free_register(FILE *fd, struct reg_t *r)
 	} else {
 		struct depth_value *dv=pop(r->depths);
 		fprintf(fd, "\tpopq %s\n", dv->name);
+		current_stack_offset-=pointer_size;
 		free(dv);
 	}
 }

@@ -79,20 +79,20 @@ void print_statem(char *pre, struct statem_t *s)
 		print_e2(new_pre, s->attrs.expr);
 		free(new_pre);
 	} else if (s->kind==list) {
-		printf("%s|_statement kind: list\n", pre);
+		printf("%s|_statement kind: block\n", pre);
 		char *new_pre;
 		int x;
-		new_pre=fill_with_branches(pre, s->attrs.list.num);
+		int num=s->attrs.list.num;
+		new_pre=fill_with_branches(pre, num);
 
-		for (x=0; x<s->attrs.list.num; x++) {
-			new_pre[2*s->attrs.list.num-2*x-1]='\0';
+		for (x=0; x<num; x++) {
 			char *tmp;
-			asprintf(&tmp, "%s%s", pre, new_pre);
-			print_statem(tmp, s->attrs.list.statements[x]);
-			free(tmp);
+			print_statem(new_pre, s->attrs.list.statements[x]);
+			free(new_pre);
+			new_pre=fill_with_branches(pre, (num-x)-1);
 		}
-
 		free(new_pre);
+
 	} else if (s->kind==declare) {
 		printf("%s|_statment kind: declare, var: %s, type: %s, pointer_depth: %d, size: %ld \n", pre, s->attrs.var->name, s->attrs.var->type->name, s->attrs.var->type->pointer_depth, get_type_size(s->attrs.var->type));
 	} else if (s->kind==_while) {
@@ -180,19 +180,27 @@ void print_statem(char *pre, struct statem_t *s)
 		print_e2(new_pre, s->attrs._switch.tester);
 		free(new_pre);
 
-		new_pre=fill_with_branches(pre, s->attrs._switch.cases->attrs.list.num);
+		new_pre=fill_with_branches(pre, num);
 
 		struct statem_t **statements=s->attrs._switch.cases->attrs.list.statements;
 		for (x=0; x<num; x++) {
+			struct statem_t *statement=statements[x];
 			char *new_pre2;
 			if (statements[x]->kind==_case) {
-				printf("%s|_ case \n", new_pre);
-				asprintf(&new_pre2, "%s |", new_pre);
+				if (statement->attrs._case.condition!=NULL && statement->attrs._case.block!=NULL) {
+					printf("%s|_ case \n", new_pre);
+					asprintf(&new_pre2, "%s |", new_pre);
 
-				print_e2(new_pre2, statements[x]->attrs._case.condition);
-				free(new_pre2);
-				asprintf(&new_pre2, "%s ", new_pre);
-				print_statem(new_pre2, statements[x]->attrs._case.block);
+					print_e2(new_pre2, statement->attrs._case.condition);
+					free(new_pre2);
+					asprintf(&new_pre2, "%s ", new_pre);
+					print_statem(new_pre2, statement->attrs._case.block);
+				} else if (statement->attrs._case.block==NULL && statement->attrs._case.condition!=NULL) {
+					printf("%s|_ case\n", new_pre);
+					asprintf(&new_pre2, "%s ", new_pre);
+					print_e2(new_pre2, statement->attrs._case.condition);
+				} else 
+					continue;
 			} else {
 				printf("%s|_ default \n", new_pre);
 

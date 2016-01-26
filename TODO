@@ -21,14 +21,13 @@
 *add bit fields to data structures.
 *add const keyword.
 *add register keyword.
-*add floating point math.
 *add arithmetic assignment operators.
 *add new bit manipulation operators that I came up with.
 *add duff's device optimization.
 *add static local variables.
 *add static global variables.
 *add pointer arithmetic.
-*add ptrdiff_t, off_t, __uint8_t, __uint16_t, __uint32_t, __uint64_t, __int8_t, __int16_t, __int32_t, __int64_t, _Bool, float, and double data types.
+*add ptrdiff_t, off_t, __uint8_t, __uint16_t, __uint32_t, __uint64_t, __int8_t, __int16_t, __int32_t, __int64_t, _Bool, and double data types.
 *add type conversion.
 *add automagic type conversion.
 *add comma operator.

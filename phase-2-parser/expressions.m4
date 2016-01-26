@@ -32,6 +32,17 @@ noncomma_expression: CONST_INT {
 	e->right=NULL;
 	e->attrs.cint_val=$1;
 	$$=e;
+} | CONST_INT '.' CONST_INT {
+	char *num;
+	asprintf(&num, "%ld.%ld", $1, $3);
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=const_float;
+	e->attrs.cfloat_val=strtof(num, NULL);
+	e->left=e->right=NULL;
+	e->type=get_type_by_name("float");
+	e->type->refcount++;
+	free(num);
+	$$=e;
 } | assignable_expr | binary_expr | '(' expression ')' {
 	$$=$2;
 } | prefix_expr | IDENTIFIER '(' ')' {

@@ -20,6 +20,7 @@ type: TYPE {
 	type->body=malloc(sizeof(struct tbody_t));
 
 	struct tbody_t *body=type->body;
+	body->core_type=_INT;
 	body->attrs.vars.num_vars=$4->attrs.list.num;
 	body->attrs.vars.vars=calloc(body->attrs.vars.num_vars, sizeof(struct var_t*));
 	size_t size=0;
@@ -54,18 +55,19 @@ type: TYPE {
 	type->refcount=2;
 	type->pointer_depth=0;
 	type->name=strdup($2);
-	type->body=malloc(sizeof(struct tbody_t));
-	type->body->refcount=1;
+	struct tbody_t *body=type->body=malloc(sizeof(struct tbody_t));
+	body->core_type=_INT;
+	body->refcount=1;
 
-	type->body->is_union=true;
-	type->body->is_struct=false;
+	body->is_union=true;
+	body->is_struct=false;
 
-	type->body->attrs.vars.num_vars=0;
-	type->body->attrs.vars.vars=NULL;
+	body->attrs.vars.num_vars=0;
+	body->attrs.vars.vars=NULL;
 	register int x;
 	size_t max_size=0;
-	struct var_t **v=type->body->attrs.vars.vars;
-	int num_vars=type->body->attrs.vars.num_vars;
+	struct var_t **v=body->attrs.vars.vars;
+	int num_vars=body->attrs.vars.num_vars;
 	struct statem_t **statements=$4->attrs.list.statements;
 	for (x=0; x<$4->attrs.list.num; x++) {
 		size_t s=get_type_size($4->attrs.list.statements[x]->attrs.var->type);

@@ -12,6 +12,7 @@ struct tbody_t {
 	int refcount;
 	int base_pointer_depth;
 	bool is_struct, is_union, is_func_pointer;
+	enum { _FLOAT, _INT } core_type;
 	union {
 		struct {
 			struct var_t **vars;
@@ -43,6 +44,7 @@ struct expr_t {
 	union {
 		struct var_t *var;
 		long int cint_val;
+		float cfloat_val;
 		char *bin_op;
 		char *un_op;
 		char *cstr_val;

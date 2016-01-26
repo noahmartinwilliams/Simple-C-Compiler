@@ -16,6 +16,12 @@
 #include "types.h"
 #include "backend/globals.h"
 
+static inline void size_error(char *message, size_t size)
+{
+	fprintf(stderr, "Internal Error: unknown size: %ld passed to %s\n", size, message);
+	exit(1);
+}
+
 void setup_backend()
 {
 
@@ -137,10 +143,8 @@ void assign_constant(FILE *fd, struct expr_t *e)
 		fprintf(fd, "\tmovl $%ld, %%eax\n", e->attrs.cint_val);
 	else if (get_type_size(e->type)==pointer_size)
 		fprintf(fd, "\tmovq $%ld, %%rax\n", e->attrs.cint_val);
-	else {
-		fprintf(stderr, "Internal Error: unknown size: %ld passed to assign_constant\n", get_type_size(e->type));
-		exit(1);
-	}
+	else 
+		size_error("assign_constant", get_type_size(e->type));
 }
 
 void assign_constant_int(FILE *fd, int e)

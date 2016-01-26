@@ -52,3 +52,6 @@ void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest);
 char* make_global_string(FILE *fd, char *str);
 void assign_constant_int(FILE *fd, int e);
 void assign_constant(FILE *fd, struct expr_t *e);
+void assign_constant_float(FILE *fd, struct expr_t *e);
+void float_sub(FILE *fd, struct reg_t *src, struct reg_t *dest);
+void compare_float_registers(FILE *fd, struct reg_t *a, struct reg_t *b);

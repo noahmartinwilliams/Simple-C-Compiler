@@ -39,7 +39,10 @@ void print_expr(char *pre, struct expr_t *e)
 			printf("string literal: %s", e->attrs.cstr_val);
 			break;
 		}
-	printf(", type: %s, type_size: %ld, pointer_depth: %ld\n", e->type->name, get_type_size(e->type), e->type->pointer_depth);
+		if (e->type->body->core_type==_INT)
+			printf(", type: %s, type_size: %ld, pointer_depth: %ld, core_type: INT\n", e->type->name, get_type_size(e->type), e->type->pointer_depth);
+		else
+			printf(", type: %s, type_size: %ld, pointer_depth: %ld, core_type: FLOAT\n", e->type->name, get_type_size(e->type), e->type->pointer_depth);
 	}
 
 	else if (e->kind==arg) {

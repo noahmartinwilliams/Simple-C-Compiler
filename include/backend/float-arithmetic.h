@@ -4,8 +4,8 @@
 #include "types.h"
 #include "generator/generator-types.h"
 
-extern void float_add(FILE *fd, struct reg_t *r1, struct reg_t *r2);
-extern void assign_float_constant(FILE *fd, struct expr_t *e);
-extern void float_neg(FILE *fd, struct reg_t *r);
+extern void assign_constant_float(FILE *fd, struct expr_t *e);
+extern void float_sub(FILE *fd, struct reg_t *src, struct reg_t *dest);
+extern void compare_float_registers(FILE *fd, struct reg_t *a, struct reg_t *b);
 
 #endif

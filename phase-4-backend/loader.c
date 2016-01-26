@@ -1,5 +1,6 @@
 #include "generator/generator-types.h"
 #include "generator/generator-globals.h"
+#define load_obj2(X, Y) load_obj( (void**) X, Y)
 #include "loader-macro.h"
 #include <dlfcn.h>
 
@@ -12,7 +13,6 @@ static inline void load_obj(void **obj, char *name)
 		exit(1);
 	}
 }
-#define load_obj2(X, Y) load_obj( (void**) X, Y)
 
 static void (*cleanup_backend2) ();
 extern char *backend_name;
@@ -30,6 +30,12 @@ void setup_backend()
 	go();
 	load_obj2(&cleanup_backend2, "cleanup_backend");
 	load_obj3;
+	word_size=*((size_t *) dlsym(lib, "word_size"));
+	pointer_size=*((size_t *) dlsym(lib, "pointer_size"));
+	int_size=*((size_t *) dlsym(lib, "int_size"));
+	char_size=*((size_t *) dlsym(lib, "char_size"));
+	long_size=*((size_t *) dlsym(lib, "long_size"));
+	float_size=*((size_t *) dlsym(lib, "float_size"));
 }
 
 void cleanup_backend()

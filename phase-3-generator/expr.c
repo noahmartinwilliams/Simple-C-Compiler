@@ -26,6 +26,8 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		read_var(fd, e->attrs.var);
 	else if (e->kind==const_int)
 		assign_constant(fd, e);
+	else if (e->kind==const_float)
+		assign_constant_float(fd, e);
 	else if (e->kind==const_size_t)
 		assign_constant(fd, e);
 	else if (e->kind==pre_un_op) {
@@ -189,7 +191,7 @@ void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 }
 
 
-static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*comparitor)(FILE*, char*), char *true_string, char *false_string, struct reg_t *lhs)
+static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*comparitor)(FILE*, char*), char *true_string, char *false_string, struct reg_t *lhs, bool is_float)
 {
 	depth++;
 	struct reg_t *ret=get_ret_register(get_type_size(e->type));
@@ -205,7 +207,10 @@ static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*co
 
 	generate_expression(fd, e->right);
 	place_comment(fd, ")");
-	compare_registers(fd, ret, lhs);
+	if (!is_float)
+		compare_registers(fd, ret, lhs);
+	else
+		compare_float_registers(fd, ret, lhs);
 
 	unique_num++;
 	char *is_true, *is_false;
@@ -266,25 +271,20 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		size_t size=get_type_size(e->type);
 		lhs=get_free_register(fd, size, depth);
 		rhs=get_free_register(fd, size, depth);
-		if (!strcmp(op, "==")) {
-			generate_comparison_expression(fd, e, jmp_eq, "is$eq$%d", "is$not$eq$%d", lhs);
-
-		} else if (!strcmp(op, "<")) {
-			generate_comparison_expression(fd, e, jmp_lt, "is$lt$%d", "is$not$lt$%d", lhs);
-
-		} else if (!strcmp(op, ">")) {
-			generate_comparison_expression(fd, e, jmp_gt, "is$gt$%d", "is$not$gt$%d", lhs);
-
-		} else if (!strcmp(op, "!=")) {
-			generate_comparison_expression(fd, e, jmp_neq, "is$ne$%d", "is$eq$%d", lhs);
-
-		} else if (!strcmp(op, ">=")) {
-			generate_comparison_expression(fd, e, jmp_ge, "is$ge$%d", "is$lt$%d", lhs);
-
-		} else if (!strcmp(op, "<=")) {
-			generate_comparison_expression(fd, e, jmp_le, "is$le$%d", "is$gt$%d", lhs);
-
-		}  else if (!strcmp(op, "?")) {
+		bool is_float=e->type->body->core_type==_FLOAT;
+		if (!strcmp(op, "==")) 
+			generate_comparison_expression(fd, e, jmp_eq, "is$eq$%d", "is$not$eq$%d", lhs, is_float);
+		else if (!strcmp(op, "<"))
+			generate_comparison_expression(fd, e, jmp_lt, "is$lt$%d", "is$not$lt$%d", lhs, is_float);
+		else if (!strcmp(op, ">"))
+			generate_comparison_expression(fd, e, jmp_gt, "is$gt$%d", "is$not$gt$%d", lhs, is_float);
+		else if (!strcmp(op, "!="))
+			generate_comparison_expression(fd, e, jmp_neq, "is$ne$%d", "is$eq$%d", lhs, is_float);
+		else if (!strcmp(op, ">="))
+			generate_comparison_expression(fd, e, jmp_ge, "is$ge$%d", "is$lt$%d", lhs, is_float);
+		else if (!strcmp(op, "<="))
+			generate_comparison_expression(fd, e, jmp_le, "is$le$%d", "is$gt$%d", lhs, is_float);
+		else if (!strcmp(op, "?")) {
 			unique_num++;
 			place_comment(fd, "(");
 			place_comment(fd, "(");
@@ -328,30 +328,57 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 			generate_expression(fd, e->right);
 
 			place_comment(fd, ")");
-			if (!strcmp(op, "+"))
-				int_add(fd, lhs, ret);
-			else if (!strcmp(op, "-")) 
-				int_sub(fd, lhs, ret);
-			else if (!strcmp(op, "/"))
-				int_div(fd, lhs, ret);
-			else if (!strcmp(op, "*"))
-				int_mul(fd, lhs, ret);
-			else if (!strcmp(op, "<<"))
-				shift_left(fd, lhs, ret);
-			else if (!strcmp(op, ">>"))
-				shift_right(fd, lhs, ret);
-			else if (!strcmp(op, "|"))
-				or(fd, lhs, ret);
-			else if (!strcmp(op, "&"))
-				and(fd, lhs, ret);
-			else if (!strcmp(op, "^"))
-				xor(fd, lhs, ret);
-			else if (!strcmp(op, "||"))
-				test_or(fd, lhs, ret);
-			else if (!strcmp(op, "&&"))
-				test_and(fd, lhs, ret);
-			else if (!strcmp(op, "%"))
-				int_num(fd, lhs, ret);
+			if (e->type->body->core_type==_INT) {
+				if (!strcmp(op, "+"))
+					int_add(fd, lhs, ret);
+				else if (!strcmp(op, "-")) 
+					int_sub(fd, lhs, ret);
+				else if (!strcmp(op, "/"))
+					int_div(fd, lhs, ret);
+				else if (!strcmp(op, "*"))
+					int_mul(fd, lhs, ret);
+				else if (!strcmp(op, "<<"))
+					shift_left(fd, lhs, ret);
+				else if (!strcmp(op, ">>"))
+					shift_right(fd, lhs, ret);
+				else if (!strcmp(op, "|"))
+					or(fd, lhs, ret);
+				else if (!strcmp(op, "&"))
+					and(fd, lhs, ret);
+				else if (!strcmp(op, "^"))
+					xor(fd, lhs, ret);
+				else if (!strcmp(op, "||"))
+					test_or(fd, lhs, ret);
+				else if (!strcmp(op, "&&"))
+					test_and(fd, lhs, ret);
+				else if (!strcmp(op, "%"))
+					int_num(fd, lhs, ret);
+			} else {
+				/* if (!strcmp(op, "+"))
+					float_add(fd, lhs, ret);
+				else */ if (!strcmp(op, "-")) 
+					float_sub(fd, lhs, ret);
+				/* else if (!strcmp(op, "/"))
+					float_div(fd, lhs, ret);
+				else if (!strcmp(op, "*"))
+					float_mul(fd, lhs, ret);
+				else if (!strcmp(op, "<<"))
+					shift_left(fd, lhs, ret);
+				else if (!strcmp(op, ">>"))
+					shift_right(fd, lhs, ret);
+				else if (!strcmp(op, "|"))
+					or(fd, lhs, ret);
+				else if (!strcmp(op, "&"))
+					and(fd, lhs, ret);
+				else if (!strcmp(op, "^"))
+					xor(fd, lhs, ret);
+				else if (!strcmp(op, "||"))
+					test_or(fd, lhs, ret);
+				else if (!strcmp(op, "&&"))
+					test_and(fd, lhs, ret);
+				else if (!strcmp(op, "%"))
+					float_num(fd, lhs, ret); */
+			}
 			place_comment(fd, ")");
 		}
 		free_register(fd, rhs);
