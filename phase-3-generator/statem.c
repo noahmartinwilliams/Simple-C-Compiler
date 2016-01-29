@@ -9,9 +9,11 @@
 #include "generator/generator-types.h"
 #include "handle-types.h"
 #include "handle-funcs.h"
+#include "handle-exprs.h"
 #include "stack.h"
 #include "optimizations.h"
 #include "optimization-globals.h"
+#include "generator/backend-exported.h"
 
 void generate_statement(FILE *fd, struct statem_t *s);
 
@@ -117,11 +119,16 @@ static inline void generate_do_while_loop(FILE *fd, struct statem_t *s, struct r
 	free(pop(loop_stack));
 }
 
+
 static inline void generate_if_statement(FILE *fd, struct statem_t *s, struct reg_t *retu, struct expr_t *cond, struct statem_t *block) 
 {
+	unique_num++;
 	cond=s->attrs._if.condition;
 	block=s->attrs._if.block;
 	struct statem_t *else_block=s->attrs._if.else_block;
+	char *unique_name_else, *unique_name_true;
+	asprintf(&unique_name_else, "if$not$true$%d", unique_num);
+	asprintf(&unique_name_true, "if$true$%d", unique_num);
 
 	place_comment(fd, "if (");
 	#ifdef OPTIMIZE_IF_CONSTANT_CONDITION
@@ -141,13 +148,65 @@ static inline void generate_if_statement(FILE *fd, struct statem_t *s, struct re
 	}
 	#endif
 
+	#ifdef OPTIMIZE_CONDITION_TEST_DETECT
+	char *op=cond->attrs.bin_op;
+	if (optimize_condition_test_detect && cond->kind==bin_op && is_test_op(op)) {
+		depth++;
+		struct expr_t *left=cond->left, *right=cond->right;
+		struct reg_t *left_reg=get_free_register(fd, get_type_size(cond->left->type), depth);
+		retu=get_ret_register(get_type_size(left->type));
+		place_comment(fd, "(");
+		place_comment(fd, "(");
+		generate_expression(fd, left);
+		assign_reg(fd, retu, left_reg);
+
+		char *op_print=NULL;
+		asprintf(&op_print, ") %s (", op);
+		place_comment(fd, op_print);
+		free(op_print);
+
+		generate_expression(fd, right);
+		place_comment(fd, ")");
+		place_comment(fd, ")");
+		if (cond->right->type->body->core_type==_FLOAT) 
+			compare_float_registers(fd, retu, left_reg);
+		else
+			compare_registers(fd, retu, left_reg);
+		free_register(fd, left_reg);
+		depth--;
+		place_comment(fd, ") {");
+
+		if (!strcmp("<", op))
+			jmp_ge(fd, unique_name_else);
+		else if (!strcmp(">", op))
+			jmp_le(fd, unique_name_else);
+		else if (!strcmp(">=", op))
+			jmp_lt(fd, unique_name_else);
+		else if (!strcmp("<=", op))
+			jmp_gt(fd, unique_name_else);
+		else if (!strcmp("==", op))
+			jmp_neq(fd, unique_name_else);
+		else if (!strcmp("!=", op))
+			jmp_eq(fd, unique_name_else);
+
+		generate_statement(fd, block);
+		jmp(fd, unique_name_true);
+		place_comment(fd, "} else {");
+		place_label(fd, unique_name_else);
+		if (else_block!=NULL)
+			generate_statement(fd, else_block);
+
+		place_label(fd, unique_name_true);
+		place_comment(fd, "}");
+		free(unique_name_else);
+		free(unique_name_true);
+		return;
+	}
+	#endif
+
 	generate_expression(fd, cond);
 	compare_register_to_int(fd, retu, 0);
 
-	unique_num++;
-	char *unique_name_else, *unique_name_true;
-	asprintf(&unique_name_else, "if$not$true$%d", unique_num);
-	asprintf(&unique_name_true, "if$true$%d", unique_num);
 	place_comment(fd, ")");
 
 	jmp_eq(fd, unique_name_else);
@@ -162,6 +221,7 @@ static inline void generate_if_statement(FILE *fd, struct statem_t *s, struct re
 		place_comment(fd, "} else {");
 		generate_statement(fd, else_block);
 	}
+
 	place_label(fd, unique_name_true);
 	place_comment(fd, "}");
 	free(unique_name_else);
@@ -297,6 +357,7 @@ static inline void generate_switch_statement(FILE *fd, struct statem_t *s, struc
 	free(loop_end);
 	free(pop(loop_stack));
 }
+
 void generate_statement(FILE *fd, struct statem_t *s)
 {
 	if (s==NULL)
@@ -353,12 +414,11 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		place_comment(fd, s->attrs.label_name);
 
 		place_label(fd, s->attrs.label_name);
-	} else if (s->kind==_for) {
+	} else if (s->kind==_for)
 		generate_for_loop(fd, s, retu, cond, block);
-	} else if (s->kind==do_while) {
+	else if (s->kind==do_while)
 		generate_do_while_loop(fd, s, retu, cond, block);
-	} else if (s->kind==_switch) {
+	else if (s->kind==_switch)
 		generate_switch_statement(fd, s, retu, cond, block);
-	}
 	depth--;
 }

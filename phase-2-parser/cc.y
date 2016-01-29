@@ -10,6 +10,7 @@
 #include "handle-statems.h"
 #include "handle-types.h"
 #include "handle-vars.h"
+#include "generator/backend-exported.h"
 #ifdef DEBUG
 #include "printer.h"
 #include "print-tree.h"
@@ -46,7 +47,10 @@ static inline struct expr_t* make_bin_op(char *X, struct expr_t *Y, struct expr_
 	struct expr_t *e=malloc(sizeof(struct expr_t)); 
 	struct expr_t *a=Y, *b=Z;
 	parser_type_cmp(&a, &b);
-	e->type=a->type;
+	if (!is_test_op(X))
+		e->type=a->type;
+	else
+		e->type=get_type_by_name("int");
 	e->type->refcount++;
 	if (!evaluate_constant_expr(X, a, b, &e)) {
 		e->kind=bin_op;
@@ -153,8 +157,8 @@ static inline struct statem_t* declare_var(struct type_t *t, char *name, struct 
 %left TEST_AND
 %left '|'
 %left '^'
-%left '&'
 %left '<' LE_TEST '>' GE_TEST EQ_TEST NE_TEST
+%left '&'
 %left SHIFT_LEFT SHIFT_RIGHT
 %left '+' '-'
 %left '*' '/' '%'
@@ -176,12 +180,6 @@ file_entry:  function {
 	generate_global_vars(output, $1);
 } | function_header ';' {
 	add_func($1);
-	register int x;
-	for (x=0; x<$1->num_arguments; x++) {
-		free_var($1->arguments[x]);
-	}
-	free($1->arguments);
-	$1->arguments=NULL;
 	multiple_functions=true;
 } | TYPEDEF type_with_stars IDENTIFIER ';' {
 	struct type_t *t=malloc(sizeof(struct type_t));

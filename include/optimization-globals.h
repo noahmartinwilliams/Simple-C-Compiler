@@ -23,4 +23,8 @@ extern bool optimize_do_while_constant_condition;
 extern bool optimize_dont_add_zero;
 #endif
 
+#ifdef OPTIMIZE_CONDITION_TEST_DETECT
+extern bool optimize_condition_test_detect;
+#endif
+
 #endif

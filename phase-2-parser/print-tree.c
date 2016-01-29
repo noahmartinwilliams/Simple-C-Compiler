@@ -5,11 +5,11 @@
 void print_tree(void (*printer) (char*, void*), void *tree, char *str, off_t a, off_t b)
 {
 	if (tree==NULL) {
-		printf("%s|_(nil)\n", str);
+		fprintf(stderr, "%s|_(nil)\n", str);
 		return;
 	}
 	char *s=NULL;
-	printf("%s|_", str);
+	fprintf(stderr, "%s|_", str);
 	printer(str, tree);
 	asprintf(&s, "%s |", str);
 	if (*((void**) (tree+a))!=NULL) {

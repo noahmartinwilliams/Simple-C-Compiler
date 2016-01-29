@@ -30,9 +30,9 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		assign_constant_float(fd, e);
 	else if (e->kind==const_size_t)
 		assign_constant(fd, e);
-	else if (e->kind==pre_un_op) {
+	else if (e->kind==pre_un_op)
 		generate_pre_unary_expression(fd, e);
-	} else if (e->kind==funccall) {
+	else if (e->kind==funccall) {
 		struct func_t *f=e->attrs.function;
 		place_comment(fd, "(");
 		place_comment(fd, f->name);
@@ -57,11 +57,11 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, ")");
 		place_comment(fd, ")");
 		/*TODO: Figure out how to handle struct return values */
-	} else if (e->kind==const_str) {
+	} else if (e->kind==const_str)
 		load_global_string(fd, e->attrs.cstr_val);
-	} else if (e->kind==post_un_op) {
+	else if (e->kind==post_un_op)
 		generate_post_unary_expression(fd, e);
-	} else if (e->kind==func_ptr_call) {
+	else if (e->kind==func_ptr_call) {
 		ret=get_ret_register(pointer_size);
 		read_var(fd, e->attrs.var);
 		struct reg_t *holder=get_free_register(fd, pointer_size, depth);
@@ -135,6 +135,7 @@ void generate_post_unary_expression(FILE *fd, struct expr_t *e)
 	free_register(fd, lhs);
 	depth--;
 }
+
 void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 {
 	depth++;
@@ -191,10 +192,10 @@ void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 }
 
 
-static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*comparitor)(FILE*, char*), char *true_string, char *false_string, struct reg_t *lhs, bool is_float)
+static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*comparitor)(FILE*, char*), char *true_string, char *false_string, struct reg_t *lhs)
 {
 	depth++;
-	struct reg_t *ret=get_ret_register(get_type_size(e->type));
+	struct reg_t *ret=get_ret_register(get_type_size(e->left->type));
 
 	place_comment(fd, "(");
 	place_comment(fd, "(");
@@ -207,6 +208,7 @@ static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*co
 
 	generate_expression(fd, e->right);
 	place_comment(fd, ")");
+	bool is_float=e->right->type->body->core_type==_FLOAT;
 	if (!is_float)
 		compare_registers(fd, ret, lhs);
 	else
@@ -243,10 +245,6 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 
 	if (!strcmp(op, "=")) {
 		struct expr_t *left=e->left;
-		/* The reason for redoing rhs, and lhs in the else statement is that 
-		this way I can declare lhs AFTER I've generated the 
-		right hand side of the expression which leaves whatever
-		register I choose available for evaulation of the rhs */
 		place_comment(fd, "Note: lhs, and rhs of assignment is swapped");
 		place_comment(fd, "(");
 		place_comment(fd, "(");
@@ -256,34 +254,35 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 
 		assign_reg(fd, ret, lhs);
 		place_comment(fd, ") = (");
+
 		if (left->kind==pre_un_op && !strcmp(left->attrs.un_op, "*")) {
+
 			place_comment(fd, "* (");
 			generate_expression(fd, left->right);
 			assign_dereference(fd, lhs, ret);
 			place_comment(fd, ")");
-		} else if (left->kind==var) {
+
+		} else if (left->kind==var)
 			assign_var(fd, lhs, left->attrs.var);
-		}
 		place_comment(fd, ")");
 		place_comment(fd, ")");
 		free_register(fd, lhs);
 	} else {
 		size_t size=get_type_size(e->type);
-		lhs=get_free_register(fd, size, depth);
-		rhs=get_free_register(fd, size, depth);
-		bool is_float=e->type->body->core_type==_FLOAT;
+		lhs=get_free_register(fd, get_type_size(e->left->type), depth);
+		rhs=get_free_register(fd, get_type_size(e->right->type), depth);
 		if (!strcmp(op, "==")) 
-			generate_comparison_expression(fd, e, jmp_eq, "is$eq$%d", "is$not$eq$%d", lhs, is_float);
+			generate_comparison_expression(fd, e, jmp_eq, "is$eq$%d", "is$not$eq$%d", lhs);
 		else if (!strcmp(op, "<"))
-			generate_comparison_expression(fd, e, jmp_lt, "is$lt$%d", "is$not$lt$%d", lhs, is_float);
+			generate_comparison_expression(fd, e, jmp_lt, "is$lt$%d", "is$not$lt$%d", lhs);
 		else if (!strcmp(op, ">"))
-			generate_comparison_expression(fd, e, jmp_gt, "is$gt$%d", "is$not$gt$%d", lhs, is_float);
+			generate_comparison_expression(fd, e, jmp_gt, "is$gt$%d", "is$not$gt$%d", lhs);
 		else if (!strcmp(op, "!="))
-			generate_comparison_expression(fd, e, jmp_neq, "is$ne$%d", "is$eq$%d", lhs, is_float);
+			generate_comparison_expression(fd, e, jmp_neq, "is$ne$%d", "is$eq$%d", lhs);
 		else if (!strcmp(op, ">="))
-			generate_comparison_expression(fd, e, jmp_ge, "is$ge$%d", "is$lt$%d", lhs, is_float);
+			generate_comparison_expression(fd, e, jmp_ge, "is$ge$%d", "is$lt$%d", lhs);
 		else if (!strcmp(op, "<="))
-			generate_comparison_expression(fd, e, jmp_le, "is$le$%d", "is$gt$%d", lhs, is_float);
+			generate_comparison_expression(fd, e, jmp_le, "is$le$%d", "is$gt$%d", lhs);
 		else if (!strcmp(op, "?")) {
 			unique_num++;
 			place_comment(fd, "(");

@@ -74,12 +74,12 @@ void print_statem(char *pre, struct statem_t *s)
 {
 	char *new_pre;
 	if (s->kind==expr) {
-		printf("%s|_statement kind: expression\n", pre);
+		fprintf(stderr, "%s|_statement kind: expression\n", pre);
 		asprintf(&new_pre, "%s ", pre);
 		print_e2(new_pre, s->attrs.expr);
 		free(new_pre);
 	} else if (s->kind==list) {
-		printf("%s|_statement kind: block\n", pre);
+		fprintf(stderr, "%s|_statement kind: block\n", pre);
 		char *new_pre;
 		int x;
 		int num=s->attrs.list.num;
@@ -94,9 +94,9 @@ void print_statem(char *pre, struct statem_t *s)
 		free(new_pre);
 
 	} else if (s->kind==declare) {
-		printf("%s|_statment kind: declare, var: %s, type: %s, pointer_depth: %d, size: %ld \n", pre, s->attrs.var->name, s->attrs.var->type->name, s->attrs.var->type->pointer_depth, get_type_size(s->attrs.var->type));
+		fprintf(stderr, "%s|_statment kind: declare, var: %s, type: %s, pointer_depth: %d, size: %ld \n", pre, s->attrs.var->name, s->attrs.var->type->name, s->attrs.var->type->pointer_depth, get_type_size(s->attrs.var->type));
 	} else if (s->kind==_while) {
-		printf("%s|_statement kind: while loop\n", pre);
+		fprintf(stderr, "%s|_statement kind: while loop\n", pre);
 		char *new_pre;
 		asprintf(&new_pre, "%s |", pre);
 		print_e2(new_pre, s->attrs._while.condition);
@@ -106,12 +106,12 @@ void print_statem(char *pre, struct statem_t *s)
 		print_statem(new_pre, s->attrs._while.block);
 		free(new_pre);
 	} else if (s->kind==ret) {
-		printf("%s|_statement kind: return\n", pre);
+		fprintf(stderr, "%s|_statement kind: return\n", pre);
 		asprintf(&new_pre, "%s ", pre);
 		print_e2(new_pre, s->attrs.expr);
 		free(new_pre);
 	} else if (s->kind==_if) {
-		printf("%s|_statement kind: if statement\n", pre);
+		fprintf(stderr, "%s|_statement kind: if statement\n", pre);
 		char *new_pre;
 		if (s->attrs._if.else_block==NULL) {
 			asprintf(&new_pre, "%s |", pre);
@@ -129,21 +129,21 @@ void print_statem(char *pre, struct statem_t *s)
 			print_statem(new_pre, s->attrs._if.block);
 			free(new_pre);
 
-			printf("%s |_ else\n", pre);
+			fprintf(stderr, "%s |_ else\n", pre);
 			asprintf(&new_pre, "%s  ", pre);
 			print_statem(new_pre, s->attrs._if.else_block);
 			free(new_pre);
 		} 
 	} else if (s->kind==_break) {
-		printf("%s|_ break\n", pre);
+		fprintf(stderr, "%s|_ break\n", pre);
 	} else if (s->kind==_continue) {
-		printf("%s|_ continue\n", pre);
+		fprintf(stderr, "%s|_ continue\n", pre);
 	} else if (s->kind==_goto) {
-		printf("%s|_ goto %s\n", pre, s->attrs.label_name);
+		fprintf(stderr, "%s|_ goto %s\n", pre, s->attrs.label_name);
 	} else if (s->kind==label) {
-		printf("%s|_ label %s:\n", pre, s->attrs.label_name);
+		fprintf(stderr, "%s|_ label %s:\n", pre, s->attrs.label_name);
 	} else if (s->kind==_for) {
-		printf("%s|_ for \n", pre);
+		fprintf(stderr, "%s|_ for \n", pre);
 		char *new_pre=NULL;
 		asprintf(&new_pre, "%s | | | ", pre);
 		print_e2(new_pre, s->attrs._for.initial);
@@ -162,7 +162,7 @@ void print_statem(char *pre, struct statem_t *s)
 		print_statem(new_pre, s->attrs._for.block);
 		free(new_pre);
 	} else if (s->kind==do_while ) {
-		printf("%s|_statement kind: do while loop\n", pre);
+		fprintf(stderr, "%s|_statement kind: do while loop\n", pre);
 		char *new_pre;
 		asprintf(&new_pre, "%s |", pre);
 		print_e2(new_pre, s->attrs.do_while.condition);
@@ -172,7 +172,7 @@ void print_statem(char *pre, struct statem_t *s)
 		print_statem(new_pre, s->attrs.do_while.block);
 		free(new_pre);
 	} else if (s->kind==_switch) {
-		printf("%s|_ switch\n", pre);
+		fprintf(stderr, "%s|_ switch\n", pre);
 
 		int x;
 		int num=s->attrs._switch.cases->attrs.list.num;
@@ -188,7 +188,7 @@ void print_statem(char *pre, struct statem_t *s)
 			char *new_pre2;
 			if (statements[x]->kind==_case) {
 				if (statement->attrs._case.condition!=NULL && statement->attrs._case.block!=NULL) {
-					printf("%s|_ case \n", new_pre);
+					fprintf(stderr, "%s|_ case \n", new_pre);
 					asprintf(&new_pre2, "%s |", new_pre);
 
 					print_e2(new_pre2, statement->attrs._case.condition);
@@ -196,13 +196,13 @@ void print_statem(char *pre, struct statem_t *s)
 					asprintf(&new_pre2, "%s ", new_pre);
 					print_statem(new_pre2, statement->attrs._case.block);
 				} else if (statement->attrs._case.block==NULL && statement->attrs._case.condition!=NULL) {
-					printf("%s|_ case\n", new_pre);
+					fprintf(stderr, "%s|_ case\n", new_pre);
 					asprintf(&new_pre2, "%s ", new_pre);
 					print_e2(new_pre2, statement->attrs._case.condition);
 				} else 
 					continue;
 			} else {
-				printf("%s|_ default \n", new_pre);
+				fprintf(stderr, "%s|_ default \n", new_pre);
 
 				asprintf(&new_pre2, "%s ", new_pre);
 				print_statem(new_pre2, statements[x]->attrs._default.def);

@@ -8,5 +8,5 @@ lex.yy.c: comp.l $(INCLUDE)/*
 	$(LEX) $<
 
 .PHONY:
-clean:
-	rm lex.yy.c 2>/dev/null || true
+clean: clean_intern
+	echo "phase 1 clean"

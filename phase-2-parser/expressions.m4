@@ -37,7 +37,7 @@ noncomma_expression: CONST_INT {
 	asprintf(&num, "%ld.%ld", $1, $3);
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=const_float;
-	e->attrs.cfloat_val=strtof(num, NULL);
+	e->attrs.cfloat=generate_global_float(output, num);
 	e->left=e->right=NULL;
 	e->type=get_type_by_name("float");
 	e->type->refcount++;

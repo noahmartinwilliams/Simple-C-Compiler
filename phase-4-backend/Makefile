@@ -14,7 +14,6 @@ libx64-backend.so: x64/*
 	$(MAKE) -C x64/ ../libx64-backend.so
 
 .PHONY:
-clean:
-	rm *.o 2>/dev/null || true
-	rm *.so 2>/dev/null || true
+clean: clean_intern
 	$(MAKE) -C x64/ clean
+	echo "phase 4 clean"

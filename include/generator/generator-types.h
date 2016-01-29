@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "stack.h"
 
-enum reg_use { RET, INT };
+enum reg_use { RET, INT, FLOAT };
 struct reg_size {
 	char *name;
 	size_t size;

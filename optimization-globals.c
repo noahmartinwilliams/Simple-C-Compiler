@@ -21,3 +21,7 @@ bool optimize_do_while_constant_condition=true;
 #ifdef OPTIMIZE_DONT_ADD_ZERO
 bool optimize_dont_add_zero=true;
 #endif
+
+#ifdef OPTIMIZE_CONDITION_TEST_DETECT
+bool optimize_condition_test_detect=true;
+#endif

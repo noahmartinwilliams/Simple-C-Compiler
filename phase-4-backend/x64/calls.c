@@ -1,4 +1,5 @@
 #define IN_BACKEND
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,8 +28,9 @@ static struct reg_t* get_reg_by_name(char *name)
 	for (x=0; x<num_regs; x++) {
 		int y;
 		for (y=0; y<regs[x]->num_sizes; y++) {
-			if (!strcmp(name, regs[x]->sizes[y].name))
+			if (!strcmp(name, regs[x]->sizes[y].name)) {
 				return regs[x];
+			}
 		}
 	}
 	return NULL;
@@ -47,32 +49,67 @@ static char* get_next_call_register(enum reg_use r)
 	struct reg_t *ret;
 	char *rname;
 	int x=0;
-	for (x=0; x<6; x++) {
-		switch (x) {
-		case 0:
-			rname="%rdi";
-			break;
-		case 1:
-			rname="%rsi";
-			break;
-		case 2:
-			rname="%rdx";
-			break;
-		case 3:
-			rname="%rcx";
-			break;
-		case 4:
-			rname="%r8";
-			break;
-		case 5:
-			rname="%r9";
-			break;
+	if (r==INT) {
+		for (x=0; x<6; x++) {
+			switch (x) {
+			case 0:
+				rname="%rdi";
+				break;
+			case 1:
+				rname="%rsi";
+				break;
+			case 2:
+				rname="%rdx";
+				break;
+			case 3:
+				rname="%rcx";
+				break;
+			case 4:
+				rname="%r8";
+				break;
+			case 5:
+				rname="%r9";
+				break;
+			}
+			ret=get_reg_by_name(rname);
+			if (ret!=NULL && !ret->used_for_call)
+				break;
 		}
-		ret=get_reg_by_name(rname);
-		if (ret!=NULL && !ret->used_for_call)
-			break;
+	} else {
+		for (x=0; x<8; x++) {
+			switch (x) {
+			case 0:
+				rname="%xmm0";
+				break;
+			case 1:
+				rname="%xmm1";
+				break;
+			case 2:
+				rname="%xmm2";
+				break;
+			case 3:
+				rname="%xmm3";
+				break;
+			case 4:
+				rname="%xmm4";
+				break;
+			case 5:
+				rname="%xmm5";
+				break;
+			case 6:
+				rname="%xmm6";
+				break;
+			case 7:
+				rname="%xmm7";
+				break;
+			}
+			ret=get_reg_by_name(rname);
+			if (ret!=NULL && !ret->used_for_call)
+				break;
+		}
 	}
 
+	assert(ret!=NULL);
 	ret->used_for_call=true;
 	return rname;
 
@@ -98,14 +135,15 @@ static void push_registers(FILE *fd)
 void start_func_ptr_call(FILE *fd, struct reg_t *r)
 {
 	reset_used_for_call();
-	/* TODO: adapt this for function calls within function calls */
 	push_registers(fd);
 }
 
+static bool has_float=false;
 void start_call(FILE *fd, struct func_t *f)
 {
+	has_float=false;
+	current_func=f;
 	if (f->do_inline) {
-		current_func=f;
 		doing_inline=true;
 		current_arg=0;
 		return;
@@ -125,11 +163,28 @@ void add_argument(FILE *fd, struct reg_t *reg, struct type_t *t )
 		return;
 	}
 	/*TODO: Fix this to work better. */	
-	char *next=get_next_call_register(INT);
-	char *name=get_reg_name(reg, pointer_size);
+	char *next=NULL;
+	if (t->body->core_type==_FLOAT) {
+		has_float=true;
+		next=get_next_call_register(FLOAT);
+	} else
+		next=get_next_call_register(INT);
 
-	if (strcmp(name, next))
-		fprintf(fd, "\tmovq %s, %s\n", name, next);
+	assert(next!=NULL);
+	if (t->body->core_type!=_FLOAT) {
+		char *name=get_reg_name(reg, pointer_size);
+
+		if (strcmp(name, next))
+			fprintf(fd, "\tmovq %s, %s\n", name, next);
+	} else {
+		char *name=get_reg_name(reg, word_size);
+		fprintf(fd, "\tsubq $4, %%rsp\n");
+		fprintf(fd, "\tmovl %s, -%ld(%%rbp)\n", name, current_stack_offset+4);
+		fprintf(fd, "\tcvtss2sd -%ld(%%rbp), %s\n", current_stack_offset+4, next);
+		fprintf(fd, "\taddq $4, %%rsp\n");
+	}
+
+	current_arg++;
 }
 
 static void pop_registers(FILE *fd)
@@ -142,14 +197,16 @@ static void pop_registers(FILE *fd)
 		return;
 
 	struct reg_t *r2=pop(pushed_registers);
-	for (; pushed_registers!=NULL; r2=pop(pushed_registers)) {
+	do {
 		int y;
 		size_t biggest_size=0;
 		for (y=0; y<r2->num_sizes; y++)
 			if (r2->sizes[y].size>biggest_size)
 				biggest_size=r2->sizes[y].size;
 		fprintf(fd, "\tpopq %s\n", get_reg_name(r2, biggest_size));
-	}
+		if (pushed_registers!=NULL) 
+			r2=pop(pushed_registers);
+	} while (pushed_registers!=NULL);
 }
 
 void call_function_pointer(FILE *fd, struct reg_t *r)
@@ -162,9 +219,14 @@ void call_function_pointer(FILE *fd, struct reg_t *r)
 void call(FILE *fd, struct func_t *f)
 {
 
+	if (has_float)
+		fprintf(fd, "\tmovl $1, %%eax\n");
+	else
+		fprintf(fd, "\tmovl $0, %%eax\n");
 	fprintf(fd, "\tcall %s\n", f->name);
 
 	pop_registers(fd);
+	current_arg=0;
 }
 
 void return_from_call(FILE *fd)
@@ -196,7 +258,6 @@ void make_function(FILE *fd, struct func_t *f)
 
 	off_t o=get_var_offset(f->statement_list, 0);
 	int x, y=0;
-	/* TODO: adjust this to work with c calling convention for x86_64 */
 	for (x=0; x<f->num_arguments; x++) {
 		size_t size=get_type_size(f->arguments[x]->type);
 		if (size==word_size || size==pointer_size) {
@@ -208,6 +269,7 @@ void make_function(FILE *fd, struct func_t *f)
 			f->arguments[x]->offset=8*y+16;
 			y++;
 		}
+		current_stack_offset+=8;
 	}
 
 	for (x=0; x<num_regs; x++) {
@@ -215,24 +277,13 @@ void make_function(FILE *fd, struct func_t *f)
 	}
 
 	if (o==0 || multiple_functions) {
-		current_stack_offset=0;
 		fprintf(fd, "\tsubq $16, %%rsp\n");
 		fprintf(fd, "\tmovl $0, -4(%%rbp)\n");
+		current_stack_offset=16;
 	} else {
-		current_stack_offset=o;
 		expand_stack_space(fd, o);
 	}
 
-	//generate_statement(fd, f->statement_list);
-	/* if (!strcmp(f->ret_type->name, "void"))
-		return_from_call(fd);
-
-	while (loop_stack!=NULL) {
-		struct stack_t *tmp=loop_stack->next;
-		free(loop_stack->element);
-		free(loop_stack);
-		loop_stack=tmp;
-	}*/
 	in_main=false;
 }
 

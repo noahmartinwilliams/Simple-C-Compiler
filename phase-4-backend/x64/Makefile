@@ -5,7 +5,7 @@ include ../../include/config.mk
 	$(SHARE)
 
 %.o: %.c
-	$(CMP)
+	$(CMP) 
 
 .PHONY:
 clean:

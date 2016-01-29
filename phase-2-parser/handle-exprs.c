@@ -7,46 +7,53 @@
 #include "types.h"
 #include "optimization-globals.h"
 
+bool is_test_op(char *op)
+{
+	return !strcmp("<", op) || !strcmp(">", op) || !strcmp("<=", op) || !strcmp(">=", op) || !strcmp("!=", op) || !strcmp("==", op);
+}
+
 #ifdef DEBUG
 void print_expr(char *pre, struct expr_t *e)
 {
 	if (e==NULL) {
-		printf("(nil)");
+		fprintf(stderr, "(nil)");
 		return;
 	} 
 
 	if (e->kind!=arg) {
 		switch (e->kind) {
 		case const_int:
-			printf("%d", e->attrs.cint_val);
+			fprintf(stderr, "%d", e->attrs.cint_val);
 			break;
 		case bin_op:
-			printf("%s", e->attrs.bin_op);
+			fprintf(stderr, "%s", e->attrs.bin_op);
 			break;
 		case var:
-			printf("%s", e->attrs.var->name);
+			fprintf(stderr, "%s", e->attrs.var->name);
 			break;
 		case pre_un_op:
-			printf("%s", e->attrs.un_op);
+			fprintf(stderr, "%s", e->attrs.un_op);
 			break;
 		case post_un_op:
-			printf("%s", e->attrs.un_op);
+			fprintf(stderr, "%s", e->attrs.un_op);
 			break;
 		case funccall:
-			printf("%s()", e->attrs.function->name);
+			fprintf(stderr, "%s()", e->attrs.function->name);
 			break;
 		case const_str:
-			printf("string literal: %s", e->attrs.cstr_val);
+			fprintf(stderr, "string literal: %s", e->attrs.cstr_val);
 			break;
+		case const_float:
+			fprintf(stderr, "float: %s", e->attrs.cfloat);
 		}
 		if (e->type->body->core_type==_INT)
-			printf(", type: %s, type_size: %ld, pointer_depth: %ld, core_type: INT\n", e->type->name, get_type_size(e->type), e->type->pointer_depth);
+			fprintf(stderr, ", type: %s, type_size: %ld, pointer_depth: %ld, core_type: INT\n", e->type->name, get_type_size(e->type), e->type->pointer_depth);
 		else
-			printf(", type: %s, type_size: %ld, pointer_depth: %ld, core_type: FLOAT\n", e->type->name, get_type_size(e->type), e->type->pointer_depth);
+			fprintf(stderr, ", type: %s, type_size: %ld, pointer_depth: %ld, core_type: FLOAT\n", e->type->name, get_type_size(e->type), e->type->pointer_depth);
 	}
 
 	else if (e->kind==arg) {
-		printf("argument: \n", pre);
+		fprintf(stderr, "argument: \n", pre);
 		char *new_pre=NULL;
 		asprintf(&new_pre, "%s |", pre);
 		print_tree((__printer_function_t) print_expr, e->attrs.argument, new_pre, offsetof(struct expr_t, left), offsetof(struct expr_t, right));
@@ -124,6 +131,9 @@ struct expr_t* copy_expression(struct expr_t *e)
 	
 	case var:
 		ret->attrs.var->refcount++;
+		break;
+	case const_float:
+		ret->attrs.cfloat=strdup(e->attrs.cfloat);
 		break;
 
 	}

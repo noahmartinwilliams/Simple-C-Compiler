@@ -44,7 +44,7 @@ struct expr_t {
 	union {
 		struct var_t *var;
 		long int cint_val;
-		float cfloat_val;
+		char* cfloat;
 		char *bin_op;
 		char *un_op;
 		char *cstr_val;
