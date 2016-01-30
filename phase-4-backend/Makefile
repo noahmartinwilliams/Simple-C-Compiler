@@ -7,6 +7,9 @@ include ../include/config.mk
 ../exported.o: exported.o
 	cp $^ $@
 
+%.o: %.c
+	$(CMP)
+
 exported.c: list-of-exported-functions.txt
 	./update-header.sh
 

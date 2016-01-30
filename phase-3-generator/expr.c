@@ -353,9 +353,9 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 				else if (!strcmp(op, "%"))
 					int_num(fd, lhs, ret);
 			} else {
-				/* if (!strcmp(op, "+"))
+				if (!strcmp(op, "+"))
 					float_add(fd, lhs, ret);
-				else */ if (!strcmp(op, "-")) 
+				else if (!strcmp(op, "-")) 
 					float_sub(fd, lhs, ret);
 				/* else if (!strcmp(op, "/"))
 					float_div(fd, lhs, ret);

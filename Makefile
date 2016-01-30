@@ -1,9 +1,6 @@
 INCLUDE=./include
 include include/config.mk
 
-.PHONY:
-main2: main phase-4-backend/libx64-backend.so
-	echo "done"
 
 main: main.c globals.o handle.a lex.yy.o generator.a optimization-globals.o loader.o exported.o
 	$(CMB) -ldl
@@ -12,9 +9,6 @@ main: main.c globals.o handle.a lex.yy.o generator.a optimization-globals.o load
 exported.o: phase-4-backend/*
 	$(MAKE) -C phase-4-backend/ ../exported.o
 
-.PHONY:
-main_debug:
-	$(MAKE) DEBUG=1 main2
 
 loader.o: phase-4-backend/*
 	$(MAKE) -C phase-4-backend/ ../loader.o
@@ -22,13 +16,21 @@ loader.o: phase-4-backend/*
 phase-4-backend/libx64-backend.so: phase-4-backend/* phase-4-backend/x64/*
 	$(MAKE) -C phase-4-backend/ libx64-backend.so
 
-.PHONY:
 generator.a: phase-3-generator/* 
 	$(MAKE) -C phase-3-generator/ ../generator.a
 
-.PHONY:
-handle.a: 
+handle.a: phase-2-parser/*
 	$(MAKE) -C phase-2-parser/ ../handle.a
+
+lex.yy.o: phase-1-lexer/* handle.a
+	$(MAKE) -C phase-1-lexer/ ../lex.yy.o
+
+%.o: %.c
+	$(CMP)
+
+.PHONY:
+main2: main phase-4-backend/libx64-backend.so
+	echo "done"
 
 .PHONY:
 test: main_debug
@@ -36,12 +38,13 @@ test: main_debug
 	$(MAKE) -s -C tests/ test
 
 .PHONY:
+main_debug:
+	$(MAKE) DEBUG=1 main2
+
+.PHONY:
 test%: main_debug
 	cp main tests/cc
 	$(MAKE) -s -C tests/ $@
-
-lex.yy.o: phase-1-lexer/* handle.a
-	$(MAKE) -C phase-1-lexer/ ../lex.yy.o
 
 .PHONY:
 clena: 

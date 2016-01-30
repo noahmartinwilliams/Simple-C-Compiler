@@ -41,21 +41,31 @@ void assign_constant_float(FILE *fd, struct expr_t *e)
 		size_error("assign_constant_float", get_type_size(e->type));
 }
 
-void float_sub(FILE *fd, struct reg_t *src, struct reg_t *dest)
+static void arithmetic_intern(FILE *fd, char *name, struct reg_t *src, struct reg_t *dest)
 {
 	if (src->size==word_size && dest->size==word_size) {
 		fprintf(fd, "\tsubq $8, %%rsp\n");
 		fprintf(fd, "\tmovl %s, -%d(%%rbp)\n", reg_name(src), current_stack_offset+4);
 		fprintf(fd, "\tmovl %s, -%d(%%rbp)\n", reg_name(dest), current_stack_offset+8);
-		fprintf(fd, "\tcvtss2sd -%d(%%rbp), %%xmm0\n", current_stack_offset+4);
-		fprintf(fd, "\tcvtss2sd -%d(%%rbp), %%xmm1\n", current_stack_offset+8);
-		fprintf(fd, "\tsubsd %%xmm0, %%xmm1\n");
-		fprintf(fd, "\taddq $8, %%rsp\n");
+		fprintf(fd, "\tmovss -%d(%%rbp), %%xmm0\n", current_stack_offset+4);
+		fprintf(fd, "\tmovss -%d(%%rbp), %%xmm1\n", current_stack_offset+8);
+		fprintf(fd, "\t%s %%xmm0, %%xmm1\n", name);
 		fprintf(fd, "\tmovq %%xmm1, %%rax\n");
 		if (dest->use!=RET)
 			fprintf(fd, "\tmovl %%xmm1, %s\n", reg_name(dest));
+		fprintf(fd, "\taddq $8, %%rsp\n");
 	} else
-		size_error("float_sub", src->size);
+		size_error(name, src->size);
+}
+
+void float_add(FILE *fd, struct reg_t *src, struct reg_t *dest)
+{
+	arithmetic_intern(fd, "addss", src, dest);
+}
+
+void float_sub(FILE *fd, struct reg_t *src, struct reg_t *dest)
+{
+	arithmetic_intern(fd, "subsd", src, dest);
 }
 
 char* generate_global_float(FILE *fd, char *num)

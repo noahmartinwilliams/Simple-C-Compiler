@@ -13,11 +13,9 @@ LEX=flex
 LD=ld
 SHARE=$(LD) -share $^ -o $@
 
-%.o: %.c $(INCLUDE)/*
-	$(CMP)
-
 .PHONY:
 clean_intern:
+	rm comp.tab.c 2>/dev/null || true
 	rm comp.y 2>/dev/null || true
 	rm *.o 2>/dev/null || true
 	rm lex.yy.c 2>/dev/null || true

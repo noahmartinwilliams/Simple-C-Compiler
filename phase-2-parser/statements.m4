@@ -76,6 +76,11 @@ statement: expression ';' {
 	$$->has_gotos=$6->has_gotos;
 	$$->attrs._switch.cases=$6;
 	$$->attrs._switch.tester=$3;
+} | RETURN ';' {
+	$$=malloc(sizeof(struct statem_t));
+	$$->kind=ret;
+	$$->attrs.expr=NULL;
+	$$->has_gotos=false;
 };
 
 switch_list: switch_element {

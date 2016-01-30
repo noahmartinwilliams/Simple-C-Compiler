@@ -54,5 +54,6 @@ void assign_constant_int(FILE *fd, int e);
 void assign_constant(FILE *fd, struct expr_t *e);
 void assign_constant_float(FILE *fd, struct expr_t *e);
 void float_sub(FILE *fd, struct reg_t *src, struct reg_t *dest);
+void float_add(FILE *fd, struct reg_t *src, struct reg_t *dest);
 void compare_float_registers(FILE *fd, struct reg_t *a, struct reg_t *b);
 char* generate_global_float(FILE *fd, char *num);
