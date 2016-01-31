@@ -5,6 +5,7 @@
 
 #ifdef DEBUG
 extern bool print_trees;
+extern int yydebug;
 #endif 
 
 extern int current_line;

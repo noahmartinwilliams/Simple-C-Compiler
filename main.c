@@ -12,6 +12,7 @@
 #ifdef DEBUG
 #include "printer.h"
 #include "print-tree.h"
+extern int yy_flex_debug;
 #endif
 #include "types.h"
 
@@ -26,6 +27,9 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Usage: %s output_file.s input_file.c \n", argv[0]);
 		exit(1);
 	}
+	#ifdef DEBUG
+	yy_flex_debug=0;
+	#endif
 	backend_name=strdup(argv[3]);
 	current_file=argv[2];
 	yyin=fopen(argv[2], "r");

@@ -4,8 +4,8 @@
 
 #ifdef DEBUG
 bool print_trees=false;
-#endif
 int yydebug=0;
+#endif
 
 char *current_line_str=NULL;
 int current_line=0;

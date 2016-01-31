@@ -27,8 +27,10 @@ static inline void haiku_easter_egg(char *s)
 #endif
 %}
 
+%x in_comment
 %%
 
+"/*"	{ count(yytext); BEGIN(in_comment); }
 \"(\\\\|[^"\\]|\\n)*\"	{ count(yytext); yylval.str=strdup(yytext); return STR_LITERAL; }
 '.'	{ count(yytext); yylval.chr=yytext[1]; return CHAR_LITERAL; }
 \/\/.*$	{ count(yytext); }
@@ -56,7 +58,7 @@ static inline void haiku_easter_egg(char *s)
 "continue"	{ count(yytext); return CONTINUE; }
 "struct"	{ count(yytext); return STRUCT; }
 [0-9]+	{ count(yytext); yylval.l=atoi(yytext); return CONST_INT; }
-[%^&|+-]=	{ count(yytext); yylval.str=strdup(yytext); return ASSIGN_OP; }
+[*%^&|+-]=	{ count(yytext); yylval.str=strdup(yytext); return ASSIGN_OP; }
 "--"	{ count(yytext); return DEC_OP; }
 "++"	{ count(yytext); return INC_OP; }
 "!"	{ count(yytext); return '!'; }
@@ -90,7 +92,10 @@ static inline void haiku_easter_egg(char *s)
 "~"	{ count(yytext); return '~'; }
 [ \t\n]	{ count(yytext); }
 [_a-zA-Z][_a-zA-Z0-9]*	{ count(yytext); haiku_easter_egg(yytext); if (get_type_by_name(yytext)==NULL) { yylval.str=strdup(yytext); return IDENTIFIER ; } else { yylval.type=get_type_by_name(yytext); return TYPE; } }
-\/\*([^\*][^\/])*[^\/]?\*\/	{ count(yytext); }
+<in_comment>[^*\n]*	{ count(yytext); }
+<in_comment>"*"+[^*/\n]*	{ count(yytext); }
+<in_comment>\n	{ count(yytext); }
+<in_comment>"*"+"/"	{ count(yytext); BEGIN(INITIAL); }
 %%
 
 void count(char *s)
