@@ -18,8 +18,8 @@ void subtraction()
 		}
 	} else {
 		printf("subtraction error: (1.0-1.0) < 0.1 failed\n");
-		printf("subtraction error: (1.0-1.0) = %f\n", f);
-		printf("subtraction error: ((1.0-1.0) < 0.1) == %d\n", f < 0.1);
+		printf("subtraction error: (1.0-1.0) = %f\n", f-1.0);
+		printf("subtraction error: ((1.0-1.0) < 0.1) == %d\n", (f-1.0) < 0.1);
 		exit(1);
 	}
 }
@@ -78,15 +78,10 @@ void multiplication()
 
 void division()
 {
-	float f=2.0;
-	f=f/2.0;
-	if (f>1.1 || f<0.9) {
-		printf("division error: (2.0/2.0)!=1.0\n");
-		printf("division error: (2.0/2.0)==%f\n", f);
-		printf("((2.0/2.0) > 2.1) == %d\n", f>1.1);
-		printf("((2.0/2.0) < 2.1) == %d\n", f<1.1);
-		exit(8);
-	}
+		printf("division error: (2.0/1.0)!=2.0\n");
+		printf("division error: (2.0/1.0)==%f\n", f);
+		printf("((2.0/1.0) > 2.1) == %d\n", f>2.1);
+		printf("((2.0/1.0) < 2.1) == %d\n", f<2.1);
 }
 
 int main()

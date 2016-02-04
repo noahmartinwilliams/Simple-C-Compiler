@@ -18,4 +18,9 @@ extern size_t get_alignof(struct type_t *t);
 extern off_t get_offset_of_member(struct type_t *t, char *name);
 extern struct var_t* get_var_member(struct type_t *t, char *name);
 extern struct type_t* get_struct_by_name(char *name);
+
+static inline bool expr_is_float(struct expr_t *e)
+{
+	return e->type->body->core_type==_FLOAT;
+}
 #endif

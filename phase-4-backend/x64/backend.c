@@ -97,6 +97,20 @@ void setup_backend()
 	regs[x]->depths=NULL;
 	regs[x]->use=INT;
 
+	x++;
+	regs[x]=malloc(sizeof(struct reg_t));
+	regs[x]->sizes=calloc(1, sizeof(struct reg_size));
+	regs[x]->num_sizes=1;
+	char *tmp=NULL;
+	asprintf(&tmp, "%%xmm%d", x-14);
+	regs[x]->sizes[0].name=tmp; 
+	regs[x]->sizes[0].size=16;
+	regs[x]->in_use=false;
+	regs[x]->depths=NULL;
+	regs[x]->used_for_call=false;
+	regs[x]->use=FLOAT_RET;
+	regs[x]->size=16;
+
 	for (x++; x<22; x++) {
 		regs[x]=malloc(sizeof(struct reg_t));
 		regs[x]->sizes=calloc(1, sizeof(struct reg_size));
@@ -109,6 +123,8 @@ void setup_backend()
 		regs[x]->depths=NULL;
 		regs[x]->used_for_call=false;
 		regs[x]->use=FLOAT;
+		regs[x]->size=16;
+
 	}
 }
 
@@ -122,9 +138,9 @@ void cleanup_backend()
 	int x;
 	for (x=0; x<num_regs; x++) {
 		int y;
-		for (y=0; y<regs[x]->num_sizes; y++) {
+		for (y=0; y<regs[x]->num_sizes; y++)
 			free_reg_size(regs[x]->sizes[y]);
-		}
+
 		free(regs[x]->sizes);
 		for (; regs[x]->depths!=NULL; free(pop(regs[x]->depths))) {}
 		free(regs[x]);
@@ -139,6 +155,10 @@ void place_comment(FILE *fd, char *str)
 
 void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest)
 {
+	if (dest->use==FLOAT || dest->use==FLOAT_RET) {
+		fprintf(fd, "\tmovsd %s, %s\n", reg_name(src), reg_name(dest));
+		return;
+	}
 	if (dest->size==char_size)
 		fprintf(fd, "\tmovb %s, %s\n", get_reg_name(src, dest->size), reg_name(dest));
 

@@ -1,9 +1,12 @@
 INCLUDE=../include
 include ../include/config.mk
 
-../generator.a: misc.o globals.o expr.o statem.o
+../generator.a: misc.o globals.o expr.o statem.o 
 	$(AR)
 
+statem.o: statem.c statems/*
+	$(CC) -I ./statems -c $< -o $@
+	
 %.o: %.c
 	$(CMP)
 

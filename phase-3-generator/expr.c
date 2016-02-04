@@ -6,6 +6,7 @@
 #include "generator/generator-misc.h"
 #include "globals.h"
 #include "generator/generator-types.h"
+#include "generator/backend-exported.h"
 #include "handle-types.h"
 #include "handle-funcs.h"
 #include "stack.h"
@@ -22,9 +23,12 @@ void generate_expression(FILE *fd, struct expr_t *e)
 
 	if (e->kind==bin_op)
 		generate_binary_expression(fd, e);
-	else if (e->kind==var)
-		read_var(fd, e->attrs.var);
-	else if (e->kind==const_int)
+	else if (e->kind==var) {
+		if (e->attrs.var->type->body->core_type==_FLOAT)
+			read_float_var(fd, e->attrs.var);
+		else
+			read_var(fd, e->attrs.var);
+	} else if (e->kind==const_int)
 		assign_constant(fd, e);
 	else if (e->kind==const_float)
 		assign_constant_float(fd, e);
@@ -46,11 +50,14 @@ void generate_expression(FILE *fd, struct expr_t *e)
 			}
 		} else {
 			struct expr_t *current_e=e->right;
-			ret=get_ret_register(get_type_size(current_e->type));
 			while (current_e!=NULL) {
+				place_comment(fd, "(");
 				generate_expression(fd, current_e->attrs.argument);
+				ret=get_ret_register(get_type_size(current_e->type), expr_is_float(current_e));
 				add_argument(fd, ret, current_e->type);
 				current_e=current_e->right;
+				place_comment(fd, ")");
+				place_comment(fd, ", ");
 			}
 			call(fd, f);
 		}
@@ -62,9 +69,9 @@ void generate_expression(FILE *fd, struct expr_t *e)
 	else if (e->kind==post_un_op)
 		generate_post_unary_expression(fd, e);
 	else if (e->kind==func_ptr_call) {
-		ret=get_ret_register(pointer_size);
+		ret=get_ret_register(pointer_size, false);
 		read_var(fd, e->attrs.var);
-		struct reg_t *holder=get_free_register(fd, pointer_size, depth);
+		struct reg_t *holder=get_free_register(fd, pointer_size, depth, false);
 		place_comment(fd, "(");
 		place_comment(fd, e->attrs.var->name);
 		assign_reg(fd, ret, holder);
@@ -85,20 +92,20 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, ")");
 		/*TODO: Figure out how to handle struct return values */
 	} else if (e->kind==func_val) {
-		ret=get_ret_register(pointer_size);
+		ret=get_ret_register(pointer_size, expr_is_float(e));
 		place_comment(fd, "(");
 		load_function_ptr(fd, e->attrs.function, ret);
 		place_comment(fd, ")");
 	}
 
-	get_ret_register(get_type_size(e->type)); /* Sometimes a sub-expression will change the size of the return register. */
+	get_ret_register(get_type_size(e->type), expr_is_float(e)); /* Sometimes a sub-expression will change the size of the return register. */
 }
 
 void generate_post_unary_expression(FILE *fd, struct expr_t *e)
 {
 	depth++;
-	register struct reg_t *ret=get_ret_register(get_type_size(e->type));
-	register struct reg_t *lhs=get_free_register(fd, get_type_size(e->type), depth);
+	struct reg_t *ret=get_ret_register(get_type_size(e->type), expr_is_float(e));
+	struct reg_t *lhs=get_free_register(fd, get_type_size(e->type), depth, expr_is_float(e));
 	place_comment(fd, "(");
 	place_comment(fd, "(");
 	generate_expression(fd, e->left);
@@ -114,8 +121,8 @@ void generate_post_unary_expression(FILE *fd, struct expr_t *e)
 
 		register struct expr_t *left=e->left;
 		if (left->kind==pre_un_op && !strcmp(left->attrs.un_op, "*")) {
-			struct reg_t *rhs=get_free_register(fd, get_type_size(e->type), depth);
-			struct reg_t *tmp=get_free_register(fd, get_type_size(e->type), depth);
+			struct reg_t *rhs=get_free_register(fd, get_type_size(e->type), depth, expr_is_float(e));
+			struct reg_t *tmp=get_free_register(fd, get_type_size(e->type), depth, expr_is_float(e));
 			assign_reg(fd, ret, tmp);
 			generate_expression(fd, left->right);
 			assign_reg(fd, ret, rhs);
@@ -141,7 +148,7 @@ void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 	depth++;
 	size_t s=get_type_size(e->right->type);
 
-	register struct reg_t *ret=get_ret_register(s);
+	register struct reg_t *ret=get_ret_register(s, expr_is_float(e));
 	register char *op=e->attrs.un_op;
 	place_comment(fd, "(");
 	place_comment(fd, op);
@@ -163,15 +170,15 @@ void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 			
 			int_inc(fd, ret);
 			if (e->right->kind==pre_un_op && !strcmp(e->right->attrs.un_op, "*")) {
-				register struct reg_t *rhs=get_free_register(fd, pointer_size, depth);
-				register struct reg_t *tmp=get_free_register(fd, get_type_size(e->type), depth);
+				register struct reg_t *rhs=get_free_register(fd, pointer_size, depth, false);
+				register struct reg_t *tmp=get_free_register(fd, get_type_size(e->type), depth, false);
 				assign_reg(fd, ret, tmp);
 
-				ret=get_ret_register(pointer_size);
+				ret=get_ret_register(pointer_size, false);
 				generate_expression(fd, e->right->right);
 
 				assign_reg(fd, ret, rhs);
-				ret=get_ret_register(get_type_size(e->type));
+				ret=get_ret_register(get_type_size(e->type), false);
 				assign_reg(fd, tmp, ret);
 
 				free_register(fd, tmp);
@@ -195,7 +202,7 @@ void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*comparitor)(FILE*, char*), char *true_string, char *false_string, struct reg_t *lhs)
 {
 	depth++;
-	struct reg_t *ret=get_ret_register(get_type_size(e->left->type));
+	struct reg_t *ret=get_ret_register(get_type_size(e->left->type), expr_is_float(e->left));
 
 	place_comment(fd, "(");
 	place_comment(fd, "(");
@@ -239,7 +246,7 @@ static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*co
 void generate_binary_expression(FILE *fd, struct expr_t *e)
 {
 	depth++;
-	struct reg_t *ret=get_ret_register(get_type_size(e->type));
+	struct reg_t *ret=get_ret_register(get_type_size(e->type), expr_is_float(e));
 	struct reg_t *lhs, *rhs;
 	char *op=e->attrs.bin_op;
 
@@ -250,7 +257,7 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, "(");
 
 		generate_expression(fd, e->right);
-		lhs=get_free_register(fd, get_type_size(e->type), depth);
+		lhs=get_free_register(fd, get_type_size(e->type), depth, expr_is_float(e));
 
 		assign_reg(fd, ret, lhs);
 		place_comment(fd, ") = (");
@@ -269,8 +276,8 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		free_register(fd, lhs);
 	} else {
 		size_t size=get_type_size(e->type);
-		lhs=get_free_register(fd, get_type_size(e->left->type), depth);
-		rhs=get_free_register(fd, get_type_size(e->right->type), depth);
+		lhs=get_free_register(fd, get_type_size(e->left->type), depth, expr_is_float(e->left));
+		rhs=get_free_register(fd, get_type_size(e->right->type), depth, expr_is_float(e->left));
 		if (!strcmp(op, "==")) 
 			generate_comparison_expression(fd, e, jmp_eq, "is$eq$%d", "is$not$eq$%d", lhs);
 		else if (!strcmp(op, "<"))
@@ -327,16 +334,16 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 			generate_expression(fd, e->right);
 
 			place_comment(fd, ")");
-			if (e->type->body->core_type==_INT) {
-				if (!strcmp(op, "+"))
-					int_add(fd, lhs, ret);
-				else if (!strcmp(op, "-")) 
-					int_sub(fd, lhs, ret);
-				else if (!strcmp(op, "/"))
-					int_div(fd, lhs, ret);
-				else if (!strcmp(op, "*"))
-					int_mul(fd, lhs, ret);
-				else if (!strcmp(op, "<<"))
+			if (!strcmp(op, "+")) {
+				add(fd, lhs, ret);
+			} else if (!strcmp(op, "-")) {
+				sub(fd, lhs, ret);
+			} else if (!strcmp(op, "*")) {
+				mul(fd, lhs, ret);
+			} else if (!strcmp(op, "/")) {
+				_div(fd, lhs, ret);
+			} else if (e->type->body->core_type==_INT) {
+				if (!strcmp(op, "<<"))
 					shift_left(fd, lhs, ret);
 				else if (!strcmp(op, ">>"))
 					shift_right(fd, lhs, ret);
@@ -352,32 +359,7 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 					test_and(fd, lhs, ret);
 				else if (!strcmp(op, "%"))
 					int_num(fd, lhs, ret);
-			} else {
-				if (!strcmp(op, "+"))
-					float_add(fd, lhs, ret);
-				else if (!strcmp(op, "-")) 
-					float_sub(fd, lhs, ret);
-				/* else if (!strcmp(op, "/"))
-					float_div(fd, lhs, ret);
-				else if (!strcmp(op, "*"))
-					float_mul(fd, lhs, ret);
-				else if (!strcmp(op, "<<"))
-					shift_left(fd, lhs, ret);
-				else if (!strcmp(op, ">>"))
-					shift_right(fd, lhs, ret);
-				else if (!strcmp(op, "|"))
-					or(fd, lhs, ret);
-				else if (!strcmp(op, "&"))
-					and(fd, lhs, ret);
-				else if (!strcmp(op, "^"))
-					xor(fd, lhs, ret);
-				else if (!strcmp(op, "||"))
-					test_or(fd, lhs, ret);
-				else if (!strcmp(op, "&&"))
-					test_and(fd, lhs, ret);
-				else if (!strcmp(op, "%"))
-					float_num(fd, lhs, ret); */
-			}
+			} 
 			place_comment(fd, ")");
 		}
 		free_register(fd, rhs);

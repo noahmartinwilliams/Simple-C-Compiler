@@ -33,7 +33,7 @@ static void inc_by_int(FILE *fd, int i, char *dest, size_t size)
 
 void get_address(FILE *fd, struct expr_t *_var)
 {
-	struct reg_t *ret=get_ret_register(pointer_size);
+	struct reg_t *ret=get_ret_register(pointer_size, false);
 	if (_var->kind==var) {
 		fprintf(fd, "\tmovq %%rbp, %s\n", get_reg_name(ret, pointer_size));
 		inc_by_int(fd, _var->attrs.var->offset, get_reg_name(ret, pointer_size), pointer_size);
@@ -44,8 +44,15 @@ static inline void print_assign_var(FILE *fd, char *operator, struct reg_t *reg,
 {
 	fprintf(fd, "\t%s %s, var$%s$%d(%%rbp)\n", operator, reg_name(reg), var->name, var->scope_depth);
 }
+
 void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 {
+	if (src->use==FLOAT || src->use==FLOAT_RET) {
+		fprintf(fd, "\tcvtsd2ss %s, %s\n", reg_name(src), reg_name(src));
+		fprintf(fd, "\tmovss %s, %d(%%rbp)\n", reg_name(src), dest->offset);
+		return;
+	}
+
 	if (dest==NULL) {
 		fprintf(stderr, "Internal error: a NULL variable pointer was passed to assign_var\n");
 		exit(1);

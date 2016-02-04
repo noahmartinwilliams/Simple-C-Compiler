@@ -105,6 +105,7 @@ void generate_function(FILE *fd, struct func_t *f)
 	make_function(fd, f);
 	generate_statement(fd, f->statement_list);
 	return_from_call(fd);
+	fprintf(fd, "\t.cfi_endproc\n");
 }
 
 char* prepare_var_assignment(FILE *fd, struct expr_t *dest)

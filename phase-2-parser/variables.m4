@@ -33,7 +33,6 @@ struct_var_declarations: type IDENTIFIER ';' {
 	statements=$1->attrs.list.statements;
 
 	statements[num_statements-1]=malloc(sizeof(struct statem_t));
-
 	statements[num_statements-1]->kind=declare;
 	statements[num_statements-1]->attrs.var=malloc(sizeof(struct var_t));
 
@@ -126,9 +125,7 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	assignment->left->type=$1;
 	$1->refcount+=2;
 
-
 	v=declaration->attrs.var=assignment->left->attrs.var=malloc(sizeof(struct var_t));
-
 
 	v->name=strdup($2);
 	free($2);
@@ -180,7 +177,6 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	$5->type->refcount++;
 
 	$$=block;
-
 } | var_declaration_start ',' IDENTIFIER {
 	struct statem_t *block=malloc(sizeof(struct statem_t));
 	block->kind=list;

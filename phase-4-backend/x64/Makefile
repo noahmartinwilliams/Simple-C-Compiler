@@ -1,7 +1,7 @@
 INCLUDE=../../include
 include ../../include/config.mk
 
-../libx64-backend.so: backend.o jumps.o int-arithmetic.o registers.o agnostic-arithmetic.o statics.o calls.o variables.o globals.o float-arithmetic.o
+../libx64-backend.so: backend.o jumps.o int-arithmetic.o registers.o agnostic-arithmetic.o statics.o calls.o variables.o globals.o float-arithmetic.o arithmetic.o
 	$(SHARE)
 
 %.o: %.c

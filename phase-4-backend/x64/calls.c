@@ -20,6 +20,7 @@ static void expand_stack_space(FILE *fd, off_t off)
 {
 	if (off!=0)
 		fprintf(fd, "\tsubq $%ld, %%rsp\n", off);
+	current_stack_offset+=off;
 }
 
 static struct reg_t* get_reg_by_name(char *name)
@@ -178,10 +179,8 @@ void add_argument(FILE *fd, struct reg_t *reg, struct type_t *t )
 			fprintf(fd, "\tmovq %s, %s\n", name, next);
 	} else {
 		char *name=get_reg_name(reg, word_size);
-		fprintf(fd, "\tsubq $4, %%rsp\n");
-		fprintf(fd, "\tmovl %s, -%ld(%%rbp)\n", name, current_stack_offset+4);
-		fprintf(fd, "\tcvtss2sd -%ld(%%rbp), %s\n", current_stack_offset+4, next);
-		fprintf(fd, "\taddq $4, %%rsp\n");
+		if (strcmp(name, next))
+			fprintf(fd, "\tmovss %s, %s\n", name, next);
 	}
 
 	current_arg++;
@@ -231,58 +230,47 @@ void call(FILE *fd, struct func_t *f)
 
 void return_from_call(FILE *fd)
 {
-	if (in_main && multiple_functions) {
-		fprintf(fd, "\tleave\n\tret\n");
-	} else {
-		fprintf(fd, "\tmovq %%rbp, %%rsp\n");
-		fprintf(fd, "\tpopq %%rbp\n");
-		fprintf(fd, "\tret\n");
-	}
+	fprintf(fd, "\tmovq %%rbp, %%rsp\n\tpopq %%rbp\n\t.cfi_def_cfa 7, 8\n\tret\n");
 }
 
 
 void make_function(FILE *fd, struct func_t *f)
 {
 	fprintf(fd, "\t.text\n");
-	if (f->attributes & _static){
-		fprintf(fd, "\t.type %s, @function\n%s:\n", f->name, f->name);
-	} else {
-		fprintf(fd, "\t.globl %s\n\t.type %s, @function\n%s:\n", f->name, f->name, f->name);
-	}
+	if (f->attributes & _static)
+		fprintf(fd, "\t.type %s, @function\n%s:\n\t.cfi_startproc\n", f->name, f->name);
+	else
+		fprintf(fd, "\t.globl %s\n\t.type %s, @function\n%s:\n\t.cfi_startproc\n", f->name, f->name, f->name);
 	fprintf(fd, "\tpushq %%rbp\n");
+	fprintf(fd, "\t.cfi_def_cfa_offset 16\n");
+	fprintf(fd, "\t.cfi_offset 6, -16\n");
 	fprintf(fd, "\tmovq %%rsp, %%rbp\n");
-	if (!strcmp("main", f->name)) {
+	fprintf(fd, "\t.cfi_def_cfa_register 6\n");
+	if (!strcmp("main", f->name))
 		in_main=true;
-	} else
+	else
 		multiple_functions=true;
 
+	//fprintf(fd, "\tsubq $16, %%rsp\n");
 	off_t o=get_var_offset(f->statement_list, 0);
+	expand_stack_space(fd, o);
 	int x, y=0;
 	for (x=0; x<f->num_arguments; x++) {
 		size_t size=get_type_size(f->arguments[x]->type);
 		if (size==word_size || size==pointer_size) {
 			fprintf(fd, "\tsubq $%d, %%rsp\n", pointer_size);
 			fprintf(fd, "\tmovq %s, -%d(%%rbp)\n", get_next_call_register(INT), pointer_size);
+			current_stack_offset+=pointer_size;
 			f->arguments[x]->offset=-pointer_size;
 			y++;
 		} else {
 			f->arguments[x]->offset=8*y+16;
 			y++;
 		}
-		current_stack_offset+=8;
 	}
 
-	for (x=0; x<num_regs; x++) {
+	for (x=0; x<num_regs; x++)
 		regs[x]->used_for_call=false;
-	}
-
-	if (o==0 || multiple_functions) {
-		fprintf(fd, "\tsubq $16, %%rsp\n");
-		fprintf(fd, "\tmovl $0, -4(%%rbp)\n");
-		current_stack_offset=16;
-	} else {
-		expand_stack_space(fd, o);
-	}
 
 	in_main=false;
 }

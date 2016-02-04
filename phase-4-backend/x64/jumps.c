@@ -27,28 +27,25 @@ void jmp_neq(FILE *fd, char *name)
 
 void jmp_lt(FILE *fd, char *name)
 {
-	if (last_comparison_float) {
+	if (last_comparison_float)
 		fprintf(fd, "\tjb %s\n", name);
-		fprintf(fd, "\taddq $8, %%rsp\n");
-	} else
+	else
 		fprintf(fd, "\tjl %s\n", name);
 }
 
 void jmp_gt(FILE *fd, char *name)
 {
-	if (last_comparison_float) {
+	if (last_comparison_float)
 		fprintf(fd, "\tja %s\n", name);
-		fprintf(fd, "\taddq $8, %%rsp\n");
-	} else
+	else
 		fprintf(fd, "\tjg %s\n", name);
 }
 
 void jmp_le(FILE *fd, char *name)
 {
-	if (last_comparison_float) {
+	if (last_comparison_float)
 		fprintf(fd, "\tjbe %s\n", name);
-		fprintf(fd, "\taddq $8, %%rsp\n");
-	} else
+	else
 		fprintf(fd, "\tjle %s\n", name);
 }
 
@@ -59,10 +56,9 @@ void place_label(FILE *fd, char *name)
 
 void jmp_ge(FILE *fd, char *name)
 {
-	if (last_comparison_float) {
+	if (last_comparison_float)
 		fprintf(fd, "\tjae %s\n", name);
-		fprintf(fd, "\taddq $8, %%rsp\n");
-	} else
+	else
 		fprintf(fd, "\tjge %s\n", name);
 }
 

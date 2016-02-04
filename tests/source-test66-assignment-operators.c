@@ -55,6 +55,20 @@ void test5()
 		exit(8);
 }
 
+void test6()
+{
+	int x=0;
+	x*=1;
+	if (x!=0)
+		exit(9);
+	
+	x=1;
+	x*=2;
+	if (x!=2)
+		exit(10);
+	
+}
+
 int main()
 {
 	test1();
@@ -62,5 +76,6 @@ int main()
 	test3();
 	test4();
 	test5();
+	test6();
 	return 0;
 }
