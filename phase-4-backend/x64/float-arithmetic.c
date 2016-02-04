@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "generator/generator-globals.h"
-#include "generator/generator-types.h"
+#include "generator/globals.h"
+#include "generator/types.h"
 #include "generator/generator.h"
 #include "globals.h"
 #include "types.h"
@@ -86,8 +86,10 @@ void assign_constant_float(FILE *fd, struct expr_t *e)
 
 void read_float_var(FILE *fd, struct var_t *v)
 {
-	/* TODO: fix this for global variables. */
-	fprintf(fd, "\tcvtss2sd %d(%%rbp), %%xmm0\n", v->offset);
+	if (v->scope_depth==0)
+		fprintf(fd, "\tcvtss2sd %s(%%rip), %%xmm0\n", v->name);
+	else
+		fprintf(fd, "\tcvtss2sd %d(%%rbp), %%xmm0\n", v->offset);
 }
 
 static void arithmetic_intern(FILE *fd, char *name, struct reg_t *src, struct reg_t *dest)

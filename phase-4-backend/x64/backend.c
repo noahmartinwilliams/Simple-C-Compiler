@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include "handle-types.h"
-#include "generator/generator-types.h"
+#include "generator/types.h"
 #include "generator/generator.h"
-#include "generator/generator-globals.h"
+#include "generator/globals.h"
 #include "backend/agnostic-arithmetic.h"
 #include "backend/int-arithmetic.h"
 #include "backend/variables.h"

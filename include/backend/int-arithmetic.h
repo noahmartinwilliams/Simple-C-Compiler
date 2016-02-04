@@ -1,7 +1,7 @@
 #ifndef __INT_ARITHMETIC_H__
 #define __INT_ARITHMETIC_H__
 #include "types.h"
-#include "generator/generator-types.h"
+#include "generator/types.h"
 #include <stdio.h>
 
 extern void int_num(FILE *fd, struct reg_t *r, struct reg_t *r2);

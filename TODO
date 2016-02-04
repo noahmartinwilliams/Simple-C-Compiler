@@ -1,5 +1,3 @@
-*get read_float_var in phase-4-backend/x64/float-arithmetic.c to read global vars too.
-*get assign_var in phase-4-backend/x64/variables.c to write to global variables.
 *Check out _setjmp
 *Solve this issue for, while, and do while
 	if (0) {

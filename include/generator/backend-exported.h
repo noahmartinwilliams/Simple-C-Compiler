@@ -1,7 +1,7 @@
 #ifndef __GENERATOR_BACKEND_EXPORTED_H__
 #define __GENERATOR_BACKEND_EXPORTED_H__
 #include "types.h"
-#include "generator/generator-types.h"
+#include "generator/types.h"
 #include <stdio.h>
 extern void (*xor)(FILE *fd, struct reg_t *a, struct reg_t *b);
 extern void (*or)(FILE *fd, struct reg_t *a, struct reg_t *b);

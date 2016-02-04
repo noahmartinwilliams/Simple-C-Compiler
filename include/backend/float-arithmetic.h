@@ -2,7 +2,7 @@
 #define __GENERATOR_BACKEND_FLOAT_ARITHMETIC_H__
 #include <stdio.h>
 #include "types.h"
-#include "generator/generator-types.h"
+#include "generator/types.h"
 
 extern void assign_constant_float(FILE *fd, struct expr_t *e);
 extern void float_add(FILE *fd, struct reg_t *src, struct reg_t *dest);

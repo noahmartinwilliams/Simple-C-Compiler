@@ -1,7 +1,7 @@
 #define IN_BACKEND
-#include "generator/generator-globals.h"
+#include "generator/globals.h"
 #include "types.h"
-#include "generator/generator-types.h"
+#include "generator/types.h"
 #include <stdio.h>
 
 extern int unique_num;

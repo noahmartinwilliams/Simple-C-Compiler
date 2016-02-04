@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "globals.h"
-#include "generator/generator-globals.h"
+#include "generator/globals.h"
 #include "types.h"
 
 size_t get_type_size(struct type_t *t);

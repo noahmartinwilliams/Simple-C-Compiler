@@ -1,5 +1,6 @@
-#include "generator/generator-types.h"
-#include "generator/generator-globals.h"
+#include "types.h"
+#include "generator/types.h"
+#include "generator/globals.h"
 #define load_obj2(X, Y) load_obj( (void**) X, Y)
 #include "loader-macro.h"
 #include <dlfcn.h>

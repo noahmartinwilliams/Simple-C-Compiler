@@ -2,7 +2,7 @@
 #define __REGISTERS_H__
 #include "types.h"
 #include <stdio.h>
-#include "generator/generator-types.h"
+#include "generator/types.h"
 #include <stdbool.h>
 
 extern char* get_reg_name(struct reg_t *reg, size_t size);

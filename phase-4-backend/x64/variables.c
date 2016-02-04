@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "generator/generator-types.h"
+#include "generator/types.h"
 #include "generator/generator.h"
 #include "handle-types.h"
 #include "backend/registers.h"
@@ -48,8 +48,14 @@ static inline void print_assign_var(FILE *fd, char *operator, struct reg_t *reg,
 void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 {
 	if (src->use==FLOAT || src->use==FLOAT_RET) {
-		fprintf(fd, "\tcvtsd2ss %s, %s\n", reg_name(src), reg_name(src));
-		fprintf(fd, "\tmovss %s, %d(%%rbp)\n", reg_name(src), dest->offset);
+		char *name=reg_name(src);
+		if (dest->scope_depth!=0) {
+			fprintf(fd, "\tcvtsd2ss %s, %s\n", name, name);
+			fprintf(fd, "\tmovss %s, %d(%%rbp)\n", name, dest->offset);
+		} else {
+			fprintf(fd, "cvtsd2ss %s, %s\n", name, name);
+			fprintf(fd, "\tmovss %s, %s(%%rip)\n", name, dest->name);
+		}
 		return;
 	}
 

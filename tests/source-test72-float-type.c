@@ -89,6 +89,18 @@ void division()
 	}
 }
 
+float _global;
+void global()
+{
+	_global=1.0;
+	_global+=1.0;
+	if (_global < 1.9 || _global > 2.1) {
+		printf("global error: global supposed to be 2, is actually: %f\n", _global);
+		exit(10);
+	}
+	return;
+}
+
 int main()
 {
 	subtraction();
@@ -97,5 +109,6 @@ int main()
 	greater_than_or_equal_to();
 	multiplication();
 	division();
+	global();
 	return 0;
 }

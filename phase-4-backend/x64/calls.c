@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "generator/generator-globals.h"
+#include "generator/globals.h"
 #include "globals.h"
 #include "types.h"
 #include "backend/backend.h"

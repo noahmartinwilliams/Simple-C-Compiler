@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "types.h"
 #include "stack.h"
-#include "generator/generator-types.h"
+#include "generator/types.h"
 
 struct stack_t *loop_stack=NULL;
 int unique_num=0;

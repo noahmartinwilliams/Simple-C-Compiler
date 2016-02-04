@@ -1,6 +1,6 @@
 #ifndef __VARIABLES_H__
 #define __VARIABLES_H__
-#include "generator/generator-types.h"
+#include "generator/types.h"
 #include "types.h"
 #include <stdio.h>
 

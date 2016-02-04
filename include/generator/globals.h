@@ -3,7 +3,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
-#include "generator/generator-types.h"
+#include "generator/types.h"
 #ifndef IN_BACKEND
 #include "generator/backend-exported.h"
 #endif

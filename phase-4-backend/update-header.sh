@@ -4,7 +4,7 @@ EXPORT=../include/generator/backend-exported.h
 echo "#ifndef __GENERATOR_BACKEND_EXPORTED_H__" >$EXPORT
 echo "#define __GENERATOR_BACKEND_EXPORTED_H__" >>$EXPORT
 echo "#include \"types.h\"" >>$EXPORT
-echo "#include \"generator/generator-types.h\"" >>$EXPORT
+echo "#include \"generator/types.h\"" >>$EXPORT
 echo "#include <stdio.h>" >>$EXPORT
 
 LOADER=../include/loader-macro.h
@@ -15,7 +15,7 @@ echo -n "#define load_obj3 " >> $LOADER
 EXPORT_SOURCE=exported.c
 echo "#include <stdio.h>" >$EXPORT_SOURCE
 echo "#include \"types.h\"" >>$EXPORT_SOURCE
-echo "#include \"generator/generator-types.h\"" >>$EXPORT_SOURCE
+echo "#include \"generator/types.h\"" >>$EXPORT_SOURCE
 
 
 cat list-of-exported-functions.txt | while read FUNC;
