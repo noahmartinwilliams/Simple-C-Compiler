@@ -101,6 +101,18 @@ void global()
 	return;
 }
 
+void convert()
+{
+	float f=1.0;
+	int i=2;
+	i=(int) f;
+	if (i!=1 && i!=0) {
+		printf("convert error: i is not correct: %d\n", i);
+		exit(11);
+	}
+	return;
+}
+
 int main()
 {
 	subtraction();
@@ -110,5 +122,6 @@ int main()
 	multiplication();
 	division();
 	global();
+	convert();
 	return 0;
 }

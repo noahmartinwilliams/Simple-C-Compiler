@@ -29,6 +29,11 @@ struct depth_value {
 	char *name;
 };
 
+void convert_float_to_int(FILE *fd, struct reg_t *a, struct reg_t *b)
+{
+	fprintf(fd, "\tcvtsd2si %s, %s\n", reg_name(a), reg_name(b));
+}
+
 struct reg_t* get_free_float_register(FILE *fd, size_t s, int depth)
 {
 	int x;

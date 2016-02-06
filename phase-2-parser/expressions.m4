@@ -127,6 +127,14 @@ noncomma_expression: CONST_INT {
 	e->attrs.cint_val=get_alignof($3);
 	free_type($3);
 	$$=e;
+} | '(' type ')' noncomma_expression {
+	$$=malloc(sizeof(struct expr_t));
+	$$->kind=convert;
+	$$->type=$2;
+	$2->refcount++;
+	$$->right=$4;
+	$$->left=NULL;
+	$$->has_gotos=$4->has_gotos;
 };
 
 postfix_expr: assignable_expr INC_OP {

@@ -61,4 +61,5 @@ extern void (*add)(FILE *fd, struct reg_t *a, struct reg_t *b);
 extern void (*sub)(FILE *fd, struct reg_t *a, struct reg_t *b);
 extern void (*mul)(FILE *fd, struct reg_t *a, struct reg_t *b);
 extern void (*_div)(FILE *fd, struct reg_t *a, struct reg_t *b);
+extern void (*convert_float_to_int)(FILE *fd, struct reg_t *a, struct reg_t *b);
 #endif

@@ -96,6 +96,9 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, "(");
 		load_function_ptr(fd, e->attrs.function, ret);
 		place_comment(fd, ")");
+	} else if (e->kind==convert && e->type->body->core_type==_INT && e->right->type->body->core_type==_FLOAT) {
+		generate_expression(fd, e->right);
+		convert_float_to_int(fd, get_ret_register(get_type_size(e->type), true), get_ret_register(get_type_size(e->type), false));
 	}
 
 	get_ret_register(get_type_size(e->type), expr_is_float(e)); /* Sometimes a sub-expression will change the size of the return register. */

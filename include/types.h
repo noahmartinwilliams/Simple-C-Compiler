@@ -37,7 +37,7 @@ struct type_t {
 };
 
 struct expr_t {
-	enum { bin_op, pre_un_op, post_un_op, question, const_int, const_float, var, funccall, arg, const_str, const_size_t, func_val, func_ptr_call } kind;
+	enum { bin_op, pre_un_op, post_un_op, question, const_int, const_float, var, funccall, arg, const_str, const_size_t, func_val, func_ptr_call, convert } kind;
 	struct expr_t *left, *right;
 	struct type_t *type;
 	bool has_gotos;
