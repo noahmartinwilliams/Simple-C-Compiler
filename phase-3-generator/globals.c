@@ -14,6 +14,7 @@ size_t pointer_size;
 size_t long_size;
 size_t char_size;
 size_t float_size;
+size_t byte_size;
 
 bool multiple_functions=false;
 

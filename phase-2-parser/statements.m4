@@ -11,6 +11,13 @@ statement_list: statement {
 	$$=$1;
 };
 
+
+maybe_empty_expr: %empty {
+	$$=NULL;
+} | expression {
+	$$=$1;
+};
+
 statement: expression ';' {
 	$$=malloc(sizeof(struct statem_t));
 	$$->kind=expr;
@@ -64,7 +71,7 @@ statement: expression ';' {
 	$$->attrs.label_name=strdup($2);
 	$$->has_gotos=true;
 	free($2);
-}  | for_loop | DO statement WHILE '(' expression ')' ';' {
+} | DO statement WHILE '(' expression ')' ';' {
 	$$=malloc(sizeof(struct statem_t));
 	$$->kind=do_while;
 	$$->has_gotos=$2->has_gotos;
@@ -81,6 +88,23 @@ statement: expression ';' {
 	$$->kind=ret;
 	$$->attrs.expr=NULL;
 	$$->has_gotos=false;
+} | FOR '(' maybe_empty_expr ';' maybe_empty_expr ';' maybe_empty_expr ')' statement {
+	$$=malloc(sizeof(struct statem_t));
+	$$->kind=_for;
+	$$->attrs._for.initial=$3;
+	if ($5==NULL) {
+		struct expr_t *e=malloc(sizeof(struct expr_t));
+		e->kind=const_int;
+		e->attrs.cint_val=1;
+		e->left=e->right=NULL;
+		e->has_gotos=false;
+		e->type=get_type_by_name("int");
+		$$->attrs._for.cond=e;
+	} else
+		$$->attrs._for.cond=$5;
+	$$->attrs._for.update=$7;
+	$$->attrs._for.block=$9;
+	$$->has_gotos=$9->has_gotos;
 };
 
 switch_list: switch_element {

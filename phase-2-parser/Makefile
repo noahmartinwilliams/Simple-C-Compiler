@@ -12,7 +12,7 @@ else
 	$(AR)
 endif
 
-comp.y: cc.y statements.m4 for.m4 expressions.m4 functions.m4 variables.m4 types.m4 ../include/*
+comp.y: cc.y statements.m4 expressions.m4 functions.m4 variables.m4 types.m4 ../include/*
 	$(M4) $< >$@
 
 comp.tab.c: comp.y

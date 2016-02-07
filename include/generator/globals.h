@@ -11,6 +11,7 @@
 extern int depth;
 extern size_t word_size;
 extern size_t int_size;
+extern size_t byte_size;
 
 extern int unique_num;
 extern struct stack_t *loop_stack;

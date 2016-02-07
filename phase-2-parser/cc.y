@@ -141,11 +141,11 @@ static inline struct statem_t* declare_var(struct type_t *t, char *name, struct 
 %token UNION
 %type <vars> arg_declaration
 %type <expr> noncomma_expression expression binary_expr assignable_expr prefix_expr call_arg_list postfix_expr
+%type <expr> maybe_empty_expr
 %type <statem> statement statement_list var_declaration struct_var_declarations
 %type <type> type 
 %type <type> type_with_stars
 %type <func> function function_header
-%type <statem> for_loop
 %type <statem> var_declaration_start
 %type <statem> switch_element switch_list
 %type <l> stars
@@ -194,7 +194,6 @@ file_entry:  function {
 
 
 include(functions.m4)
-include(for.m4)
 include(statements.m4)
 include(expressions.m4)
 include(variables.m4)

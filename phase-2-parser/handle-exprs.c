@@ -48,9 +48,9 @@ void print_expr(char *pre, struct expr_t *e)
 			break;
 		case convert:
 			if (e->type->body->core_type==_INT)
-				fprintf(stderr, "conversion type: %s, type_size: %ld, pointer_depth: %ld, core_type: INT\n", e->type->name, get_type_size(e->type), e->type->pointer_depth);
+				fprintf(stderr, "conversion type: %s, type_size: %ld, pointer_depth: %ld, core_type: INT", e->type->name, get_type_size(e->type), e->type->pointer_depth);
 			else
-				fprintf(stderr, "conversion type: %s, type_size: %ld, pointer_depth: %ld, core_type: FLOAT\n", e->type->name, get_type_size(e->type), e->type->pointer_depth);
+				fprintf(stderr, "conversion type: %s, type_size: %ld, pointer_depth: %ld, core_type: FLOAT", e->type->name, get_type_size(e->type), e->type->pointer_depth);
 		}
 		if (e->type->body->core_type==_INT)
 			fprintf(stderr, ", type: %s, type_size: %ld, pointer_depth: %ld, core_type: INT\n", e->type->name, get_type_size(e->type), e->type->pointer_depth);

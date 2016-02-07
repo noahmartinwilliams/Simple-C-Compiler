@@ -1,5 +1,5 @@
-stars: '*' {
-	$$=1;
+stars: %empty {
+	$$=0;
 } | stars '*' {
 	$$=$1 + 1;
 } ;
@@ -137,7 +137,7 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	$1->refcount++;
 	$$=block;
 
-} | var_declaration_start ',' IDENTIFIER '=' expression {
+} | var_declaration_start ',' stars IDENTIFIER '=' expression {
 	struct statem_t *block=malloc(sizeof(struct statem_t));
 	block->kind=list;
 
@@ -149,12 +149,12 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	declaration->kind=declare;
 	struct expr_t *holder=malloc(sizeof(struct expr_t));
 	holder->left=holder->right=NULL;
-	holder->type=$5->type;
-	$5->type->refcount++;
+	holder->type=$6->type;
+	$6->type->refcount++;
 	holder->kind=var;
 	struct var_t *v=holder->attrs.var=declaration->attrs.var=malloc(sizeof(struct var_t));
-	v->name=strdup($3);
-	free($3);
+	v->name=strdup($4);
+	free($4);
 
 	v->scope_depth=scope_depth;
 	v->hidden=false;
@@ -172,29 +172,10 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	expr->kind=bin_op;
 	expr->attrs.bin_op=strdup("=");
 	expr->left=holder;
-	expr->right=$5;
-	expr->type=$5->type;
-	$5->type->refcount++;
+	expr->right=$6;
+	expr->type=$6->type;
+	$6->type->refcount++;
 
-	$$=block;
-} | var_declaration_start ',' IDENTIFIER {
-	struct statem_t *block=malloc(sizeof(struct statem_t));
-	block->kind=list;
-	block->attrs.list.statements=calloc(2, sizeof(struct statem_t*));
-	block->attrs.list.statements[1]=malloc(sizeof(struct statem_t));
-	block->attrs.list.statements[1]->kind=declare;
-	block->attrs.list.num=2;
-	struct var_t *v=block->attrs.list.statements[1]->attrs.var=malloc(sizeof(struct var_t));
-	block->attrs.list.statements[0]=$1;
-	v->name=strdup($3);
-	free($3);
-	v->refcount=2;
-	v->type=current_type;
-	current_type->refcount++;
-
-	v->scope_depth=scope_depth;
-	v->hidden=false;
-	add_var(v);
 	$$=block;
 } | var_declaration_start ',' stars IDENTIFIER {
 	struct statem_t *block=malloc(sizeof(struct statem_t));
@@ -221,39 +202,4 @@ var_declaration_start: type_with_stars IDENTIFIER {
 
 	declaration->attrs.var=v;
 	$$=block;
-} | var_declaration_start ',' stars IDENTIFIER '=' expression {
-	struct statem_t *block=malloc(sizeof(struct statem_t));
-	block->kind=list;
-
-	block->attrs.list.num=3;
-	block->attrs.list.statements=calloc(3, sizeof(struct statem_t*));
-
-	block->attrs.list.statements[0]=$1;
-
-	struct statem_t *declaration=block->attrs.list.statements[1]=malloc(sizeof(struct statem_t));
-	declaration->kind=declare;
-
-	struct var_t *v=malloc(sizeof(struct var_t));
-	v->type=increase_type_depth(current_type, $3);
-	v->type->refcount++;
-	v->refcount=2;
-
-	v->name=strdup($4);
-	free($4);
-
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->type=v->type;
-	v->type->refcount++;
-
-	e->left=setup_var_expr(v);
-	e->right=$6;
-	e->kind=bin_op;
-	e->attrs.bin_op=strdup("=");
-
-	declaration->attrs.var=v;
-
-	struct statem_t *expression=block->attrs.list.statements[2]=malloc(sizeof(struct statem_t));
-	expression->kind=expr;
-	expression->attrs.expr=e;
-	$$=block;
-} ;
+}; 

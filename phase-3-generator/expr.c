@@ -17,6 +17,7 @@ void generate_post_unary_expression(FILE *fd, struct expr_t *e);
 
 void generate_expression(FILE *fd, struct expr_t *e)
 {
+	depth++;
 	struct reg_t *ret;
 	if (e==NULL)
 		return;
@@ -99,9 +100,31 @@ void generate_expression(FILE *fd, struct expr_t *e)
 	} else if (e->kind==convert && e->type->body->core_type==_INT && e->right->type->body->core_type==_FLOAT) {
 		generate_expression(fd, e->right);
 		convert_float_to_int(fd, get_ret_register(get_type_size(e->type), true), get_ret_register(get_type_size(e->type), false));
+	} else if (e->kind==convert && e->type->body->core_type==e->right->type->body->core_type && e->type->body->core_type==_INT) {
+		char *comment;
+		asprintf(&comment, "((%s)", e->type->name);
+		place_comment(fd, comment);
+		free(comment);
+
+		ret=get_ret_register(get_type_size(e->type), false);
+		struct reg_t *tmp=get_free_register(fd, get_type_size(e->type), depth, false);
+		int x=0;
+		int power=1;
+		for (; x<byte_size; x++)
+			power*=2;
+		power--;
+		assign_constant_int(fd, power);
+		assign_reg(fd, ret, tmp);
+		generate_expression(fd, e->right);
+		set_register_size(ret, get_type_size(e->type));
+		
+		and(fd, tmp, ret);
+		free_register(fd, tmp);
+		place_comment(fd, ")");
 	}
 
 	get_ret_register(get_type_size(e->type), expr_is_float(e)); /* Sometimes a sub-expression will change the size of the return register. */
+	depth--;
 }
 
 void generate_post_unary_expression(FILE *fd, struct expr_t *e)
