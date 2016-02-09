@@ -1,3 +1,6 @@
+*prepare variables.m4 for const keyword.
+*add const keyword.
+*add enumerations.
 *Check out _setjmp
 *Solve this issue for, while, and do while
 	if (0) {
@@ -8,7 +11,6 @@
 *modify if, if else, while, do while, expression statements, return statements, and for statements to properly take gotos from their expressions.
 *add typedefs with pointers as base type.
 *add arrays.
-*add enumerations.
 *add putting structures within structures.
 *add returning of structures to function calls.
 *add passing of structures to function calls.
@@ -20,7 +22,6 @@
 *add alignas keyword.
 *add preprocessor statements.
 *add bit fields to data structures.
-*add const keyword.
 *add register keyword.
 *add arithmetic assignment operators.
 *add new bit manipulation operators that I came up with.
@@ -31,7 +32,6 @@
 *add ptrdiff_t, off_t, __uint8_t, __uint16_t, __uint32_t, __uint64_t, __int8_t, __int16_t, __int32_t, __int64_t, _Bool, and double data types.
 *add type conversion.
 *add automagic type conversion.
-*add comma operator.
 *add __nosideeffects keyword
 *add volatile keyword.
 *add typedefs for function pointers.

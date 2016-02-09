@@ -29,7 +29,7 @@ type: TYPE {
 	struct statem_t **statements=$4->attrs.list.statements;
 	size_t alignment=body->attrs.vars.alignment;
 	for (x=0; x<$4->attrs.list.num; x++) {
-		struct var_t *var=statements[x]->attrs.var;
+		struct var_t *var=statements[x]->attrs._declare.var;
 		int s=get_type_size(var->type);
 		if (s<alignment)
 			size+=alignment;
@@ -70,12 +70,12 @@ type: TYPE {
 	int num_vars=body->attrs.vars.num_vars;
 	struct statem_t **statements=$4->attrs.list.statements;
 	for (x=0; x<$4->attrs.list.num; x++) {
-		size_t s=get_type_size($4->attrs.list.statements[x]->attrs.var->type);
+		size_t s=get_type_size($4->attrs.list.statements[x]->attrs._declare.var->type);
 		num_vars++;
 		v=realloc(v, num_vars*sizeof(struct var_t*));
 		v[num_vars-1]=malloc(sizeof(struct var_t));
 
-		v[num_vars-1]=statements[x]->attrs.var;
+		v[num_vars-1]=statements[x]->attrs._declare.var;
 		v[num_vars-1]->refcount=1;
 		if (s>=max_size)
 			max_size=s;

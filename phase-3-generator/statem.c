@@ -46,12 +46,17 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		return_from_call(fd);
 		place_comment(fd, ");");
 	} else if (s->kind==declare) {
+		if (s->attrs._declare.expr!=NULL) {
+			struct reg_t *retu=get_ret_register(word_size, s->attrs._declare.expr->type->body->core_type==_FLOAT);
+			generate_expression(fd, s->attrs._declare.expr);
+			assign_var(fd, retu, s->attrs._declare.var);
+		}
 		return;
-	} else if (s->kind==_if) {
+	} else if (s->kind==_if)
 		generate_if_statement(fd, s, retu, cond, block);
-	} else if (s->kind==_while) {
+	else if (s->kind==_while)
 		generate_while_loop(fd, s, retu, cond, block);
-	} else if (s->kind==_break) {
+	else if (s->kind==_break) {
 		int *n=pop(loop_stack);
 		char *jump_to;
 		asprintf(&jump_to, "loop$end$%d", *n);

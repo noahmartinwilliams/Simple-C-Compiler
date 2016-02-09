@@ -22,7 +22,16 @@ call_arg_list: noncomma_expression {
 	$$=$1;
 };
 
-expression: noncomma_expression ;
+expression: noncomma_expression | noncomma_expression ',' noncomma_expression {
+	$$=malloc(sizeof(struct expr_t));
+	$$->kind=bin_op;
+	$$->attrs.bin_op=strdup(",");
+	$$->has_gotos=$1->has_gotos || $3->has_gotos;
+	$$->type=$3->type;
+	$3->type->refcount++;
+	$$->left=$1;
+	$$->right=$3;
+};
 noncomma_expression: CONST_INT {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->type=get_type_by_name("int");

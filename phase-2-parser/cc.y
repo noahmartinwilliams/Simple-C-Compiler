@@ -69,53 +69,6 @@ struct arguments_t {
 	int num_vars;
 };
 
-static inline struct statem_t* declare_var(struct type_t *t, char *name, struct expr_t *e)
-{
-	struct var_t *v=malloc(sizeof(struct var_t));
-
-	v->refcount=4;
-	v->type=t;
-	v->type->refcount++;
-	v->name=strdup(name);
-	v->scope_depth=scope_depth;
-	v->hidden=false;
-	free(name);
-	add_var(v);
-
-	struct statem_t *block=malloc(sizeof(struct statem_t));
-	struct statem_t *declaration=malloc(sizeof(struct statem_t));
-
-	declaration->kind=declare;
-	declaration->attrs.var=v;
-
-	block->kind=list;
-	block->attrs.list.num=2;
-
-	int num=2;
-	block->attrs.list.statements=calloc(2, sizeof(struct statem_t*));
-
-	struct statem_t *expression=block->attrs.list.statements[1]=malloc(sizeof(struct statem_t));
-	expression->kind=expr;
-	struct expr_t *assignment=expression->attrs.expr=malloc(sizeof(struct expr_t));
-	assignment->kind=bin_op;
-	assignment->attrs.bin_op=strdup("=");
-	assignment->type=t;
-	t->refcount+=2;
-
-	struct expr_t *var_holder=malloc(sizeof(struct expr_t));
-	var_holder->kind=var;
-	var_holder->type=t;
-	t->refcount++;
-	var_holder->left=var_holder->right=NULL;
-	var_holder->attrs.var=v;
-	assignment->left=var_holder;
-	assignment->right=e;
-
-	/*TODO add type checking. */
-	block->attrs.list.statements[0]=declaration;
-
-	return block;
-}
 %}
 %union {
 	long int l;
@@ -163,6 +116,7 @@ static inline struct statem_t* declare_var(struct type_t *t, char *name, struct 
 %left '+' '-'
 %left '*' '/' '%'
 %left '(' ')' '.' POINTER_OP
+%left ','
 %nonassoc IFX
 %nonassoc ELSE
 

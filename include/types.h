@@ -68,7 +68,10 @@ struct statem_t {
 	union {
 		char *label_name;
 		struct expr_t *expr;
-		struct var_t *var;
+		struct {
+			struct var_t *var;
+			struct expr_t *expr;
+		} _declare;
 
 		struct {
 			struct statem_t *block;

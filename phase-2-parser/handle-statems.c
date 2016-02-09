@@ -42,9 +42,11 @@ void free_statem(struct statem_t *s)
 	} else if (s->kind==do_while) {
 		free_expr(s->attrs.do_while.condition);
 		free_statem(s->attrs.do_while.block);
-	} else if (s->kind==declare) 
-		free_var(s->attrs.var);
-	else if (s->kind==_case) {
+	} else if (s->kind==declare) {
+		free_var(s->attrs._declare.var);
+		if (s->attrs._declare.expr!=NULL)
+			free_expr(s->attrs._declare.expr);
+	} else if (s->kind==_case) {
 		free_expr(s->attrs._case.condition);
 		free_statem(s->attrs._case.block);
 	} else if (s->kind==_switch) {
@@ -94,7 +96,15 @@ void print_statem(char *pre, struct statem_t *s)
 		free(new_pre);
 
 	} else if (s->kind==declare) {
-		fprintf(stderr, "%s|_statment kind: declare, var: %s, type: %s, pointer_depth: %d, size: %ld \n", pre, s->attrs.var->name, s->attrs.var->type->name, s->attrs.var->type->pointer_depth, get_type_size(s->attrs.var->type));
+		struct var_t *var=s->attrs._declare.var;
+		if (s->attrs._declare.expr!=NULL) {
+			char *new_pre=NULL;
+			new_pre=fill_with_branches(pre, 1);
+			fprintf(stderr, "%s|_statment kind: declare, var: %s, type: %s, pointer_depth: %d, size: %ld \n", pre, var->name, var->type->name, var->type->pointer_depth, get_type_size(var->type));
+			print_e2(new_pre, s->attrs._declare.expr);
+			free(new_pre);
+		} else
+			fprintf(stderr, "%s|_statment kind: declare, var: %s, type: %s, pointer_depth: %d, size: %ld \n", pre, var->name, var->type->name, var->type->pointer_depth, get_type_size(var->type));
 	} else if (s->kind==_while) {
 		fprintf(stderr, "%s|_statement kind: while loop\n", pre);
 		char *new_pre;

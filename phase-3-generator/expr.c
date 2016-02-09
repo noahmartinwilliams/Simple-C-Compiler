@@ -300,6 +300,13 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, ")");
 		place_comment(fd, ")");
 		free_register(fd, lhs);
+	} else if (!strcmp(op, ",")) {
+		place_comment(fd, "(");
+		place_comment(fd, "(");
+		generate_expression(fd, e->left);
+		place_comment(fd, ") , (");
+		generate_expression(fd, e->right);
+		place_comment(fd, ")");
 	} else {
 		size_t size=get_type_size(e->type);
 		lhs=get_free_register(fd, get_type_size(e->left->type), depth, expr_is_float(e->left));
