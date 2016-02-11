@@ -1,6 +1,7 @@
 #! /bin/bash
 
-if [ ! -f "compile-$2.sh" ] ;
+NAME=$(echo "$2" | sed 's/source-//g')
+if [ ! -f "compile-$NAME.sh" ] ;
 then
 	set -e
 	./cc $2-output.s $1 ../phase-4-backend/libx64-backend.so
@@ -8,5 +9,5 @@ then
 	gcc output.o -o $2
 else
 	set -e
-	./compile-$2.sh
+	./compile-$NAME.sh
 fi

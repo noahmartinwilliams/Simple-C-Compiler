@@ -64,6 +64,7 @@ noncomma_expression: CONST_INT {
 	parser_handle_inline_func(e->attrs.function->num_calls, e->attrs.function);
 	e->type=e->attrs.function->ret_type;
 	e->type->refcount++;
+	found_inline_in_function=found_inline_in_function || e->attrs.function->attributes&_inline;
 	free($1);
 	$$=e;
 } | IDENTIFIER '(' call_arg_list ')' {
@@ -89,6 +90,7 @@ noncomma_expression: CONST_INT {
 		e->type->refcount++;
 	}
 	free($1);
+	found_inline_in_function=found_inline_in_function || e->attrs.function->attributes&_inline;
 	$$=e;
 } | STR_LITERAL {
 	struct expr_t *e=malloc(sizeof(struct expr_t));

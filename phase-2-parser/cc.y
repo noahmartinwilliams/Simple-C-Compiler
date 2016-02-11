@@ -69,6 +69,8 @@ struct arguments_t {
 	int num_vars;
 };
 
+static bool found_inline_in_function=false;
+
 %}
 %union {
 	long int l;
