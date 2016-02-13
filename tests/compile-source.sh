@@ -4,7 +4,10 @@ NAME=$(echo "$2" | sed 's/source-//g')
 if [ ! -f "compile-$NAME.sh" ] ;
 then
 	set -e
-	./cc $2-output.s $1 ../phase-4-backend/libx64-backend.so
+	TMP=$(mktemp)
+	trap "rm $TMP" EXIT
+	cpp -I ./include $1 >$TMP
+	./cc $2-output.s $TMP ../phase-4-backend/libx64-backend.so
 	as $2-output.s -o output.o
 	gcc output.o -o $2
 else

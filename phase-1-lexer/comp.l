@@ -25,6 +25,55 @@ static inline void haiku_easter_egg(char *s)
 #else
 #define haiku_easter_egg(X )
 #endif
+
+void handle_preproc_token(char *str)
+{
+	/* TODO: get this working with the haiku easter egg (or don't). */
+	int x=1;
+	free(current_line_str);
+	current_line_str=NULL;
+	free(current_file);
+	current_file=NULL;
+	while ((str[x]==' ' || str[x]=='\t') && str[x]!='\0')
+		x++;
+
+	#define preproc_error \
+	if (str[x]=='\0') {\
+		fprintf(stderr, "Internal preprocessing error on line %d\n", __LINE__);\
+		exit(1);\
+	}
+	preproc_error
+	int y=x;
+	while (str[y]!=' ' && str[y]!='\t' && str[y]!='\0')
+		y++;
+
+	preproc_error
+	
+	char c=str[y];
+	str[y]='\0';
+
+	current_line=atoi(str+x);
+
+	str[y]='\0';
+
+	while (str[x]!='"' )
+		x++;
+	
+	preproc_error
+
+	y=++x;
+	while (str[y]!='"' )
+		y++;
+
+	preproc_error
+	
+	str[y]='\0';
+
+	current_file=strdup(str+x);
+	str[y]='"';
+	current_char=0;
+	#undef preproc_error
+}
 %}
 
 %x in_comment
@@ -34,6 +83,7 @@ static inline void haiku_easter_egg(char *s)
 \"(\\\\|[^"\\]|\\n)*\"	{ count(yytext); yylval.str=strdup(yytext); return STR_LITERAL; }
 '.'	{ count(yytext); yylval.chr=yytext[1]; return CHAR_LITERAL; }
 \/\/.*$	{ count(yytext); }
+^\#[[:space:]]*[0-9]+[[:space:]]*\".*\".*$	{ handle_preproc_token(yytext); count(yytext); }
 "."	{ count(yytext); return '.'; }
 "->"	{ count(yytext); return POINTER_OP; }
 "..."	{ count(yytext); return MULTI_ARGS; }

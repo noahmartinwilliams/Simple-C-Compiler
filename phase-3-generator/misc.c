@@ -55,15 +55,9 @@ void setup_types()
 	i=types[num_types-3];
 	i->name=strdup("void");
 	i->pointer_depth=0;
-	b=i->body=malloc(sizeof(struct tbody_t));
-	b->size=0;
-	b->is_struct=false;
-	b->is_func_pointer=false;
-	b->refcount=1;
-	b->is_union=false;
+	i->body=NULL;
 	i->refcount=1;
 	i->native_type=true;
-	b->core_type=_INT;
 
 	types[num_types-4]=malloc(sizeof(struct type_t));
 	i=types[num_types-4];

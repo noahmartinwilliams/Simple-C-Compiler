@@ -20,7 +20,6 @@
 *add passing of enumerations to function calls.
 *add offsetof keyword.
 *add alignas keyword.
-*add preprocessor statements.
 *add bit fields to data structures.
 *add register keyword.
 *add arithmetic assignment operators.

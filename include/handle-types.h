@@ -21,6 +21,9 @@ extern struct type_t* get_struct_by_name(char *name);
 
 static inline bool expr_is_float(struct expr_t *e)
 {
+	if (e->type->body==NULL)
+		return false;
+
 	return e->type->body->core_type==_FLOAT;
 }
 #endif

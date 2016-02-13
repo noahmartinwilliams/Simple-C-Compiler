@@ -52,6 +52,9 @@ struct type_t* get_type_by_name(char *name)
 {
 	int x;
 	for (x=0; x<num_types; x++) {
+		if (!strcmp(name, types[x]->name) && types[x]->body==NULL)
+			return types[x];
+
 		if (!strcmp(name, types[x]->name) && !types[x]->body->is_struct)
 			return types[x];
 	}
@@ -77,10 +80,21 @@ void add_type(struct type_t *t)
 
 size_t get_type_size(struct type_t *t)
 {
-	if (t==NULL || t->body==NULL) {
+	if (t==NULL) {
 		fprintf(stderr, "Internal Error: Null pointer passed to get_type_size\n");
-		exit(0);
+		exit(1);
 	}
+
+	if (t->body==NULL && t->pointer_depth >0)
+		return pointer_size;
+	else if (t->body==NULL && t->pointer_depth<=0)
+		return 0;
+
+	if (t->body==NULL && t->pointer_depth==0)
+		return 0;
+	else if (t->body==NULL && t->pointer_depth>0)
+		return pointer_size;
+
 	if (t->pointer_depth>0)
 		return pointer_size;
 	else 
@@ -185,7 +199,8 @@ struct type_t* increase_type_depth(struct type_t *t, int n)
 	new->name=strdup(t->name);
 	new->refcount=1;
 	new->pointer_depth+=n;
-	new->body->refcount++;
+	if (new->body!=NULL)
+		new->body->refcount++;
 	return new;
 }
 
@@ -196,7 +211,8 @@ struct type_t* decrease_type_depth(struct type_t *t, int n)
 	new->refcount=1;
 	new->native_type=false;
 	new->pointer_depth-=n;
-	new->body->refcount++;
+	if (new->body!=NULL)
+		new->body->refcount++;
 	new->name=strdup(t->name);
 	return new;
 }

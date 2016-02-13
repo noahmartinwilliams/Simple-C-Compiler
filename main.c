@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	yy_flex_debug=0;
 	#endif
 	backend_name=strdup(argv[3]);
-	current_file=argv[2];
+	current_file=strdup(argv[2]);
 	yyin=fopen(argv[2], "r");
 	output=fopen(argv[1], "w+");
 	setup_generator();
@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
 	cleanup_backend();
 	free_all_types();
 	free_all_vars();
+	free(current_file);
 	fclose(output);
 	return 0;
 }

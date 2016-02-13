@@ -14,6 +14,7 @@ void free_statem(struct statem_t *s)
 {
 	if (s==NULL)
 		return;
+
 	if (s->kind==expr || s->kind==ret) {
 		free_expr(s->attrs.expr);
 	} else if (s->kind==list) {

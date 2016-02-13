@@ -59,6 +59,7 @@ function_header: type_with_stars IDENTIFIER '(' ')' {
 	free(current_function);
 	current_function=strdup($2);
 	free($2);
+	f->statement_list=NULL;
 	$$=f;
 } | EXTERN function_header {
 	$2->attributes|=_extern;
