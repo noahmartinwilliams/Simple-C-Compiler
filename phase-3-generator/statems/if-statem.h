@@ -20,9 +20,9 @@
 static inline void generate_if_statement(FILE *fd, struct statem_t *s, struct reg_t *retu, struct expr_t *cond, struct statem_t *block) 
 {
 	unique_num++;
-	cond=s->attrs._if.condition;
-	block=s->attrs._if.block;
-	struct statem_t *else_block=s->attrs._if.else_block;
+	cond=s->expr;
+	block=s->left;
+	struct statem_t *else_block=s->right;
 	char *unique_name_else, *unique_name_true;
 	asprintf(&unique_name_else, "if$not$true$%d", unique_num);
 	asprintf(&unique_name_true, "if$true$%d", unique_num);

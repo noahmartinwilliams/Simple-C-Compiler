@@ -15,11 +15,11 @@
 #include "optimization-globals.h"
 #include "generator/backend-exported.h"
 void generate_statement(FILE *fd, struct statem_t *s);
-#include "if-statem.h"
-#include "while-statem.h"
-#include "do-while-statem.h"
-#include "for-statem.h"
-#include "switch-statem.h"
+#include "statems/if-statem.h"
+#include "statems/while-statem.h"
+#include "statems/do-while-statem.h"
+#include "statems/for-statem.h"
+#include "statems/switch-statem.h"
 
 void generate_statement(FILE *fd, struct statem_t *s)
 {
@@ -32,23 +32,21 @@ void generate_statement(FILE *fd, struct statem_t *s)
 	struct statem_t *block;
 	if (s->kind==expr) {
 		place_comment(fd, "(");
-		generate_expression(fd, s->attrs.expr);
+		generate_expression(fd, s->expr);
 		place_comment(fd, ");");
 	} else if (s->kind==list) {
-		int x;
-		for (x=0; x<s->attrs.list.num; x++) {
-			generate_statement(fd, s->attrs.list.statements[x]);
-		}
+		generate_statement(fd, s->left);
+		generate_statement(fd, s->right);
 	} else if (s->kind==ret) {
 		place_comment(fd, "return");
 		place_comment(fd, "(");
-		generate_expression(fd, s->attrs.expr);
+		generate_expression(fd, s->expr);
 		return_from_call(fd);
 		place_comment(fd, ");");
 	} else if (s->kind==declare) {
-		if (s->attrs._declare.expr!=NULL) {
-			struct reg_t *retu=get_ret_register(word_size, s->attrs._declare.expr->type->body->core_type==_FLOAT);
-			generate_expression(fd, s->attrs._declare.expr);
+		if (s->expr!=NULL) {
+			struct reg_t *retu=get_ret_register(word_size, s->expr->type->body->core_type==_FLOAT);
+			generate_expression(fd, s->expr);
 			assign_var(fd, retu, s->attrs._declare.var);
 		}
 		return;

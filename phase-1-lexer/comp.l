@@ -88,6 +88,7 @@ void handle_preproc_token(char *str)
 "->"	{ count(yytext); return POINTER_OP; }
 "..."	{ count(yytext); return MULTI_ARGS; }
 "__alignof__"	{ count(yytext); return ALIGNOF; }
+"register"	{ count(yytext); return REGISTER; }
 "default"	{ count(yytext); return DEFAULT; }
 "switch"	{ count(yytext); return SWITCH; }
 "case"	{ count(yytext); return CASE; }

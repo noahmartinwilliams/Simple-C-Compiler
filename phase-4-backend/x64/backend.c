@@ -22,6 +22,20 @@ static inline void size_error(char *message, size_t size)
 	exit(1);
 }
 
+static void init_reg(struct reg_t *reg)
+{
+	reg->is_available=true;
+	reg->depths=NULL;
+	reg->in_use=false;
+}
+
+void prepare_for_new_function()
+{
+	int x=0;
+	for (x=0; x<num_regs; x++)
+		init_reg(regs[x]);
+}
+
 void setup_backend()
 {
 
@@ -32,11 +46,10 @@ void setup_backend()
 	int x;
 	for (x=0; x<4; x++) {
 		regs[x]=malloc(sizeof(struct reg_t));
+		init_reg(regs[x]);
 		regs[x]->sizes=calloc(4, sizeof(struct reg_size));
 		regs[x]->num_sizes=4;
 		regs[x]->size=8;
-		regs[x]->in_use=false;
-		regs[x]->depths=NULL;
 		asprintf(&(regs[x]->sizes[0].name), "%%%sl", primary[x]);
 		asprintf(&(regs[x]->sizes[1].name), "%%%sx", primary[x]);
 		asprintf(&(regs[x]->sizes[2].name), "%%e%sx", primary[x]);
@@ -52,6 +65,7 @@ void setup_backend()
 	regs[0]->use=RET;
 	for (x=4; x<12; x++) {
 		regs[x]=malloc(sizeof(struct reg_t));
+		init_reg(regs[x]);
 		regs[x]->sizes=calloc(4, sizeof(struct reg_size));
 		regs[x]->num_sizes=4;
 		asprintf(&(regs[x]->sizes[3].name), "%%r%d", (x-4)+8);
@@ -62,8 +76,6 @@ void setup_backend()
 		regs[x]->sizes[1].size=2;
 		asprintf(&(regs[x]->sizes[2].name), "%%r%db", (x-4)+8);
 		regs[x]->sizes[2].size=1;
-		regs[x]->in_use=false;
-		regs[x]->depths=NULL;
 		regs[x]->use=INT;
 	}
 	regs[x]=malloc(sizeof(struct reg_t));
@@ -77,8 +89,7 @@ void setup_backend()
 	regs[x]->sizes[2].size=4;
 	regs[x]->sizes[3].name=strdup("%rdi");
 	regs[x]->sizes[3].size=8;
-	regs[x]->in_use=false;
-	regs[x]->depths=NULL;
+	init_reg(regs[x]);
 	regs[x]->use=INT;
 
 	x++;
@@ -93,9 +104,8 @@ void setup_backend()
 	regs[x]->sizes[2].size=4;
 	regs[x]->sizes[3].name=strdup("%rsi");
 	regs[x]->sizes[3].size=8;
-	regs[x]->in_use=false;
-	regs[x]->depths=NULL;
 	regs[x]->use=INT;
+	init_reg(regs[x]);
 
 	x++;
 	regs[x]=malloc(sizeof(struct reg_t));
@@ -105,8 +115,7 @@ void setup_backend()
 	asprintf(&tmp, "%%xmm%d", x-14);
 	regs[x]->sizes[0].name=tmp; 
 	regs[x]->sizes[0].size=16;
-	regs[x]->in_use=false;
-	regs[x]->depths=NULL;
+	init_reg(regs[x]);
 	regs[x]->used_for_call=false;
 	regs[x]->use=FLOAT_RET;
 	regs[x]->size=16;
@@ -119,8 +128,7 @@ void setup_backend()
 		asprintf(&tmp, "%%xmm%d", x-14);
 		regs[x]->sizes[0].name=tmp; 
 		regs[x]->sizes[0].size=16;
-		regs[x]->in_use=false;
-		regs[x]->depths=NULL;
+		init_reg(regs[x]);
 		regs[x]->used_for_call=false;
 		regs[x]->use=FLOAT;
 		regs[x]->size=16;

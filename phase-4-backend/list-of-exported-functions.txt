@@ -57,3 +57,5 @@ void sub(FILE *fd, struct reg_t *a, struct reg_t *b);
 void mul(FILE *fd, struct reg_t *a, struct reg_t *b);
 void _div(FILE *fd, struct reg_t *a, struct reg_t *b);
 void convert_float_to_int(FILE *fd, struct reg_t *a, struct reg_t *b);
+void make_register_variable(struct var_t *v);
+void prepare_for_new_function();

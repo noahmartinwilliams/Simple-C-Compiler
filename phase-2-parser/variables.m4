@@ -6,15 +6,17 @@ stars: %empty {
 
 struct_var_declarations: type IDENTIFIER ';' {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
+	init_statem(s);
 	s->kind=list;
-	s->attrs.list.num=1;
-	s->attrs.list.statements=malloc(sizeof(struct statem_t*));
-	s->attrs.list.statements[0]=malloc(sizeof(struct statem_t*));
+	s->left=malloc(sizeof(struct statem_t));
+	init_statem(s->left);
+	s->right=NULL;
 
-	struct statem_t *var=s->attrs.list.statements[0];
+	struct statem_t *var=s->left;
 	var->kind=declare;
 	var->attrs._declare.var=malloc(sizeof(struct var_t));
-	var->attrs._declare.expr=NULL;
+	init_var(var->attrs._declare.var);
+	var->expr=NULL;
 
 	struct var_t *v=var->attrs._declare.var;
 	v->refcount=1;
@@ -27,18 +29,24 @@ struct_var_declarations: type IDENTIFIER ';' {
 	free($2);
 	$$=s;
 } | struct_var_declarations type_with_stars IDENTIFIER ';' {
-	$1->attrs.list.num++;
-	int num_statements=$1->attrs.list.num;
-	struct statem_t **statements=$1->attrs.list.statements;
-	$1->attrs.list.statements=realloc($1->attrs.list.statements, num_statements*sizeof(struct statem_t*));
-	statements=$1->attrs.list.statements;
+	$$=$1;
+	struct statem_t *latest=$1;
+	for (; latest->right!=NULL; latest=latest->right) {}
 
-	statements[num_statements-1]=malloc(sizeof(struct statem_t));
-	statements[num_statements-1]->kind=declare;
-	statements[num_statements-1]->attrs._declare.var=malloc(sizeof(struct var_t));
-	statements[num_statements-1]->attrs._declare.expr=NULL;
+	latest->right=malloc(sizeof(struct statem_t));
+	struct statem_t *new=latest->right;
+	init_statem(new);
+	new->kind=list;
+	new->left=malloc(sizeof(struct statem_t));
+	init_statem(new->left);
+	new->right=NULL;
+	new->left->kind=declare;
+	new=new->left;
+	new->attrs._declare.var=malloc(sizeof(struct var_t));
+	init_var(new->attrs._declare.var);
+	new->expr=NULL;
 
-	struct var_t *v=statements[num_statements-1]->attrs._declare.var;
+	struct var_t *v=new->attrs._declare.var;
 
 	v->name=strdup($3);
 	v->type=$2;
@@ -46,13 +54,18 @@ struct_var_declarations: type IDENTIFIER ';' {
 	v->scope_depth=scope_depth;
 	v->refcount=1;
 	free($3);
-	$$=$1;
 };
 
-var_declaration: var_declaration_start ';' {
+var_declaration: REGISTER var_declaration_start ';' {
+	struct statem_t *s=$2;
+	for (; s!=NULL; s=s->right)
+		make_register_variable(s->left->attrs._declare.var);
+	$$=$2;
+} | var_declaration_start ';' {
 	$$=$1;
 } | type_with_stars '(' stars IDENTIFIER ')' '(' arg_declaration ')' ';' {
 	struct var_t *v=malloc(sizeof(struct var_t));
+	init_var(v);
 	struct type_t *t=v->type=malloc(sizeof(struct type_t));
 	struct tbody_t *tb=t->body=malloc(sizeof(struct tbody_t));
 	tb->size=pointer_size;
@@ -78,9 +91,10 @@ var_declaration: var_declaration_start ';' {
 	}
 
 	struct statem_t *declaration=malloc(sizeof(struct statem_t));
+	init_statem(declaration);
 	declaration->kind=declare;
 	declaration->attrs._declare.var=v;
-	declaration->attrs._declare.expr=NULL;
+	declaration->expr=NULL;
 	v->scope_depth=scope_depth;
 	v->hidden=false;
 	add_var(v);
@@ -89,12 +103,14 @@ var_declaration: var_declaration_start ';' {
 
 var_declaration_start: type_with_stars IDENTIFIER {
 	$$=malloc(sizeof(struct statem_t));
+	init_statem($$);
 	$$->kind=list;
-	$$->attrs.list.num=1;
-	$$->attrs.list.statements=calloc(1, sizeof(struct statem_t*));
-	struct statem_t *declaration=malloc(sizeof(struct statem_t));
+	struct statem_t *declaration=$$->left=malloc(sizeof(struct statem_t));
+	init_statem(declaration);
+	$$->right=NULL;
 	declaration->kind=declare;
 	struct var_t *v=declaration->attrs._declare.var=malloc(sizeof(struct var_t));
+	init_var(v);
 
 	v->type=$1;
 	$1->refcount++;
@@ -103,18 +119,19 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	v->refcount=2;
 	v->scope_depth=scope_depth;
 	v->hidden=false;
-	declaration->attrs._declare.expr=NULL;
+	declaration->expr=NULL;
 	add_var(v);
-	$$->attrs.list.statements[0]=declaration;
 } | type_with_stars IDENTIFIER '=' noncomma_expression { 
 	$$=malloc(sizeof(struct statem_t));
+	init_statem($$);
 	$$->kind=list;
-	$$->attrs.list.num=1;
-	$$->attrs.list.statements=calloc(1, sizeof(struct statem_t*));
-	struct statem_t *declaration=malloc(sizeof(struct statem_t));
+	$$->right=NULL;
+	struct statem_t *declaration=$$->left=malloc(sizeof(struct statem_t));
+	init_statem(declaration);
 	declaration->kind=declare;
 	struct var_t *v;
 	v=malloc(sizeof(struct var_t));
+	init_var(v);
 
 	v->name=strdup($2);
 	free($2);
@@ -125,17 +142,22 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	v->type=$1;
 	$1->refcount++;
 	declaration->attrs._declare.var=v;
-	declaration->attrs._declare.expr=$4;
-
-	$$->attrs.list.statements[0]=declaration;
+	declaration->expr=$4;
 
 } | var_declaration_start ',' stars IDENTIFIER '=' noncomma_expression {
 	$$=$1;
-	($$->attrs.list.num)++;
-	$$->attrs.list.statements=realloc($$->attrs.list.statements, $$->attrs.list.num*sizeof(struct statem_t*));
-	struct statem_t *declaration=malloc(sizeof(struct statem_t));
+	struct statem_t *s=$$;
+	for (; s->right!=NULL; s=s->right) {}
+	s->right=malloc(sizeof(struct statem_t));
+	init_statem(s->right);
+	s=s->right;
+	s->kind=list;
+	s->right=NULL;
+	struct statem_t *declaration=s->left=malloc(sizeof(struct statem_t));
+	init_statem(declaration);
 	declaration->kind=declare;
 	struct var_t *v=malloc(sizeof(struct var_t));
+	init_var(v);
 
 	v->name=strdup($4);
 	free($4);
@@ -148,16 +170,21 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	add_var(v);
 
 	declaration->attrs._declare.var=v;
-	declaration->attrs._declare.expr=$6;
-	$$->attrs.list.statements[$$->attrs.list.num-1]=declaration;
-
+	declaration->expr=$6;
 } | var_declaration_start ',' stars IDENTIFIER {
 	$$=$1;
-	$$->attrs.list.num++;
-	$$->attrs.list.statements=realloc($$->attrs.list.statements, $$->attrs.list.num*sizeof(struct statem_t*));
-	struct statem_t *declaration=malloc(sizeof(struct statem_t));
+	struct statem_t *s=$$;
+	for (; s->right!=NULL; s=s->right) {}
+	s->right=malloc(sizeof(struct statem_t));
+	init_statem(s->right);
+	s=s->right;
+	s->kind=list;
+	s->right=NULL;
+	struct statem_t *declaration=s->left=malloc(sizeof(struct statem_t));
+	init_statem(declaration);
 	declaration->kind=declare;
 	struct var_t *v=malloc(sizeof(struct var_t));
+	init_var(v);
 
 	v->name=strdup($4);
 	free($4);
@@ -169,6 +196,5 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	add_var(v);
 
 	declaration->attrs._declare.var=v;
-	declaration->attrs._declare.expr=NULL;
-	$$->attrs.list.statements[$$->attrs.list.num-1]=declaration;
+	declaration->expr=NULL;
 }; 

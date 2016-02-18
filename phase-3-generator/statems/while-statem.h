@@ -18,8 +18,8 @@
 #include "generator/backend-exported.h"
 static inline void generate_while_loop(FILE *fd, struct statem_t *s, struct reg_t *retu, struct expr_t *cond, struct statem_t *block)
 {
-	cond=s->attrs._while.condition;
-	block=s->attrs._while.block;
+	cond=s->expr;
+	block=s->right;
 	int *l=malloc(sizeof(int));
 	unique_num++;
 	*l=unique_num;

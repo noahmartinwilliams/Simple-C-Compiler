@@ -100,6 +100,7 @@ void generate_function(FILE *fd, struct func_t *f)
 	generate_statement(fd, f->statement_list);
 	return_from_call(fd);
 	fprintf(fd, "\t.cfi_endproc\n");
+	prepare_for_new_function();
 }
 
 char* prepare_var_assignment(FILE *fd, struct expr_t *dest)
@@ -116,10 +117,8 @@ char* prepare_var_assignment(FILE *fd, struct expr_t *dest)
 void generate_global_vars(FILE *fd, struct statem_t *s)
 {
 	if (s->kind==list) {
-		int x;
-		for (x=0; x<s->attrs.list.num; x++) {
-			generate_global_vars(fd, s->attrs.list.statements[x]);
-		}
+		for (; s!=NULL ; s=s->right)
+			generate_global_vars(fd, s->left);
 	} else if (s->kind==declare) {
 		backend_make_global_var(fd, s->attrs._declare.var);
 		s->attrs._declare.var->scope_depth=0;
@@ -173,24 +172,18 @@ static off_t get_var_offset_expr(struct expr_t *e, off_t current_off)
 off_t get_var_offset(struct statem_t *s, off_t current_off)
 {
 	off_t o=0;
-	if (s->kind==list) {
-		int x;
-		for (x=0; x<s->attrs.list.num; x++)
-			o+=get_var_offset(s->attrs.list.statements[x], current_off+o);
-	} else if (s->kind==declare) {
+	if (s->left!=NULL)
+		o+=get_var_offset(s->left, current_off+o);
+	if (s->right!=NULL)
+		o+=get_var_offset(s->right, current_off+o);
+	if (s->expr!=NULL)
+		o+=get_var_offset_expr(s->expr, current_off+o);
+	if (s->kind==declare) {
 		o=get_type_size(s->attrs._declare.var->type);
 		s->attrs._declare.var->offset=-(o+current_off);
-	} else if (s->kind==_if) {
-		o+=get_var_offset(s->attrs._if.block, current_off+o);
-	} else if (s->kind==_while) {
-		o+=get_var_offset(s->attrs._while.block, current_off+o);
-	} else if (s->kind==do_while) {
-		o+=get_var_offset(s->attrs.do_while.block, current_off+o);
-		o+=get_var_offset_expr(s->attrs.do_while.condition, current_off+o);
 	} else if (s->kind==_for) {
-		o+=get_var_offset(s->attrs._for.block, current_off+o);
-	} else if (s->kind==expr) {
-		o+=get_var_offset_expr(s->attrs.expr, current_off+o);
+		o+=get_var_offset_expr(s->attrs._for.initial, current_off+o);
+		o+=get_var_offset_expr(s->attrs._for.update, current_off+o);
 	}
 
 	return o;

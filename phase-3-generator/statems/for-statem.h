@@ -19,8 +19,8 @@
 
 static inline void generate_for_loop(FILE *fd, struct statem_t *s, struct reg_t *retu, struct expr_t *cond, struct statem_t *block) 
 {
-	cond=s->attrs._for.cond;
-	block=s->attrs._for.block;
+	cond=s->expr;
+	block=s->right;
 	struct expr_t *update=s->attrs._for.update;
 	struct expr_t *initial=s->attrs._for.initial;
 

@@ -3,6 +3,7 @@
 #include "globals.h"
 #include "generator/globals.h"
 #include "types.h"
+#include "handle-vars.h"
 
 size_t get_type_size(struct type_t *t);
 off_t get_offset_of_member(struct type_t *t, char *name)
@@ -35,6 +36,7 @@ struct var_t* get_var_member(struct type_t *t, char *name)
 	}
 	return NULL;
 }
+
 struct type_t* get_struct_or_union_attr_type(struct type_t *t, char *name)
 {
 	struct tbody_t *tb=t->body;
@@ -87,6 +89,7 @@ size_t get_type_size(struct type_t *t)
 
 	if (t->body==NULL && t->pointer_depth >0)
 		return pointer_size;
+
 	else if (t->body==NULL && t->pointer_depth<=0)
 		return 0;
 

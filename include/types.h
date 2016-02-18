@@ -58,6 +58,8 @@ struct var_t {
 	off_t offset;
 	int scope_depth;
 	bool hidden;
+	bool is_register;
+	struct reg_t *reg;
 	struct type_t *type;
 	int refcount;
 };
@@ -65,56 +67,18 @@ struct var_t {
 struct statem_t {
 	enum { expr, list, declare, _while, ret, _if, _break, _continue, label, _goto, _for, do_while, _switch, _case, _default } kind;
 	bool has_gotos;
+	struct statem_t *left;
+	struct expr_t *expr; 
+	struct statem_t *right;
 	union {
 		char *label_name;
-		struct expr_t *expr;
 		struct {
 			struct var_t *var;
-			struct expr_t *expr;
 		} _declare;
 
 		struct {
-			struct statem_t *block;
-			struct expr_t *condition;
-			char *label;
-		} _case;
-
-		struct {
-			struct statem_t **statements;
-			int num;
-		} list;
-
-		struct {
-			struct expr_t *condition;
-			struct statem_t *block;
-		} _while;
-
-		struct {
-			struct expr_t *condition;
-			struct statem_t *block;
-		} do_while;
-
-		struct {
-			struct expr_t *condition;
-			struct statem_t *block;
-
-			struct statem_t *else_block;
-		} _if;
-
-		struct {
-			struct expr_t *initial, *cond, *update;
-			struct statem_t *block;
+			struct expr_t *initial, *update;
 		} _for;
-
-		struct {
-			struct statem_t *cases;
-			struct expr_t *tester;
-		} _switch;
-
-		struct {
-			struct statem_t *def;
-			char *label;
-		} _default;
 	} attrs;
 };
 

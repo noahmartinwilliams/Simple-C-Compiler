@@ -1,4 +1,5 @@
 %{
+#include <assert.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -93,7 +94,7 @@ static bool found_inline_in_function=false;
 %token <l> CONST_INT
 %token <str> IDENTIFIER
 %token <chr> CHAR_LITERAL
-%token UNION
+%token UNION REGISTER
 %type <vars> arg_declaration
 %type <expr> noncomma_expression expression binary_expr assignable_expr prefix_expr call_arg_list postfix_expr
 %type <expr> maybe_empty_expr

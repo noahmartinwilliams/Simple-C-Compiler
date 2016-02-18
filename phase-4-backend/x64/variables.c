@@ -29,6 +29,8 @@ static void inc_by_int(FILE *fd, int i, char *dest, size_t size)
 		fprintf(fd, "\taddl $%d, %s\n", i, dest);
 	else if (size==pointer_size)
 		fprintf(fd, "\taddq $%d, %s\n", i, dest);
+	else
+		error("inc_by_int", size);
 }
 
 void get_address(FILE *fd, struct expr_t *_var)
@@ -47,6 +49,12 @@ static inline void print_assign_var(FILE *fd, char *operator, struct reg_t *reg,
 
 void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 {
+	if (dest->is_register)
+		if (src->size==word_size)
+			fprintf(fd, "\tmovl %s, %s\n", reg_name(src), reg_name(dest->reg));
+		else
+			error("assign_var", src->size);
+			
 	if (src->use==FLOAT || src->use==FLOAT_RET) {
 		char *name=reg_name(src);
 		if (dest->scope_depth!=0) {
@@ -75,10 +83,11 @@ void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 			print_assign_var(fd, "movq", src, dest);
 		else
 			error("assign_var", size);
-	} else {
+	} else 
 		if (size==word_size)
 			fprintf(fd, "\tmovl %s, %s(%%rip)\n", reg_name(src), dest->name);
-	}
+		else
+			error("assign_var", size);
 } 
 
 static inline void print_read_var(FILE *fd, char *operator, char *reg, struct var_t *var)
@@ -88,6 +97,16 @@ static inline void print_read_var(FILE *fd, char *operator, char *reg, struct va
 
 void read_var(FILE *fd, struct var_t *v)
 {
+	if (v->is_register) {
+		if (v->reg->size==word_size)
+			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(v->reg));
+		else if (v->reg->size==pointer_size)
+			fprintf(fd, "\tmovq %s, %%rax\n", reg_name(v->reg));
+		else
+			error("read_var", v->reg->size);
+
+		return;
+	}
 	fprintf(fd, "\t.equ var$%s$%d, %d\n", v->name, v->scope_depth, v->offset);
 	if (v->scope_depth!=0) {
 		size_t size=get_type_size(v->type);
@@ -120,8 +139,6 @@ void assign_dereference(FILE *fd, struct reg_t *assign_from, struct reg_t *assig
 		fprintf(fd, "\tmovl %s, (%s)\n", reg_name(assign_from), reg_name(assign_to));
 	else if (assign_from->size==pointer_size)
 		fprintf(fd, "\tmovq %s, (%s)\n", reg_name(assign_from), reg_name(assign_to));
-	else {
-		fprintf(stderr, "Internal error: %ld size passed to assign_dereference. No size handler found.\n", assign_from->size);
-		exit(1);
-	}
+	else
+		error("assign_dereference", assign_from->size);
 }

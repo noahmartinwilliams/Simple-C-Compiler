@@ -268,6 +268,8 @@ assignable_expr: IDENTIFIER {
 		struct expr_t *e=malloc(sizeof(struct expr_t));
 		memcpy(e, $1, sizeof(struct expr_t));
 		e->type=get_struct_or_union_attr_type(type, $3);
+		if (e->type==NULL)
+			yyerror("Identifier is not a valid attribute.");
 		free($3);
 		$$=e;
 	} else if (body->is_struct) {
@@ -288,7 +290,7 @@ assignable_expr: IDENTIFIER {
 		deref->right=addition;
 		deref->attrs.un_op=strdup("*");
 		ref->attrs.un_op=strdup("&");
-		deref->type=get_var_member(type, $3)->type;
+		deref->type=get_var_member(type, $3)->type; /* source of the problems. */
 		deref->type->refcount++;
 
 		constant->attrs.cint_val=get_offset_of_member(type, $3);

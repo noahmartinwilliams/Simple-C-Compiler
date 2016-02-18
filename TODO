@@ -1,3 +1,4 @@
+*add register keyword use to float variables.
 *prepare variables.m4 for const keyword.
 *add const keyword.
 *add enumerations.
@@ -21,7 +22,6 @@
 *add offsetof keyword.
 *add alignas keyword.
 *add bit fields to data structures.
-*add register keyword.
 *add arithmetic assignment operators.
 *add new bit manipulation operators that I came up with.
 *add duff's device optimization.

@@ -6,11 +6,13 @@
 #include "generator/types.h"
 #include "globals.h"
 #include "types.h"
+#include "handle-types.h"
 #include "backend/float-arithmetic.h"
 
 struct reg_t **regs=NULL;
 int num_regs=0;
 
+void set_register_size(struct reg_t *r, size_t s);
 char* get_reg_name(struct reg_t *reg, size_t size)
 {
 	if (reg->use==FLOAT || reg->use==FLOAT_RET) 
@@ -20,6 +22,46 @@ char* get_reg_name(struct reg_t *reg, size_t size)
 	for (x=0; x<reg->num_sizes; x++)
 		if (reg->sizes[x].size==size)
 			return reg->sizes[x].name;
+}
+
+static int num_free_int_registers()
+{
+	int x;
+	int num=0;
+	for (x=0; x<num_regs; x++)
+		if (!regs[x]->in_use && regs[x]->is_available && regs[x]->use==INT)
+			num++;
+			
+	return num;
+}
+
+static bool register_has_size(size_t s, struct reg_t *r)
+{
+	int x;
+	for (x=0; x<r->num_sizes; x++)
+		if (r->sizes[x].size==s)
+			return true;
+	return false;
+}
+
+void make_register_variable(struct var_t *v)
+{
+	if (type_is_float(v->type)) /* TODO: fix this to work with floats. */
+		return;
+	else
+		if (num_free_int_registers() > 5) {
+			int x;
+			for (x=0; x<num_regs; x++) {
+				struct reg_t *r=regs[x];
+				if (!r->in_use && r->is_available && r->use==INT && register_has_size(get_type_size(v->type), r)) {
+					v->is_register=true;
+					v->reg=r;
+					set_register_size(r, get_type_size(v->type));
+					r->is_available=false;
+					break;
+				}
+			}
+		}
 }
 
 char* reg_name(struct reg_t *a)
@@ -60,7 +102,7 @@ struct reg_t* get_free_register (FILE *fd, size_t s, int depth, bool is_float)
 	struct reg_t *r;
 	for (x=0; x<num_regs; x++) {
 		r=regs[x];
-		if (!r->in_use && r->use==INT) {
+		if (!r->in_use && r->use==INT && r->is_available) {
 			regs[x]->in_use=true;
 			regs[x]->size=s;
 			return r;
@@ -73,7 +115,7 @@ struct reg_t* get_free_register (FILE *fd, size_t s, int depth, bool is_float)
 		current_depth->depth=depth;
 		current_depth->name=get_reg_name(r, pointer_size);
 		struct depth_value *reg_depth=pop((r->depths));
-		if (r->size==s && reg_depth->depth < depth && r->use==INT) {
+		if (r->size==s && reg_depth->depth < depth && r->use==INT && r->is_available) {
 
 			push((r->depths), reg_depth);
 			fprintf(fd, "\tpushq %s\n", get_reg_name(r, pointer_size));
@@ -110,7 +152,7 @@ void free_register(FILE *fd, struct reg_t *r)
 
 void set_register_size(struct reg_t *r, size_t s)
 {
-	if (r->use==FLOAT)
+	if (r->use==FLOAT) /* TODO: fix this up. */
 		return;
 
 	r->size=s;

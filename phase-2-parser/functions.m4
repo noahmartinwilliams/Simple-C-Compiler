@@ -33,34 +33,32 @@ arg_declaration: type_with_stars IDENTIFIER{
 };
 
 function_header: type_with_stars IDENTIFIER '(' ')' {
-	struct func_t *f=malloc(sizeof(struct func_t));
-	init_func(f);
-	f->name=strdup($2);
-	f->has_var_args=false;
-	f->ret_type=$1;
-	f->num_arguments=0;
-	f->arguments=NULL;
-	f->statement_list=NULL;
-	f->do_inline=false;
+	$$=malloc(sizeof(struct func_t));
+	init_func($$);
+	$$->name=strdup($2);
+	$$->has_var_args=false;
+	$$->ret_type=$1;
+	$$->num_arguments=0;
+	$$->arguments=NULL;
+	$$->statement_list=NULL;
+	$$->do_inline=false;
 	free(current_function);
-	current_function=strdup(f->name);
+	current_function=strdup($$->name);
 	free($2);
-	$$=f;
 } | type_with_stars IDENTIFIER '(' arg_declaration ')' {
-	struct func_t *f=malloc(sizeof(struct func_t));
-	f->name=strdup($2);
-	init_func(f);
-	f->ret_type=$1;
-	f->do_inline=false;
+	$$=malloc(sizeof(struct func_t));
+	$$->name=strdup($2);
+	init_func($$);
+	$$->ret_type=$1;
+	$$->do_inline=false;
 	$1->refcount++;
-	f->arguments=$4->vars;
-	f->num_arguments=$4->num_vars;
+	$$->arguments=$4->vars;
+	$$->num_arguments=$4->num_vars;
 	free($4);
 	free(current_function);
 	current_function=strdup($2);
 	free($2);
-	f->statement_list=NULL;
-	$$=f;
+	$$->statement_list=NULL;
 } | EXTERN function_header {
 	$2->attributes|=_extern;
 	$$=$2;

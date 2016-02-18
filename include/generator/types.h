@@ -15,6 +15,7 @@ struct reg_t {
 	int num_sizes;
 	size_t size;
 	bool in_use, used_for_call;
+	bool is_available;
 	struct stack_t *depths;
 	enum reg_use use;
 };

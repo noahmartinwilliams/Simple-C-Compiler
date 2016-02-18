@@ -25,8 +25,8 @@ static inline void generate_do_while_loop(FILE *fd, struct statem_t *s, struct r
 	push(loop_stack, l);
 
 	char *loop_start, *loop_end;
-	cond=s->attrs.do_while.condition;
-	block=s->attrs.do_while.block;
+	cond=s->expr;
+	block=s->right;
 	asprintf(&loop_start, "loop$start$%d", unique_num);
 	asprintf(&loop_end, "loop$end$%d", unique_num);
 

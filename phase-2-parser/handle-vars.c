@@ -4,6 +4,11 @@
 #include "handle-types.h"
 #include <stdio.h>
 
+void init_var(struct var_t *v)
+{
+	v->is_register=false;
+}
+
 void add_var(struct var_t *v)
 {
 	num_vars++;

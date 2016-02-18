@@ -40,7 +40,7 @@ struct reg_t* get_free_float_register(FILE *fd, size_t s, int depth)
 	struct reg_t *r;
 	for (x=0; x<num_regs; x++) {
 		r=regs[x];
-		if (r->in_use==false && r->use==FLOAT)
+		if (r->in_use==false && r->use==FLOAT && r->is_available)
 			return r;
 	}
 	for (x=0; x<num_regs; x++) {
@@ -49,7 +49,7 @@ struct reg_t* get_free_float_register(FILE *fd, size_t s, int depth)
 		current_depth->depth=depth;
 		current_depth->name=reg_name(r);
 		struct depth_value *reg_depth=pop((r->depths));
-		if (reg_depth->depth < depth && r->use==FLOAT) {
+		if (reg_depth->depth < depth && r->use==FLOAT && r->is_available) {
 			push((r->depths), reg_depth);
 			fprintf(fd, "\tpushsd %s\n", r->sizes[0].name);
 			current_stack_offset+=16;

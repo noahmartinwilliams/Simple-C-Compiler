@@ -21,21 +21,24 @@ type: TYPE {
 
 	struct tbody_t *body=type->body;
 	body->core_type=_INT;
-	body->attrs.vars.num_vars=$4->attrs.list.num;
+	int y=0;
+	struct statem_t *tmp=$4;
+	for (; tmp!=NULL; tmp=tmp->right, y++) {}
+	body->attrs.vars.num_vars=y;
 	body->attrs.vars.vars=calloc(body->attrs.vars.num_vars, sizeof(struct var_t*));
 	size_t size=0;
-	register int x;
 	body->attrs.vars.alignment=word_size;
-	struct statem_t **statements=$4->attrs.list.statements;
+	struct statem_t *current=$4;
 	size_t alignment=body->attrs.vars.alignment;
-	for (x=0; x<$4->attrs.list.num; x++) {
-		struct var_t *var=statements[x]->attrs._declare.var;
+	for (y=0; current!=NULL; current=current->right, y++) {
+		assert(current->left->kind==declare);
+		struct var_t *var=current->left->attrs._declare.var;
 		int s=get_type_size(var->type);
 		if (s<alignment)
 			size+=alignment;
 		else
 			size+=s;
-		body->attrs.vars.vars[x]=var;
+		body->attrs.vars.vars[y]=var;
 		var->refcount=1;
 
 	}
@@ -49,7 +52,6 @@ type: TYPE {
 	$$=type;
 	current_type=type;
 	free($2);
-
 } | UNION IDENTIFIER '{' struct_var_declarations '}' {
 	struct type_t *type=malloc(sizeof(struct type_t));
 	type->refcount=2;
@@ -68,14 +70,14 @@ type: TYPE {
 	size_t max_size=0;
 	struct var_t **v=body->attrs.vars.vars;
 	int num_vars=body->attrs.vars.num_vars;
-	struct statem_t **statements=$4->attrs.list.statements;
-	for (x=0; x<$4->attrs.list.num; x++) {
-		size_t s=get_type_size($4->attrs.list.statements[x]->attrs._declare.var->type);
+	struct statem_t *current=$4;
+	for (; current!=NULL; current=current->right) {
+		size_t s=get_type_size(current->left->attrs._declare.var->type);
 		num_vars++;
 		v=realloc(v, num_vars*sizeof(struct var_t*));
 		v[num_vars-1]=malloc(sizeof(struct var_t));
 
-		v[num_vars-1]=statements[x]->attrs._declare.var;
+		v[num_vars-1]=current->left->attrs._declare.var;
 		v[num_vars-1]->refcount=1;
 		if (s>=max_size)
 			max_size=s;

@@ -28,8 +28,8 @@ static inline void generate_switch_statement(FILE *fd, struct statem_t *s, struc
 	asprintf(&loop_end, "loop$end$%d", unique_num);
 	place_label(fd, loop_start);
 
-	block=s->attrs._switch.cases;
-	cond=s->attrs._switch.tester;
+	block=s->right;
+	cond=s->expr;
 	struct reg_t *input=get_free_register(fd, get_type_size(cond->type), depth, false);
 
 	place_comment(fd, "switch (");
@@ -38,41 +38,37 @@ static inline void generate_switch_statement(FILE *fd, struct statem_t *s, struc
 	place_comment(fd, ") {");
 
 	int x;
-	int num=block->attrs.list.num;
-	struct statem_t **statements=block->attrs.list.statements;
+	struct statem_t *statement=block;
 	bool found_default=false;
-	struct statem_t *statement;
 	struct statem_t *def=NULL;
-	for (x=0; x<num; x++) {
-		statement=statements[x];
+	for (; statement!=NULL; statement=statement->right) {
 		unique_num++;
-		if (statements[x]->kind==_case) {
+		if (statement->left->kind==_case) {
 			place_comment(fd, "case: ");
-			generate_expression(fd, statements[x]->attrs._case.condition);
-			asprintf(&(statement->attrs._case.label), "switch$case$%d", unique_num);
+			generate_expression(fd, statement->left->expr);
+			asprintf(&(statement->left->attrs.label_name), "switch$case$%d", unique_num);
 			compare_registers(fd, retu, input);
-			jmp_eq(fd, statement->attrs._case.label);
+			jmp_eq(fd, statement->left->attrs.label_name);
 		} else  {
 			found_default=true;
 			place_comment(fd, "default: ");
-			asprintf(&(statement->attrs._default.label), "switch$default$%d", unique_num);
-			jmp(fd, statement->attrs._default.label);
-			def=statement;
+			asprintf(&(statement->left->attrs.label_name), "switch$default$%d", unique_num);
+			jmp(fd, statement->left->attrs.label_name);
+			def=statement->left;
 		}
 	}
 
-	for (x=0; x<num; x++) {
-		statement=statements[x];
-		if (statement->kind==_case) {
-			place_label(fd, statement->attrs._case.label);
-			generate_statement(fd, statement->attrs._case.block);
-			free(statement->attrs._case.label);
+	for (statement=block; statement!=NULL; statement=statement->right) {
+		if (statement->left->kind==_case) {
+			place_label(fd, statement->left->attrs.label_name);
+			generate_statement(fd, statement->left->right);
+			free(statement->left->attrs.label_name);
 		}
 	}
 	if (found_default) {
-		place_label(fd, def->attrs._default.label);
-		generate_statement(fd, statement->attrs._default.def);
-		free(statement->attrs._default.label);
+		place_label(fd, def->attrs.label_name);
+		generate_statement(fd, def->right);
+		free(def->attrs.label_name);
 	}
 	place_label(fd, loop_end);
 	place_comment(fd, "}");
