@@ -91,6 +91,11 @@ void assign_constant_float(FILE *fd, struct expr_t *e)
 
 void read_float_var(FILE *fd, struct var_t *v)
 {
+	if (v->is_register) {
+		if (strcmp(reg_name(v->reg), "%xmm0"))
+			fprintf(fd, "\tmovsd %s, %%xmm0\n", reg_name(v->reg));
+		return;
+	}
 	if (v->scope_depth==0)
 		fprintf(fd, "\tcvtss2sd %s(%%rip), %%xmm0\n", v->name);
 	else

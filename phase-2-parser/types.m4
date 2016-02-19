@@ -32,7 +32,7 @@ type: TYPE {
 	size_t alignment=body->attrs.vars.alignment;
 	for (y=0; current!=NULL; current=current->right, y++) {
 		assert(current->left->kind==declare);
-		struct var_t *var=current->left->attrs._declare.var;
+		struct var_t *var=current->left->attrs.var;
 		int s=get_type_size(var->type);
 		if (s<alignment)
 			size+=alignment;
@@ -72,12 +72,12 @@ type: TYPE {
 	int num_vars=body->attrs.vars.num_vars;
 	struct statem_t *current=$4;
 	for (; current!=NULL; current=current->right) {
-		size_t s=get_type_size(current->left->attrs._declare.var->type);
+		size_t s=get_type_size(current->left->attrs.var->type);
 		num_vars++;
 		v=realloc(v, num_vars*sizeof(struct var_t*));
 		v[num_vars-1]=malloc(sizeof(struct var_t));
 
-		v[num_vars-1]=current->left->attrs._declare.var;
+		v[num_vars-1]=current->left->attrs.var;
 		v[num_vars-1]->refcount=1;
 		if (s>=max_size)
 			max_size=s;

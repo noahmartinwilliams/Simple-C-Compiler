@@ -24,15 +24,24 @@ char* get_reg_name(struct reg_t *reg, size_t size)
 			return reg->sizes[x].name;
 }
 
-static int num_free_int_registers()
+static int num_free_regs_type(enum reg_use r)
 {
 	int x;
 	int num=0;
 	for (x=0; x<num_regs; x++)
-		if (!regs[x]->in_use && regs[x]->is_available && regs[x]->use==INT)
+		if (!regs[x]->in_use && regs[x]->is_available && regs[x]->use==r)
 			num++;
 			
 	return num;
+}
+static inline int num_free_int_registers()
+{
+	return num_free_regs_type(INT);
+}
+
+static inline int num_free_float_registers()
+{
+	return num_free_regs_type(FLOAT);
 }
 
 static bool register_has_size(size_t s, struct reg_t *r)
@@ -46,9 +55,21 @@ static bool register_has_size(size_t s, struct reg_t *r)
 
 void make_register_variable(struct var_t *v)
 {
-	if (type_is_float(v->type)) /* TODO: fix this to work with floats. */
-		return;
-	else
+	if (type_is_float(v->type)) { 
+		if (num_free_float_registers() > 5) {
+			int x;
+			for (x=0; x<num_regs; x++) {
+				struct reg_t *r=regs[x];
+				if (!r->in_use && r->is_available && r->use==FLOAT) {
+					v->is_register=true;
+					v->reg=r;
+					r->is_available=false;
+					break;
+				}
+			}
+		}
+			
+	} else
 		if (num_free_int_registers() > 5) {
 			int x;
 			for (x=0; x<num_regs; x++) {

@@ -37,7 +37,7 @@ struct type_t {
 };
 
 struct expr_t {
-	enum { bin_op, pre_un_op, post_un_op, question, const_int, const_float, var, funccall, arg, const_str, const_size_t, func_val, func_ptr_call, convert } kind;
+	enum { bin_op=0x01, pre_un_op=0x02, post_un_op=0x03, question=0x04, const_int=0x05, const_float=0x06, var=0x07, funccall=0x08, arg=0x09, const_str=0x0A, const_size_t=0x0B, func_val=0x0C, func_ptr_call=0x0D, convert=0x0E } kind;
 	struct expr_t *left, *right;
 	struct type_t *type;
 	bool has_gotos;
@@ -65,16 +65,14 @@ struct var_t {
 };
 
 struct statem_t {
-	enum { expr, list, declare, _while, ret, _if, _break, _continue, label, _goto, _for, do_while, _switch, _case, _default } kind;
+	enum { expr=0x01, list=0x02, declare=0x03, _while=0x04, ret=0x05, _if=0x06, _break=0x07, _continue=0x08, label=0x09, _goto=0x0A, _for=0x0B, do_while=0x0C, _switch=0x0D, _case=0x0E, _default=0x0F } kind;
 	bool has_gotos;
 	struct statem_t *left;
 	struct expr_t *expr; 
 	struct statem_t *right;
 	union {
 		char *label_name;
-		struct {
-			struct var_t *var;
-		} _declare;
+		struct var_t *var;
 
 		struct {
 			struct expr_t *initial, *update;

@@ -49,11 +49,17 @@ static inline void print_assign_var(FILE *fd, char *operator, struct reg_t *reg,
 
 void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 {
-	if (dest->is_register)
-		if (src->size==word_size)
-			fprintf(fd, "\tmovl %s, %s\n", reg_name(src), reg_name(dest->reg));
-		else
-			error("assign_var", src->size);
+	if (dest->is_register) {
+		if (dest->reg->use==FLOAT) {
+			fprintf(fd, "\tmovsd %s, %s\n", reg_name(src), reg_name(dest->reg));
+		} else {
+			if (src->size==word_size)
+				fprintf(fd, "\tmovl %s, %s\n", reg_name(src), reg_name(dest->reg));
+			else
+				error("assign_var", src->size);
+		}
+		return;
+	}
 			
 	if (src->use==FLOAT || src->use==FLOAT_RET) {
 		char *name=reg_name(src);

@@ -14,11 +14,11 @@ struct_var_declarations: type IDENTIFIER ';' {
 
 	struct statem_t *var=s->left;
 	var->kind=declare;
-	var->attrs._declare.var=malloc(sizeof(struct var_t));
-	init_var(var->attrs._declare.var);
+	var->attrs.var=malloc(sizeof(struct var_t));
+	init_var(var->attrs.var);
 	var->expr=NULL;
 
-	struct var_t *v=var->attrs._declare.var;
+	struct var_t *v=var->attrs.var;
 	v->refcount=1;
 
 	v->type=$1;
@@ -42,11 +42,11 @@ struct_var_declarations: type IDENTIFIER ';' {
 	new->right=NULL;
 	new->left->kind=declare;
 	new=new->left;
-	new->attrs._declare.var=malloc(sizeof(struct var_t));
-	init_var(new->attrs._declare.var);
+	new->attrs.var=malloc(sizeof(struct var_t));
+	init_var(new->attrs.var);
 	new->expr=NULL;
 
-	struct var_t *v=new->attrs._declare.var;
+	struct var_t *v=new->attrs.var;
 
 	v->name=strdup($3);
 	v->type=$2;
@@ -59,7 +59,7 @@ struct_var_declarations: type IDENTIFIER ';' {
 var_declaration: REGISTER var_declaration_start ';' {
 	struct statem_t *s=$2;
 	for (; s!=NULL; s=s->right)
-		make_register_variable(s->left->attrs._declare.var);
+		make_register_variable(s->left->attrs.var);
 	$$=$2;
 } | var_declaration_start ';' {
 	$$=$1;
@@ -93,7 +93,7 @@ var_declaration: REGISTER var_declaration_start ';' {
 	struct statem_t *declaration=malloc(sizeof(struct statem_t));
 	init_statem(declaration);
 	declaration->kind=declare;
-	declaration->attrs._declare.var=v;
+	declaration->attrs.var=v;
 	declaration->expr=NULL;
 	v->scope_depth=scope_depth;
 	v->hidden=false;
@@ -109,7 +109,7 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	init_statem(declaration);
 	$$->right=NULL;
 	declaration->kind=declare;
-	struct var_t *v=declaration->attrs._declare.var=malloc(sizeof(struct var_t));
+	struct var_t *v=declaration->attrs.var=malloc(sizeof(struct var_t));
 	init_var(v);
 
 	v->type=$1;
@@ -141,7 +141,7 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	add_var(v);
 	v->type=$1;
 	$1->refcount++;
-	declaration->attrs._declare.var=v;
+	declaration->attrs.var=v;
 	declaration->expr=$4;
 
 } | var_declaration_start ',' stars IDENTIFIER '=' noncomma_expression {
@@ -169,7 +169,7 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	v->refcount=2;
 	add_var(v);
 
-	declaration->attrs._declare.var=v;
+	declaration->attrs.var=v;
 	declaration->expr=$6;
 } | var_declaration_start ',' stars IDENTIFIER {
 	$$=$1;
@@ -195,6 +195,6 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	v->refcount=2;
 	add_var(v);
 
-	declaration->attrs._declare.var=v;
+	declaration->attrs.var=v;
 	declaration->expr=NULL;
 }; 

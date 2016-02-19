@@ -9,46 +9,39 @@
 #include "globals.h"
 #include "handle-exprs.h"
 #include "handle-exprs.h"
+#include <stdint.h>
 
 void free_statem(struct statem_t *s)
 {
 	if (s==NULL)
 		return;
 
-	if (s->kind==expr || s->kind==ret) {
+	if (s->expr!=NULL)
 		free_expr(s->expr);
-	} else if (s->kind==_while) { /* TODO: free up block statement. */
-		free_expr(s->expr);
-		free_statem(s->right);
-	} else if (s->kind==_if) {
-		free_expr(s->expr);
-		free_statem(s->left);
-		if (s->right!=NULL)
-			free_statem(s->right);
-	} else if (s->kind==label || s->kind==_goto) {
-		free(s->attrs.label_name);
-	} else if (s->kind==_for) {
-		struct expr_t *initial=s->attrs._for.initial;
-		if (initial!=NULL)
-			free_expr(initial);
 
-		free_expr(s->attrs._for.update);
+	if (s->right!=NULL)
 		free_statem(s->right);
-	} else if (s->kind==do_while) {
-		free_expr(s->expr);
-		free_statem(s->right);
-	} else if (s->kind==declare) {
-		free_var(s->attrs._declare.var);
-		if (s->expr!=NULL)
-			free_expr(s->expr);
-	} else if (s->kind==_case) {
-		free_expr(s->expr);
-		free_statem(s->right);
-	} else if (s->kind==_switch) {
-		free_statem(s->right);
-		free_expr(s->expr);
-	} else if (s->kind==_default)
-		free_statem(s->right);
+
+	if (s->left!=NULL)
+		free_statem(s->left);
+
+	switch(s->kind) {
+	case label:
+	case _goto:
+		free(s->attrs.label_name);
+		break;
+
+	case _for:
+		if (s->attrs._for.initial!=NULL)
+			free_expr(s->attrs._for.initial);
+
+		if (s->attrs._for.update!=NULL)
+			free_expr(s->attrs._for.update);
+		break;
+
+	case declare:
+		free_var(s->attrs.var);
+	}
 	free(s);
 }
 
@@ -80,85 +73,47 @@ void print_statem(char *pre, struct statem_t *s)
 		exit(1);
 	}
 	char *new_pre;
-	if (s->kind==expr) {
+	int x=0;
+
+	if (s->expr!=NULL)
+		x++;
+	if (s->left!=NULL)
+		x++;
+	if (s->right!=NULL)
+		x++;
+
+	switch(s->kind) {
+	case expr:
 		fprintf(stderr, "%s|_statement kind: expression\n", pre);
-		asprintf(&new_pre, "%s ", pre);
-		print_e2(new_pre, s->expr);
-		free(new_pre);
-	} else if (s->kind==list) {
+		break;
+	case list:
 		fprintf(stderr, "%s|_statement kind: block\n", pre);
-		char *new_pre;
-		if (s->right!=NULL)
-			new_pre=fill_with_branches(pre, 2);
-		else
-			new_pre=fill_with_branches(pre, 1);
-
-		print_statem(new_pre, s->left);
-		free(new_pre);
-
-		if (s->right!=NULL) {
-			new_pre=fill_with_branches(pre, 1);
-			print_statem(new_pre, s->right);
-			free(new_pre);
-		}
-	} else if (s->kind==declare) {
-		struct var_t *var=s->attrs._declare.var;
-		if (s->expr!=NULL) {
-			char *new_pre=NULL;
-			new_pre=fill_with_branches(pre, 1);
-			fprintf(stderr, "%s|_statment kind: declare, var: %s, type: %s, pointer_depth: %d, size: %ld \n", pre, var->name, var->type->name, var->type->pointer_depth, get_type_size(var->type));
-			print_e2(new_pre, s->expr);
-			free(new_pre);
-		} else
-			fprintf(stderr, "%s|_statment kind: declare, var: %s, type: %s, pointer_depth: %d, size: %ld \n", pre, var->name, var->type->name, var->type->pointer_depth, get_type_size(var->type));
-	} else if (s->kind==_while) {
+		break;
+	case declare: 
+		fprintf(stderr, "%s|_statment kind: declare, var: %s, type: %s, pointer_depth: %d, size: %ld \n", pre, s->attrs.var->name, s->attrs.var->type->name, s->attrs.var->type->pointer_depth, get_type_size(s->attrs.var->type));
+		break;
+	case _while:
 		fprintf(stderr, "%s|_statement kind: while loop\n", pre);
-		char *new_pre;
-		asprintf(&new_pre, "%s |", pre);
-		print_e2(new_pre, s->expr);
-		free(new_pre);
-
-		asprintf(&new_pre, "%s ", pre);
-		print_statem(new_pre, s->right);
-		free(new_pre);
-	} else if (s->kind==ret) {
+		break;
+	case ret:
 		fprintf(stderr, "%s|_statement kind: return\n", pre);
-		asprintf(&new_pre, "%s ", pre);
-		print_e2(new_pre, s->expr);
-		free(new_pre);
-	} else if (s->kind==_if) {
+		break;
+	case _if:
 		fprintf(stderr, "%s|_statement kind: if statement\n", pre);
-		char *new_pre;
-		if (s->right==NULL) {
-			asprintf(&new_pre, "%s |", pre);
-			print_e2(new_pre, s->expr);
-			free(new_pre);
-			asprintf(&new_pre, "%s ", pre);
-			print_statem(new_pre, s->left);
-			free(new_pre);
-		} else {
-			asprintf(&new_pre, "%s | | ", pre);
-			print_e2(new_pre, s->expr);
-			free(new_pre);
-
-			asprintf(&new_pre, "%s | ", pre);
-			print_statem(new_pre, s->left);
-			free(new_pre);
-
-			fprintf(stderr, "%s |_ else\n", pre);
-			asprintf(&new_pre, "%s  ", pre);
-			print_statem(new_pre, s->right);
-			free(new_pre);
-		} 
-	} else if (s->kind==_break)
+		break;
+	case _break:
 		fprintf(stderr, "%s|_ break\n", pre);
-	else if (s->kind==_continue)
+		break;
+	case _continue:
 		fprintf(stderr, "%s|_ continue\n", pre);
-	else if (s->kind==_goto)
+		break;
+	case _goto:
 		fprintf(stderr, "%s|_ goto %s\n", pre, s->attrs.label_name);
-	else if (s->kind==label)
+		break;
+	case label:
 		fprintf(stderr, "%s|_ label %s:\n", pre, s->attrs.label_name);
-	else if (s->kind==_for) {
+		break;
+	case _for:
 		fprintf(stderr, "%s|_ for \n", pre);
 		char *new_pre=NULL;
 		asprintf(&new_pre, "%s | | | ", pre);
@@ -177,41 +132,37 @@ void print_statem(char *pre, struct statem_t *s)
 		asprintf(&new_pre, "%s ", pre);
 		print_statem(new_pre, s->right);
 		free(new_pre);
-	} else if (s->kind==do_while ) {
+		return;
+	case do_while :
 		fprintf(stderr, "%s|_statement kind: do while loop\n", pre);
-		char *new_pre;
-		asprintf(&new_pre, "%s |", pre);
-		print_e2(new_pre, s->expr);
-		free(new_pre);
-
-		asprintf(&new_pre, "%s ", pre);
-		print_statem(new_pre, s->right);
-		free(new_pre);
-	} else if (s->kind==_switch) {
+		break;
+	case _switch:
 		fprintf(stderr, "%s|_ switch\n", pre);
+		break;
+	case _case:
+		fprintf(stderr, "%s|_ statement kind: case \n", pre);
+		break;
+	}
 
-		int x;
-		new_pre=fill_with_branches(pre, 2);
+	new_pre=fill_with_branches(pre, x);
+	if (s->expr!=NULL) {
 		print_e2(new_pre, s->expr);
 		free(new_pre);
-		new_pre=fill_with_branches(pre, 1);
-
-		print_statem(new_pre, s->right);
-		free(new_pre);
-	} else if (s->kind==_case) {
-		fprintf(stderr, "%s|_ statement kind: case \n", pre);
-		if (s->right!=NULL) {
-			new_pre=fill_with_branches(pre, 2);
-			print_e2(new_pre, s->expr);
-			free(new_pre);
-			new_pre=fill_with_branches(pre, 1);
-			print_statem(new_pre, s->right);
-			free(new_pre);
-		} else {
-			new_pre=fill_with_branches(pre, 1);
-			print_e2(new_pre, s->expr);
-			free(new_pre);
-		}
+		x--;
+		new_pre=fill_with_branches(pre, x);
 	}
+
+	if (s->left!=NULL) {
+		print_statem(new_pre, s->left);
+		free(new_pre);
+		x--;
+		new_pre=fill_with_branches(pre, x);
+	}
+
+	if (s->right!=NULL) {
+		print_statem(new_pre, s->right);
+	}
+
+	free(new_pre);
 }
 #endif

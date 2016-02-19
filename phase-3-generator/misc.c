@@ -120,8 +120,8 @@ void generate_global_vars(FILE *fd, struct statem_t *s)
 		for (; s!=NULL ; s=s->right)
 			generate_global_vars(fd, s->left);
 	} else if (s->kind==declare) {
-		backend_make_global_var(fd, s->attrs._declare.var);
-		s->attrs._declare.var->scope_depth=0;
+		backend_make_global_var(fd, s->attrs.var);
+		s->attrs.var->scope_depth=0;
 	}
 }
 
@@ -179,8 +179,8 @@ off_t get_var_offset(struct statem_t *s, off_t current_off)
 	if (s->expr!=NULL)
 		o+=get_var_offset_expr(s->expr, current_off+o);
 	if (s->kind==declare) {
-		o=get_type_size(s->attrs._declare.var->type);
-		s->attrs._declare.var->offset=-(o+current_off);
+		o=get_type_size(s->attrs.var->type);
+		s->attrs.var->offset=-(o+current_off);
 	} else if (s->kind==_for) {
 		o+=get_var_offset_expr(s->attrs._for.initial, current_off+o);
 		o+=get_var_offset_expr(s->attrs._for.update, current_off+o);

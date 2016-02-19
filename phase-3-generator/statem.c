@@ -47,7 +47,7 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		if (s->expr!=NULL) {
 			struct reg_t *retu=get_ret_register(word_size, s->expr->type->body->core_type==_FLOAT);
 			generate_expression(fd, s->expr);
-			assign_var(fd, retu, s->attrs._declare.var);
+			assign_var(fd, retu, s->attrs.var);
 		}
 		return;
 	} else if (s->kind==_if)
