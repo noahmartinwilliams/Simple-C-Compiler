@@ -6,6 +6,7 @@
 #include "globals.h"
 #include "handle-exprs.h"
 #include "handle-funcs.h"
+#include "handle-consts.h"
 #include "handle-statems.h"
 #include "handle-types.h"
 #include "handle-vars.h"
@@ -42,6 +43,7 @@ int main(int argc, char *argv[])
 	cleanup_backend();
 	free_all_types();
 	free_all_vars();
+	free_all_constants();
 	free(current_file);
 	fclose(output);
 	return 0;

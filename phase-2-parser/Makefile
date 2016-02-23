@@ -5,10 +5,10 @@ M4=m4 -I .
 
 
 ifdef DEBUG
-../handle.a: handle-types.o handle-exprs.o handle-statems.o handle-funcs.o handle-vars.o print-tree.o comp.tab.o
+../handle.a: handle-types.o handle-exprs.o handle-statems.o handle-funcs.o handle-vars.o print-tree.o comp.tab.o handle-consts.o
 	$(AR)
 else
-../handle.a: handle-types.o handle-exprs.o handle-statems.o handle-funcs.o handle-vars.o comp.tab.o
+../handle.a: handle-types.o handle-exprs.o handle-statems.o handle-funcs.o handle-vars.o comp.tab.o handle-consts.o
 	$(AR)
 endif
 

@@ -10,6 +10,7 @@
 #include "handle-funcs.h"
 #include "handle-statems.h"
 #include "handle-types.h"
+#include "handle-consts.h"
 #include "handle-vars.h"
 #include "generator/backend-exported.h"
 #ifdef DEBUG
@@ -72,6 +73,11 @@ struct arguments_t {
 
 static bool found_inline_in_function=false;
 
+static inline bool is_constant_kind(struct expr_t *e)
+{
+	return e->kind==const_int || e->kind==const_float || e->kind==const_str;
+}
+
 %}
 %union {
 	long int l;
@@ -94,7 +100,7 @@ static bool found_inline_in_function=false;
 %token <l> CONST_INT
 %token <str> IDENTIFIER
 %token <chr> CHAR_LITERAL
-%token UNION REGISTER
+%token UNION REGISTER CONST
 %type <vars> arg_declaration
 %type <expr> noncomma_expression expression binary_expr assignable_expr prefix_expr call_arg_list postfix_expr
 %type <expr> maybe_empty_expr
@@ -134,7 +140,8 @@ file_entry:  function {
 	if (!$1->do_inline)
 		generate_function(output, $1);
 } | var_declaration {
-	generate_global_vars(output, $1);
+	if ($1!=NULL)
+		generate_global_vars(output, $1);
 } | function_header ';' {
 	add_func($1);
 	multiple_functions=true;

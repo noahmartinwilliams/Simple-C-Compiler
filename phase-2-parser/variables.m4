@@ -61,6 +61,9 @@ var_declaration: REGISTER var_declaration_start ';' {
 	for (; s!=NULL; s=s->right)
 		make_register_variable(s->left->attrs.var);
 	$$=$2;
+} | CONST var_declaration_start ';' {
+	$$=$2;
+	read_const_keyword=false;
 } | var_declaration_start ';' {
 	$$=$1;
 } | type_with_stars '(' stars IDENTIFIER ')' '(' arg_declaration ')' ';' {
@@ -102,6 +105,9 @@ var_declaration: REGISTER var_declaration_start ';' {
 };
 
 var_declaration_start: type_with_stars IDENTIFIER {
+	if (read_const_keyword) {
+		yyerror("constant not set at declaration");
+	}
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
 	$$->kind=list;
@@ -122,56 +128,69 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	declaration->expr=NULL;
 	add_var(v);
 } | type_with_stars IDENTIFIER '=' noncomma_expression { 
-	$$=malloc(sizeof(struct statem_t));
-	init_statem($$);
-	$$->kind=list;
-	$$->right=NULL;
-	struct statem_t *declaration=$$->left=malloc(sizeof(struct statem_t));
-	init_statem(declaration);
-	declaration->kind=declare;
-	struct var_t *v;
-	v=malloc(sizeof(struct var_t));
-	init_var(v);
+	if (read_const_keyword) {
+		add_constant($2, scope_depth, $4);
+		$$=NULL;
+	} else {
+		$$=malloc(sizeof(struct statem_t));
+		init_statem($$);
+		$$->kind=list;
+		$$->right=NULL;
+		struct statem_t *declaration=$$->left=malloc(sizeof(struct statem_t));
+		init_statem(declaration);
+		declaration->kind=declare;
+		struct var_t *v;
+		v=malloc(sizeof(struct var_t));
+		init_var(v);
 
-	v->name=strdup($2);
-	free($2);
-	v->scope_depth=scope_depth;
-	v->hidden=false;
-	v->refcount=4;
-	add_var(v);
-	v->type=$1;
-	$1->refcount++;
-	declaration->attrs.var=v;
-	declaration->expr=$4;
+		v->name=strdup($2);
+		free($2);
+		v->scope_depth=scope_depth;
+		v->hidden=false;
+		v->refcount=4;
+		add_var(v);
+		v->type=$1;
+		$1->refcount++;
+		declaration->attrs.var=v;
+		declaration->expr=$4;
+	}
 
 } | var_declaration_start ',' stars IDENTIFIER '=' noncomma_expression {
-	$$=$1;
-	struct statem_t *s=$$;
-	for (; s->right!=NULL; s=s->right) {}
-	s->right=malloc(sizeof(struct statem_t));
-	init_statem(s->right);
-	s=s->right;
-	s->kind=list;
-	s->right=NULL;
-	struct statem_t *declaration=s->left=malloc(sizeof(struct statem_t));
-	init_statem(declaration);
-	declaration->kind=declare;
-	struct var_t *v=malloc(sizeof(struct var_t));
-	init_var(v);
+	if (read_const_keyword) {
+		$$=NULL;
+		add_constant($4, scope_depth, $6);
+	} else {
+		$$=$1;
+		struct statem_t *s=$$;
+		for (; s->right!=NULL; s=s->right) {}
+		s->right=malloc(sizeof(struct statem_t));
+		init_statem(s->right);
+		s=s->right;
+		s->kind=list;
+		s->right=NULL;
+		struct statem_t *declaration=s->left=malloc(sizeof(struct statem_t));
+		init_statem(declaration);
+		declaration->kind=declare;
+		struct var_t *v=malloc(sizeof(struct var_t));
+		init_var(v);
 
-	v->name=strdup($4);
-	free($4);
+		v->name=strdup($4);
+		free($4);
 
-	v->scope_depth=scope_depth;
-	v->hidden=false;
-	v->type=increase_type_depth(current_type, $3);
-	v->type->refcount++;
-	v->refcount=2;
-	add_var(v);
+		v->scope_depth=scope_depth;
+		v->hidden=false;
+		v->type=increase_type_depth(current_type, $3);
+		v->type->refcount++;
+		v->refcount=2;
+		add_var(v);
 
-	declaration->attrs.var=v;
-	declaration->expr=$6;
+		declaration->attrs.var=v;
+		declaration->expr=$6;
+	}
 } | var_declaration_start ',' stars IDENTIFIER {
+	if (read_const_keyword) {
+		yyerror("constant not set at declaration");
+	}
 	$$=$1;
 	struct statem_t *s=$$;
 	for (; s->right!=NULL; s=s->right) {}

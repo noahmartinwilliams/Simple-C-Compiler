@@ -9,7 +9,6 @@
 #include "globals.h"
 #include "handle-exprs.h"
 #include "handle-exprs.h"
-#include <stdint.h>
 
 void free_statem(struct statem_t *s)
 {

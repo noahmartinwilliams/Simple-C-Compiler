@@ -64,6 +64,13 @@ struct var_t {
 	int refcount;
 };
 
+struct const_t {
+	char *name;
+	int scope;
+	bool is_hidden;
+	struct expr_t *e;
+};
+
 struct statem_t {
 	enum { expr=0x01, list=0x02, declare=0x03, _while=0x04, ret=0x05, _if=0x06, _break=0x07, _continue=0x08, label=0x09, _goto=0x0A, _for=0x0B, do_while=0x0C, _switch=0x0D, _case=0x0E, _default=0x0F } kind;
 	bool has_gotos;

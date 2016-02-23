@@ -7,7 +7,7 @@ then
 	TMP=$(mktemp)
 	trap "rm $TMP" EXIT
 	cpp -I ./include $1 >$TMP
-	./cc $2-output.s $TMP ../phase-4-backend/libx64-backend.so
+	./cc $2-output.s $TMP $(./get-arc-name.sh)
 	as $2-output.s -o output.o
 	gcc output.o -o $2
 else

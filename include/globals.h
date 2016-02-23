@@ -19,6 +19,11 @@ extern int num_vars;
 extern struct func_t **funcs;
 extern int num_funcs;
 
+extern struct const_t **constants;
+extern int num_consts;
+
+extern bool read_const_keyword;
+
 #ifdef HAIKU_EASTER_EGG
 extern int number_of_syllables;
 extern int current_haiku_line;

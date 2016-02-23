@@ -1,6 +1,3 @@
-*add register keyword use to float variables.
-*prepare variables.m4 for const keyword.
-*add const keyword.
 *add enumerations.
 *Check out _setjmp
 *Solve this issue for, while, and do while

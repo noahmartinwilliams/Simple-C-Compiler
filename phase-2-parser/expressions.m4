@@ -149,6 +149,8 @@ noncomma_expression: CONST_INT {
 };
 
 postfix_expr: assignable_expr INC_OP {
+	if (is_constant_kind($1))
+		yyerror("can not increment constant.");
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=post_un_op;
 	e->left=$1;
@@ -158,6 +160,8 @@ postfix_expr: assignable_expr INC_OP {
 	$1->type->refcount++;
 	$$=e;
 } | assignable_expr DEC_OP {
+	if (is_constant_kind($1))
+		yyerror("can not decrement constant.");
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=post_un_op;
 	e->left=$1;
@@ -169,6 +173,9 @@ postfix_expr: assignable_expr INC_OP {
 };
 
 prefix_expr: '&' assignable_expr {
+	if (is_constant_kind($2))
+		/* This can happen thanks to the const keyword. */
+		yyerror("can not take address of constant.");
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=pre_un_op;
 	e->attrs.un_op=strdup("&");
@@ -195,6 +202,9 @@ prefix_expr: '&' assignable_expr {
 	e->type->refcount++;
 	$$=e;
 } | INC_OP assignable_expr {
+	if (is_constant_kind($2))
+		/* This can happen thanks to the const keyword. */
+		yyerror("can not increment constant.");
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=pre_un_op;
 	e->attrs.un_op=strdup("++");
@@ -224,36 +234,42 @@ prefix_expr: '&' assignable_expr {
 };
 
 assignable_expr: IDENTIFIER {
-	struct var_t *v=get_var_by_name($1);
-	if (v==NULL) {
-		struct func_t *f=get_func_by_name($1);
-		if (f==NULL) {
-			yyerror("Unkown var");
-			exit(1);
-		}
-		free($1);
-		struct expr_t *e=malloc(sizeof(struct expr_t));
-		e->kind=func_val;
-		e->type=increase_type_depth(get_type_by_name("void"), 1);
-		/*TODO: fix this to be more sophisticated later on. */
-
-		e->left=e->right=NULL;
-		e->has_gotos=false;
-		e->attrs.function=f;
-		$$=e;
+	if (is_constant($1)!=NULL) {
+		$$=is_constant($1);
 	} else {
-		free($1);
-		struct expr_t *e=malloc(sizeof(struct expr_t));
-		e->left=NULL;
-		e->right=NULL;
-		e->kind=var;
-		e->attrs.var=v;
-		e->type=v->type;
-		e->type->refcount++;
-		v->refcount++;
-		$$=e;
+		struct var_t *v=get_var_by_name($1);
+		if (v==NULL) {
+			struct func_t *f=get_func_by_name($1);
+			if (f==NULL) {
+				yyerror("Unkown var");
+				exit(1);
+			}
+			free($1);
+			struct expr_t *e=malloc(sizeof(struct expr_t));
+			e->kind=func_val;
+			e->type=increase_type_depth(get_type_by_name("void"), 1);
+			/*TODO: fix this to be more sophisticated later on. */
+
+			e->left=e->right=NULL;
+			e->has_gotos=false;
+			e->attrs.function=f;
+			$$=e;
+		} else {
+			free($1);
+			struct expr_t *e=malloc(sizeof(struct expr_t));
+			e->left=NULL;
+			e->right=NULL;
+			e->kind=var;
+			e->attrs.var=v;
+			e->type=v->type;
+			e->type->refcount++;
+			v->refcount++;
+			$$=e;
+		}
 	}
 } | '*' assignable_expr {
+	if ($2->kind==const_int || $2->kind==const_float) 
+		yyerror("can not dereference constant.");
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=pre_un_op;
 	e->attrs.un_op=strdup("*");
@@ -348,6 +364,9 @@ binary_expr:  noncomma_expression '*' noncomma_expression {
 } | noncomma_expression '-' noncomma_expression {
 	$$=make_bin_op("-", $1, $3);
 } | assignable_expr '=' noncomma_expression {
+	if (is_constant_kind($1))
+		/* This can happen due to the const keyword. */
+		yyerror("error: can not assign to constant.");
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	struct expr_t *a=$1, *b=$3;
 	parser_type_cmp(&a, &b);
@@ -365,6 +384,8 @@ binary_expr:  noncomma_expression '*' noncomma_expression {
 } | noncomma_expression NE_TEST noncomma_expression {
 	$$=make_bin_op("!=", $1, $3);
 } | assignable_expr ASSIGN_OP noncomma_expression {
+	if (is_constant_kind($1))
+		yyerror("can't assign to constant.");
 	$$=make_bin_op($2, $1, $3);
 } | noncomma_expression GE_TEST noncomma_expression {
 	$$=make_bin_op(">=", $1, $3);

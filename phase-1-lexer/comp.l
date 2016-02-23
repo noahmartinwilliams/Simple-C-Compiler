@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "handle-types.h"
+#include "handle-consts.h"
 void count(char *s);
 
 #ifdef HAIKU_EASTER_EGG
@@ -87,6 +88,7 @@ void handle_preproc_token(char *str)
 "."	{ count(yytext); return '.'; }
 "->"	{ count(yytext); return POINTER_OP; }
 "..."	{ count(yytext); return MULTI_ARGS; }
+"const"	{ count(yytext); read_const_keyword=true; return CONST; }
 "__alignof__"	{ count(yytext); return ALIGNOF; }
 "register"	{ count(yytext); return REGISTER; }
 "default"	{ count(yytext); return DEFAULT; }
@@ -142,7 +144,15 @@ void handle_preproc_token(char *str)
 "&"	{ count(yytext); return '&'; }
 "~"	{ count(yytext); return '~'; }
 [ \t\n]	{ count(yytext); }
-[_a-zA-Z][_a-zA-Z0-9]*	{ count(yytext); haiku_easter_egg(yytext); if (get_type_by_name(yytext)==NULL) { yylval.str=strdup(yytext); return IDENTIFIER ; } else { yylval.type=get_type_by_name(yytext); return TYPE; } }
+[_a-zA-Z][_a-zA-Z0-9]*	{ count(yytext); 
+	haiku_easter_egg(yytext); 
+	if (get_type_by_name(yytext)==NULL ) { 
+		yylval.str=strdup(yytext); 
+		return IDENTIFIER ; 
+	} else { 
+		yylval.type=get_type_by_name(yytext); 
+		return TYPE;
+	} }
 <in_comment>[^*\n]*	{ count(yytext); }
 <in_comment>"*"+[^*/\n]*	{ count(yytext); }
 <in_comment>\n	{ count(yytext); }
