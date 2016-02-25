@@ -163,4 +163,13 @@ enum_element: IDENTIFIER {
 	$$=malloc(sizeof(struct enum_element));
 	$$->name=$1;
 	$$->i=-1;
+} | IDENTIFIER '=' noncomma_expression {
+	if ($3->kind!=const_int) {
+		yyerror("Only constant integers are allowed for enumeration value specifications.");
+		exit(1);
+	}
+	$$=malloc(sizeof(struct enum_element));
+	$$->name=$1;
+	$$->i=$3->attrs.cint_val;
+	free_expr($3);
 }; 
