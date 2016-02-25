@@ -96,4 +96,64 @@ type: TYPE {
 	$$=current_type=get_struct_by_name($2);
 	$$->refcount+=2;
 	free($2);
+} | ENUM IDENTIFIER '{' enum_elements '}' {
+	free_type(current_type);
+	int x;
+	for (x=0; $4[x]!=NULL; x++) {}
+	int num_enums=++x;
+	struct type_t *type=malloc(sizeof(struct type_t));
+	type->refcount=2;
+
+	struct tbody_t *bod=type->body=malloc(sizeof(struct tbody_t));
+	bod->refcount=1;
+	bod->base_pointer_depth=type->pointer_depth=0;
+	bod->is_struct=bod->is_union=bod->is_func_pointer=false;
+	bod->is_enum=true;
+	bod->size=num_enums%byte_size>0 ? ((num_enums-(num_enums%byte_size))+byte_size)/byte_size : num_enums/byte_size;
+	bod->core_type=_INT;
+
+	type->name=$2;
+	type->native_type=false;
+
+	add_type(type);
+	struct const_t **consts=calloc(num_enums, sizeof(struct const_t*));
+
+	for (x=0; $4[x]!=NULL; x++) {
+		struct expr_t *e=malloc(sizeof(struct expr_t));
+		e->kind=const_int;
+		e->left=e->right=NULL;
+		e->type=type;
+		type->refcount++;
+		e->has_gotos=false;
+		e->attrs.cint_val=$4[x]->i >=0 ? $4[x]->i : 1 << x;
+		add_constant($4[x]->name, scope_depth, e);
+	}
+
+	for (x=0; $4[x]!=NULL; x++)
+		free($4[x]);
+	free($4);
+	current_type=type;
+	type->refcount++;
+	$$=type;
 };
+
+enum_elements: enum_element {
+	$$=calloc(2, sizeof(struct enum_element*));
+	$$[0]=$1;
+	$$[1]=NULL;
+} | enum_elements ',' enum_element {
+	/* TODO: finish adding enumerations. */
+	$$=$1;
+	int x;
+	for (x=0; $1[x]!=NULL; x++) {
+	}
+	$$=realloc($$, (x+2)*sizeof(struct enum_element*));
+	$$[x]=$3;
+	$$[x+1]=NULL;
+};
+
+enum_element: IDENTIFIER {
+	$$=malloc(sizeof(struct enum_element));
+	$$->name=$1;
+	$$->i=-1;
+}; 

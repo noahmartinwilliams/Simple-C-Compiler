@@ -88,6 +88,7 @@ void handle_preproc_token(char *str)
 "."	{ count(yytext); return '.'; }
 "->"	{ count(yytext); return POINTER_OP; }
 "..."	{ count(yytext); return MULTI_ARGS; }
+"enum"	{ count(yytext); return ENUM; }
 "const"	{ count(yytext); read_const_keyword=true; return CONST; }
 "__alignof__"	{ count(yytext); return ALIGNOF; }
 "register"	{ count(yytext); return REGISTER; }

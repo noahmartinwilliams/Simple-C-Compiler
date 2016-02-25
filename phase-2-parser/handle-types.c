@@ -57,7 +57,7 @@ struct type_t* get_type_by_name(char *name)
 		if (!strcmp(name, types[x]->name) && types[x]->body==NULL)
 			return types[x];
 
-		if (!strcmp(name, types[x]->name) && !types[x]->body->is_struct)
+		if (!strcmp(name, types[x]->name) && !types[x]->body->is_struct && !types[x]->body->is_union && !types[x]->body->is_enum)
 			return types[x];
 	}
 	return NULL;

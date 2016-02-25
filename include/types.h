@@ -11,7 +11,7 @@ struct tbody_t {
 	size_t size;
 	int refcount;
 	int base_pointer_depth;
-	bool is_struct, is_union, is_func_pointer;
+	bool is_struct, is_union, is_func_pointer, is_enum;
 	enum { _FLOAT, _INT } core_type;
 	union {
 		struct {

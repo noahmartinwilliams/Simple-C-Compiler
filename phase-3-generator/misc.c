@@ -33,6 +33,7 @@ void setup_types()
 	b->refcount=1;
 	b->is_func_pointer=false;
 	b->is_union=false;
+	b->is_enum=false;
 	i->refcount=1;
 	i->native_type=true;
 	b->core_type=_INT;
@@ -44,6 +45,7 @@ void setup_types()
 	b=i->body=malloc(sizeof(struct tbody_t));
 	b->size=char_size;
 	b->is_struct=false;
+	b->is_enum=false;
 	b->core_type=_INT;
 	b->is_func_pointer=false;
 	b->refcount=1;
@@ -66,6 +68,7 @@ void setup_types()
 	b=i->body=malloc(sizeof(struct tbody_t));
 	b->size=sizeof(size_t);
 	b->is_struct=false;
+	b->is_enum=false;
 	b->is_func_pointer=false;
 	b->refcount=1;
 	b->is_union=false;
@@ -79,6 +82,7 @@ void setup_types()
 	i->pointer_depth=0;
 	b=i->body=malloc(sizeof(struct tbody_t));
 	b->size=float_size;
+	b->is_enum=false;
 	b->is_struct=false;
 	b->is_func_pointer=false;
 	b->refcount=1;

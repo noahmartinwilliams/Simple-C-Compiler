@@ -1,4 +1,6 @@
-*add enumerations.
+*add "enum a b;" for var declarations.
+*add assigning numbers to enumeration values.
+*add more tests for enumerations.
 *Check out _setjmp
 *Solve this issue for, while, and do while
 	if (0) {

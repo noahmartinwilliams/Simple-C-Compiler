@@ -78,6 +78,11 @@ static inline bool is_constant_kind(struct expr_t *e)
 	return e->kind==const_int || e->kind==const_float || e->kind==const_str;
 }
 
+struct enum_element {
+	int i;
+	char *name;
+};
+
 %}
 %union {
 	long int l;
@@ -89,11 +94,13 @@ static inline bool is_constant_kind(struct expr_t *e)
 	struct var_t *var;
 	struct arguments_t *vars;
 	char chr;
+	struct enum_element **enum_elements;
+	struct enum_element *enum_element;
 }
 %define parse.error verbose
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST RETURN STRUCT WHILE GE_TEST LE_TEST FOR INC_OP DO
 %token SHIFT_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF MULTI_ARGS STATIC INLINE SIZEOF
-%token POINTER_OP DEFAULT SWITCH CASE ALIGNOF
+%token POINTER_OP DEFAULT SWITCH CASE ALIGNOF ENUM
 %token <str> STR_LITERAL 
 %token <type> TYPE
 %token <str> ASSIGN_OP
@@ -102,6 +109,8 @@ static inline bool is_constant_kind(struct expr_t *e)
 %token <chr> CHAR_LITERAL
 %token UNION REGISTER CONST
 %type <vars> arg_declaration
+%type <enum_elements> enum_elements
+%type <enum_element> enum_element
 %type <expr> noncomma_expression expression binary_expr assignable_expr prefix_expr call_arg_list postfix_expr
 %type <expr> maybe_empty_expr
 %type <statem> statement statement_list var_declaration struct_var_declarations
