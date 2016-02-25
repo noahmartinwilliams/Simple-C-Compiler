@@ -82,7 +82,8 @@ var_declaration: REGISTER var_declaration_start ';' {
 	v->name=strdup($4);
 	free($4);
 
-	t->body->is_struct=t->body->is_union=false;
+	t->body->kind=_normal;
+	t->body->is_func_pointer=true;
 
 	t->body->attrs.func_ptr.arguments=calloc($7->num_vars, $7->num_vars*sizeof(struct type_t));
 

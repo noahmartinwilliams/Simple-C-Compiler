@@ -147,11 +147,11 @@ void handle_preproc_token(char *str)
 [ \t\n]	{ count(yytext); }
 [_a-zA-Z][_a-zA-Z0-9]*	{ count(yytext); 
 	haiku_easter_egg(yytext); 
-	if (get_type_by_name(yytext)==NULL ) { 
+	if (get_type_by_name(yytext, _normal)==NULL ) { 
 		yylval.str=strdup(yytext); 
 		return IDENTIFIER ; 
 	} else { 
-		yylval.type=get_type_by_name(yytext); 
+		yylval.type=get_type_by_name(yytext, _normal); 
 		return TYPE;
 	} }
 <in_comment>[^*\n]*	{ count(yytext); }

@@ -45,9 +45,8 @@ type: TYPE {
 
 	/*TODO: free struct_var_declarations */
 
+	body->kind=_struct;
 	body->size=size;
-	body->is_struct=true;
-	body->is_union=false;
 	add_type(type);
 	$$=type;
 	current_type=type;
@@ -61,8 +60,8 @@ type: TYPE {
 	body->core_type=_INT;
 	body->refcount=1;
 
-	body->is_union=true;
-	body->is_struct=false;
+	body->kind=_union;
+	body->is_func_pointer=false;
 
 	body->attrs.vars.num_vars=0;
 	body->attrs.vars.vars=NULL;
@@ -93,7 +92,7 @@ type: TYPE {
 	$$=type;
 } | STRUCT IDENTIFIER {
 	free_type(current_type);
-	$$=current_type=get_struct_by_name($2);
+	$$=current_type=get_type_by_name($2, _struct);
 	$$->refcount+=2;
 	free($2);
 } | ENUM IDENTIFIER '{' enum_elements '}' {
@@ -107,8 +106,8 @@ type: TYPE {
 	struct tbody_t *bod=type->body=malloc(sizeof(struct tbody_t));
 	bod->refcount=1;
 	bod->base_pointer_depth=type->pointer_depth=0;
-	bod->is_struct=bod->is_union=bod->is_func_pointer=false;
-	bod->is_enum=true;
+	bod->kind=_enum;
+	bod->is_func_pointer=false;
 	bod->size=num_enums%byte_size>0 ? ((num_enums-(num_enums%byte_size))+byte_size)/byte_size : num_enums/byte_size;
 	bod->core_type=_INT;
 
@@ -135,6 +134,14 @@ type: TYPE {
 	current_type=type;
 	type->refcount++;
 	$$=type;
+} | ENUM IDENTIFIER {
+	free_type(current_type);
+	current_type=$$=get_type_by_name($2, _enum);
+	current_type->refcount+=2;
+	if ($$==NULL) {
+		yyerror("Error: enumeration not known.");
+		exit(1);
+	}
 };
 
 enum_elements: enum_element {

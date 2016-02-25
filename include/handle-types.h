@@ -2,7 +2,6 @@
 #define __HANDLE_TYPES_H__
 #include "types.h"
 
-extern struct type_t* get_type_by_name(char *name);
 extern void free_type(struct type_t *t);
 extern void free_tbody(struct tbody_t *t);
 extern int get_type_index_by_name(char *name);
@@ -17,7 +16,7 @@ extern size_t get_alignof(struct type_t *t);
 
 extern off_t get_offset_of_member(struct type_t *t, char *name);
 extern struct var_t* get_var_member(struct type_t *t, char *name);
-extern struct type_t* get_struct_by_name(char *name);
+extern struct type_t* get_type_by_name(char *name, enum type_kind kind);
 
 static inline bool type_is_float(struct type_t *t)
 {

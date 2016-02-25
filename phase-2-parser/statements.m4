@@ -116,7 +116,7 @@ statement: expression ';' {
 		e->attrs.cint_val=1;
 		e->left=e->right=NULL;
 		e->has_gotos=false;
-		e->type=get_type_by_name("int");
+		e->type=get_type_by_name("int", _normal);
 		$$->expr=e;
 	} else
 		$$->expr=$5;

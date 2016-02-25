@@ -7,11 +7,14 @@ typedef void (*__printer_function_t) (char*, void*); /* For type conversion for
 the print_tree function so I don't get annoying warnings because I never pass it
 a function pointer that has void* as the second argument type. */
 
+enum type_kind { _normal, _enum, _struct, _union };
 struct tbody_t {
 	size_t size;
 	int refcount;
 	int base_pointer_depth;
-	bool is_struct, is_union, is_func_pointer, is_enum;
+	bool is_func_pointer;
+	enum type_kind kind;
+
 	enum { _FLOAT, _INT } core_type;
 	union {
 		struct {

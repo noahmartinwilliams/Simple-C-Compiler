@@ -1,4 +1,4 @@
-OPT=-O -fPIC -rdynamic
+OPT=-O -fPIC -rdynamic 
 AR=ar crT $@ $^
 ifdef DEBUG
 YACC=bison -d --report=all --verbose --debug

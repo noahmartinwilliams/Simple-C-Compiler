@@ -34,7 +34,7 @@ expression: noncomma_expression | noncomma_expression ',' noncomma_expression {
 };
 noncomma_expression: CONST_INT {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->type=get_type_by_name("int");
+	e->type=get_type_by_name("int", _normal);
 	e->type->refcount++;
 	e->kind=const_int;
 	e->left=NULL;
@@ -48,7 +48,7 @@ noncomma_expression: CONST_INT {
 	e->kind=const_float;
 	e->attrs.cfloat=generate_global_float(output, num);
 	e->left=e->right=NULL;
-	e->type=get_type_by_name("float");
+	e->type=get_type_by_name("float", _normal);
 	e->type->refcount++;
 	free(num);
 	$$=e;
@@ -94,7 +94,7 @@ noncomma_expression: CONST_INT {
 	$$=e;
 } | STR_LITERAL {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->type=increase_type_depth(get_type_by_name("char"), 1);
+	e->type=increase_type_depth(get_type_by_name("char", _normal), 1);
 	e->kind=const_str;
 	e->right=NULL;
 	e->left=NULL;
@@ -105,7 +105,7 @@ noncomma_expression: CONST_INT {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=const_size_t;
 	e->attrs.cint_val=get_type_size($3);
-	e->type=get_type_by_name("size_t");
+	e->type=get_type_by_name("size_t", _normal);
 	e->type->refcount++;
 	e->left=e->right=NULL;
 	$$=e;
@@ -131,7 +131,7 @@ noncomma_expression: CONST_INT {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=const_int;
 	e->left=e->right=NULL;
-	e->type=get_type_by_name("int");
+	e->type=get_type_by_name("int", _normal);
 	e->type->refcount++;
 
 	e->has_gotos=false;
@@ -186,7 +186,7 @@ prefix_expr: '&' assignable_expr {
 } | CHAR_LITERAL {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=const_int;
-	e->type=get_type_by_name("char");
+	e->type=get_type_by_name("char", _normal);
 	e->type->refcount++;
 	e->left=NULL;
 	e->right=NULL;
@@ -247,7 +247,7 @@ assignable_expr: IDENTIFIER {
 			free($1);
 			struct expr_t *e=malloc(sizeof(struct expr_t));
 			e->kind=func_val;
-			e->type=increase_type_depth(get_type_by_name("void"), 1);
+			e->type=increase_type_depth(get_type_by_name("void", _normal), 1);
 			/*TODO: fix this to be more sophisticated later on. */
 
 			e->left=e->right=NULL;
@@ -280,7 +280,7 @@ assignable_expr: IDENTIFIER {
 } | assignable_expr '.' IDENTIFIER {
 	struct type_t *type=$1->type;
 	struct tbody_t *body=type->body;
-	if (body->is_union) {
+	if (body->kind==_union) {
 		struct expr_t *e=malloc(sizeof(struct expr_t));
 		memcpy(e, $1, sizeof(struct expr_t));
 		e->type=get_struct_or_union_attr_type(type, $3);
@@ -288,7 +288,7 @@ assignable_expr: IDENTIFIER {
 			yyerror("Identifier is not a valid attribute.");
 		free($3);
 		$$=e;
-	} else if (body->is_struct) {
+	} else if (body->kind==_struct) {
 		/* a.b ---> *(&a+offsetof(typeof(a), b)) */
 		/* TODO: ensure that a.b.c works properly */
 		struct expr_t *deref=malloc(sizeof(struct expr_t));
@@ -300,7 +300,7 @@ assignable_expr: IDENTIFIER {
 		addition->kind=bin_op;
 		constant->kind=const_int;
 		constant->left=constant->right=deref->left=ref->left=NULL;
-		constant->type=get_type_by_name("int");
+		constant->type=get_type_by_name("int", _normal);
 		constant->type->refcount++;
 
 		deref->right=addition;
@@ -332,7 +332,7 @@ assignable_expr: IDENTIFIER {
 	struct expr_t *offset=malloc(sizeof(struct expr_t));
 
 	offset->kind=const_int;
-	offset->type=increase_type_depth(get_type_by_name("int"), 1);
+	offset->type=increase_type_depth(get_type_by_name("int", _normal), 1);
 	addition->kind=bin_op;
 	addition->type=var->type;
 	var->type->refcount++;

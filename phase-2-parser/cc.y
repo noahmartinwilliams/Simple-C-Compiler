@@ -52,7 +52,7 @@ static inline struct expr_t* make_bin_op(char *X, struct expr_t *Y, struct expr_
 	if (!is_test_op(X))
 		e->type=a->type;
 	else
-		e->type=get_type_by_name("int");
+		e->type=get_type_by_name("int", _normal);
 	e->type->refcount++;
 	if (!evaluate_constant_expr(X, a, b, &e)) {
 		e->kind=bin_op;

@@ -50,28 +50,24 @@ struct type_t* get_struct_or_union_attr_type(struct type_t *t, char *name)
 }
 
 extern void yyerror(char *s);
-struct type_t* get_type_by_name(char *name)
+
+struct type_t* get_type_by_name(char *name, enum type_kind kind) 
 {
 	int x;
 	for (x=0; x<num_types; x++) {
-		if (!strcmp(name, types[x]->name) && types[x]->body==NULL)
-			return types[x];
+		struct type_t *t=types[x];
+		struct tbody_t *bod=t->body;
+		if (!strcmp(t->name, name)) {
+			if (bod==NULL)
+				return t;
 
-		if (!strcmp(name, types[x]->name) && !types[x]->body->is_struct && !types[x]->body->is_union && !types[x]->body->is_enum)
-			return types[x];
+			if (kind==bod->kind)
+				return t;
+		}
 	}
 	return NULL;
 }
 
-struct type_t* get_struct_by_name(char *name)
-{
-	register int x;
-	for (x=0; x<num_types; x++) {
-		if (!strcmp(name, types[x]->name) && types[x]->body->is_struct)
-			return types[x];
-	}
-	return NULL;
-}
 
 void add_type(struct type_t *t)
 {
@@ -123,7 +119,7 @@ void free_tbody(struct tbody_t *t)
 
 	t->refcount--;
 	if (t->refcount==0) {
-		if (t->is_struct || t->is_union) {
+		if (t->kind==_union || t->kind==_struct) {
 			int x;
 			for (x=0; x<t->attrs.vars.num_vars; x++) {
 				free_var(t->attrs.vars.vars[x]);
