@@ -50,7 +50,7 @@ static inline struct expr_t* make_bin_op(char *X, struct expr_t *Y, struct expr_
 	struct expr_t *a=Y, *b=Z;
 	parser_type_cmp(&a, &b);
 	if (!is_test_op(X))
-		e->type=a->type;
+		e->type=b->type;
 	else
 		e->type=get_type_by_name("int", _normal);
 	e->type->refcount++;
@@ -82,6 +82,26 @@ struct enum_element {
 	int i;
 	char *name;
 };
+
+static inline struct expr_t* make_prefix_op(char *op, struct expr_t *e, struct type_t *t)
+{
+	if (is_constant_kind(e) && strcmp("-", op)) {
+		/*TODO: make the error message easier to read for programmers
+		who aren't experts on how compilers work. */
+		yyerror("can not do prefix operator on constant expression.");
+		exit (1);
+	}
+
+	struct expr_t *new=malloc(sizeof(struct expr_t));
+	new->kind=pre_un_op;
+	new->attrs.un_op=strdup(op);
+	new->right=e;
+	new->left=NULL;
+	new->type=t;
+	new->has_gotos=e->has_gotos;
+	t->refcount++;
+	return new;
+}
 
 %}
 %union {

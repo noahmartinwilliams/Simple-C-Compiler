@@ -41,7 +41,7 @@
 *fix up TODOs.
 *get memory management cleared up.
 *add asm keyword.
-*add hexadecimal, binary, and octal number formats.
+*add binary, and octal number formats.
 *add until, and unless keywords.
 *add passing of arrays to functions.
 *add returning of arrays from functions.

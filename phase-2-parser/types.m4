@@ -118,13 +118,7 @@ type: TYPE {
 	struct const_t **consts=calloc(num_enums, sizeof(struct const_t*));
 
 	for (x=0; $4[x]!=NULL; x++) {
-		struct expr_t *e=malloc(sizeof(struct expr_t));
-		e->kind=const_int;
-		e->left=e->right=NULL;
-		e->type=type;
-		type->refcount++;
-		e->has_gotos=false;
-		e->attrs.cint_val=$4[x]->i >=0 ? $4[x]->i : 1 << x;
+		struct expr_t *e=create_const_int_expr($4[x]->i >=0 ? $4[x]->i : 1 << x, type);
 		add_constant($4[x]->name, scope_depth, e);
 	}
 

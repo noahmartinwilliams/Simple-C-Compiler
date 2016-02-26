@@ -3,7 +3,6 @@ statement_list: statement {
 	init_statem($$);
 	$$->kind=list;
 	$$->left=$1;
-	$$->right=NULL;
 } | statement_list statement {
 	$$=$1;
 	struct statem_t *s=$1;
@@ -38,14 +37,12 @@ statement: expression ';' {
 	$$->expr=$3;
 	$$->right=$5;
 	$$->has_gotos=$5->has_gotos;
-	$$->left=NULL;
 } | RETURN expression ';' {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
 	$$->kind=ret;
 	$$->expr=$2;
-	$$->has_gotos=false;
-	/*TODO: Fix this to properly detect gotos from the epxression statements in expression. */
+	$$->has_gotos=$2->has_gotos;
 } | IF '(' expression ')' statement ELSE statement {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
@@ -59,7 +56,7 @@ statement: expression ';' {
 	init_statem($$);
 	$$->kind=_if;
 	$$->left=$5;
-	$$->has_gotos=$5->has_gotos;
+	$$->has_gotos=$5->has_gotos || $3->has_gotos;
 	$$->expr=$3;
 } | BREAK ';' { 
 	$$=malloc(sizeof(struct statem_t));
@@ -96,14 +93,13 @@ statement: expression ';' {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
 	$$->kind=_switch;
-	$$->has_gotos=$6->has_gotos;
+	$$->has_gotos=$6->has_gotos || $3->has_gotos;
 	$$->right=$6;
 	$$->expr=$3;
 } | RETURN ';' {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
 	$$->kind=ret;
-	$$->expr=NULL;
 	$$->has_gotos=false;
 } | FOR '(' maybe_empty_expr ';' maybe_empty_expr ';' maybe_empty_expr ')' statement {
 	$$=malloc(sizeof(struct statem_t));

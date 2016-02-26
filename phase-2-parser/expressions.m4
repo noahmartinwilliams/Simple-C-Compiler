@@ -1,8 +1,7 @@
 call_arg_list: noncomma_expression {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=arg;
-	e->left=NULL;
-	e->right=NULL;
+	e->left=e->right=NULL;
 	e->type=$1->type;
 	e->type->refcount++;
 	e->attrs.argument=$1;
@@ -15,32 +14,17 @@ call_arg_list: noncomma_expression {
 	e->kind=arg;
 	e->type=$3->type;
 	e->type->refcount++;
-	e->right=NULL;
-	e->left=NULL;
+	e->right=e->left=NULL;
 	e->attrs.argument=$3;
 	tmp->right=e;
 	$$=$1;
 };
 
 expression: noncomma_expression | noncomma_expression ',' noncomma_expression {
-	$$=malloc(sizeof(struct expr_t));
-	$$->kind=bin_op;
-	$$->attrs.bin_op=strdup(",");
-	$$->has_gotos=$1->has_gotos || $3->has_gotos;
-	$$->type=$3->type;
-	$3->type->refcount++;
-	$$->left=$1;
-	$$->right=$3;
+	$$=make_bin_op(",", $1, $3);
 };
 noncomma_expression: CONST_INT {
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->type=get_type_by_name("int", _normal);
-	e->type->refcount++;
-	e->kind=const_int;
-	e->left=NULL;
-	e->right=NULL;
-	e->attrs.cint_val=$1;
-	$$=e;
+	$$=create_const_int_expr($1, NULL);
 } | CONST_INT '.' CONST_INT {
 	char *num;
 	asprintf(&num, "%ld.%ld", $1, $3);
@@ -57,8 +41,7 @@ noncomma_expression: CONST_INT {
 } | prefix_expr | IDENTIFIER '(' ')' {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=funccall;
-	e->left=NULL;
-	e->right=NULL;
+	e->left=e->right=NULL;
 	e->attrs.function=get_func_by_name($1);
 	e->attrs.function->num_calls++;
 	parser_handle_inline_func(e->attrs.function->num_calls, e->attrs.function);
@@ -102,13 +85,7 @@ noncomma_expression: CONST_INT {
 	free($1);
 	$$=e;
 } | postfix_expr | SIZEOF '(' type_with_stars ')' {
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->kind=const_size_t;
-	e->attrs.cint_val=get_type_size($3);
-	e->type=get_type_by_name("size_t", _normal);
-	e->type->refcount++;
-	e->left=e->right=NULL;
-	$$=e;
+	$$=create_const_int_expr(get_type_size($3), get_type_by_name("size_t", _normal));
 } | noncomma_expression '?' noncomma_expression ':' noncomma_expression {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=bin_op;
@@ -128,16 +105,8 @@ noncomma_expression: CONST_INT {
 
 	$$=e;
 } | ALIGNOF '(' type ')' {
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->kind=const_int;
-	e->left=e->right=NULL;
-	e->type=get_type_by_name("int", _normal);
-	e->type->refcount++;
-
-	e->has_gotos=false;
-	e->attrs.cint_val=get_alignof($3);
+	$$=create_const_int_expr(get_alignof($3), NULL);
 	free_type($3);
-	$$=e;
 } | '(' type ')' noncomma_expression {
 	$$=malloc(sizeof(struct expr_t));
 	$$->kind=convert;
@@ -173,70 +142,23 @@ postfix_expr: assignable_expr INC_OP {
 };
 
 prefix_expr: '&' assignable_expr {
-	if (is_constant_kind($2))
-		/* This can happen thanks to the const keyword. */
-		yyerror("can not take address of constant.");
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->kind=pre_un_op;
-	e->attrs.un_op=strdup("&");
-	e->right=$2;
-	e->left=NULL;
-	e->type=increase_type_depth($2->type, 1);
-	$$=e;
+	$$=make_prefix_op("&", $2, increase_type_depth($2->type, 1));
 } | CHAR_LITERAL {
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->kind=const_int;
-	e->type=get_type_by_name("char", _normal);
-	e->type->refcount++;
-	e->left=NULL;
-	e->right=NULL;
-	e->attrs.cint_val=(long int) $1;
-	$$=e;
+	$$=create_const_int_expr((long int) $1, get_type_by_name("char", _normal));
 } | '!' noncomma_expression {
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->kind=pre_un_op;
-	e->attrs.un_op=strdup("!");
-	e->right=$2;
-	e->left=NULL;
-	e->type=$2->type;
-	e->type->refcount++;
-	$$=e;
+	$$=make_prefix_op("!", $2, $2->type);
 } | INC_OP assignable_expr {
-	if (is_constant_kind($2))
-		/* This can happen thanks to the const keyword. */
-		yyerror("can not increment constant.");
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->kind=pre_un_op;
-	e->attrs.un_op=strdup("++");
-	e->right=$2;
-	e->left=NULL;
-	e->type=$2->type;
-	e->type->refcount++;
-	$$=e;
+	$$=make_prefix_op("++", $2, $2->type);
 } | '~' noncomma_expression {
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->kind=pre_un_op;
-	e->attrs.un_op=strdup("~");
-	e->right=$2;
-	e->left=NULL;
-	e->type=$2->type;
-	e->type->refcount++;
-	$$=e;
+	$$=make_prefix_op("~", $2, $2->type);
 } | '-' noncomma_expression {
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->kind=pre_un_op;
-	e->type=$2->type;
-	e->type->refcount++;
-	e->left=NULL;
-	e->right=$2;
-	e->attrs.un_op=strdup("-");
-	$$=e;
+	$$=make_prefix_op("-", $2, $2->type);
 };
 
 assignable_expr: IDENTIFIER {
-	if (is_constant($1)!=NULL) {
+	if (is_constant($1)!=NULL)
 		$$=is_constant($1);
-	} else {
+	else {
 		struct var_t *v=get_var_by_name($1);
 		if (v==NULL) {
 			struct func_t *f=get_func_by_name($1);
@@ -257,8 +179,7 @@ assignable_expr: IDENTIFIER {
 		} else {
 			free($1);
 			struct expr_t *e=malloc(sizeof(struct expr_t));
-			e->left=NULL;
-			e->right=NULL;
+			e->left=e->right=NULL;
 			e->kind=var;
 			e->attrs.var=v;
 			e->type=v->type;
@@ -268,15 +189,7 @@ assignable_expr: IDENTIFIER {
 		}
 	}
 } | '*' assignable_expr {
-	if ($2->kind==const_int || $2->kind==const_float) 
-		yyerror("can not dereference constant.");
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->kind=pre_un_op;
-	e->attrs.un_op=strdup("*");
-	e->right=$2;
-	e->left=NULL;
-	e->type=decrease_type_depth($2->type, 1);
-	$$=e;
+	$$=make_prefix_op("*", $2, decrease_type_depth($2->type, 1));
 } | assignable_expr '.' IDENTIFIER {
 	struct type_t *type=$1->type;
 	struct tbody_t *body=type->body;

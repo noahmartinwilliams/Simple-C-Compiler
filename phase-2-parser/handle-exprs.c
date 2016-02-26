@@ -6,6 +6,7 @@
 #include "print-tree.h"
 #include "types.h"
 #include "optimization-globals.h"
+#include "handle-types.h"
 
 bool is_test_op(char *op)
 {
@@ -72,6 +73,22 @@ void print_expr(char *pre, struct expr_t *e)
 }
 #endif
 
+struct expr_t* create_const_int_expr(int i, struct type_t *t)
+{
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->kind=const_int;
+	e->left=e->right=NULL;
+	e->has_gotos=false;
+	e->attrs.cint_val=i;
+	if (t==NULL) {
+		e->type=get_type_by_name("int", _normal);
+		e->type->refcount++;
+	} else {
+		e->type=t;
+		t->refcount++;
+	}
+	return e;
+}
 void free_expr(struct expr_t *e)
 {
 	if (e==NULL)
@@ -198,6 +215,8 @@ bool evaluate_constant_expr(char *op, struct expr_t *a, struct expr_t *b, struct
 			f=c&&d;
 		else if (!strcmp(op, "%"))
 			f=c%d;
+		else if (!strcmp(op, ","))
+			f=d;
 	
 		e->attrs.cint_val=f;
 		free_expr(a);

@@ -75,6 +75,73 @@ void handle_preproc_token(char *str)
 	current_char=0;
 	#undef preproc_error
 }
+
+static inline int hextoi(char *str)
+{
+	int i=0;
+	int x;
+	for (x=0; str[x]!='\0'; x++) {
+		i*=16;
+		switch(str[x]) {
+		case '0':
+			i+=0;
+			break;
+		case '1':
+			i+=1;
+			break;
+		case '2':
+			i+=2;
+			break;
+		case '3':
+			i+=3;
+			break;
+		case '4':
+			i+=4;
+			break;
+		case '5':
+			i+=5;
+			break;
+		case '6':
+			i+=6;
+			break;
+		case '7':
+			i+=7;
+			break;
+		case '8':
+			i+=8;
+			break;
+		case '9':
+			i+=9;
+			break;
+		case 'a':
+		case 'A':
+			i+=10;
+			break;
+		case 'b':
+		case 'B':
+			i+=11;
+			break;
+		case 'c':
+		case 'C':
+			i+=12;
+			break;
+		case 'd':
+		case 'D':
+			i+=13;
+			break;
+		case 'e':
+		case 'E':
+			i+=14;
+			break;
+		case 'f':
+		case 'F':
+			i+=15;
+			break;
+		}
+	}
+
+	return i;
+}
 %}
 
 %x in_comment
@@ -85,6 +152,7 @@ void handle_preproc_token(char *str)
 '.'	{ count(yytext); yylval.chr=yytext[1]; return CHAR_LITERAL; }
 \/\/.*$	{ count(yytext); }
 ^\#[[:space:]]*[0-9]+[[:space:]]*\".*\".*$	{ handle_preproc_token(yytext); count(yytext); }
+0x[0-9a-fA-F]+	{ count(yytext); yylval.l=hextoi(yytext); return CONST_INT; }
 "."	{ count(yytext); return '.'; }
 "->"	{ count(yytext); return POINTER_OP; }
 "..."	{ count(yytext); return MULTI_ARGS; }
