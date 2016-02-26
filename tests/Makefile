@@ -8,7 +8,6 @@ test:
 
 test%: source-test%.c cc
 	./compile-source.sh $< $@
-	./run-test.sh $@
 
 .PHONY: clean
 clean:
@@ -18,3 +17,4 @@ clean:
 	rm *.o 2>/dev/null || true
 	rm *.s 2>/dev/null || true
 	rm cc 2>/dev/null || true
+	rm output 2>/dev/null || true

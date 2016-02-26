@@ -156,9 +156,9 @@ prefix_expr: '&' assignable_expr {
 };
 
 assignable_expr: IDENTIFIER {
-	if (is_constant($1)!=NULL)
+	if (is_constant($1)!=NULL) {
 		$$=is_constant($1);
-	else {
+	} else {
 		struct var_t *v=get_var_by_name($1);
 		if (v==NULL) {
 			struct func_t *f=get_func_by_name($1);
@@ -277,9 +277,11 @@ binary_expr:  noncomma_expression '*' noncomma_expression {
 } | noncomma_expression '-' noncomma_expression {
 	$$=make_bin_op("-", $1, $3);
 } | assignable_expr '=' noncomma_expression {
-	if (is_constant_kind($1))
+	if (is_constant_kind($1)) {
 		/* This can happen due to the const keyword. */
 		yyerror("error: can not assign to constant.");
+		exit(1);
+	}
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	struct expr_t *a=$1, *b=$3;
 	parser_type_cmp(&a, &b);

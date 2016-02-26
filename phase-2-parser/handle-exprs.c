@@ -219,8 +219,6 @@ bool evaluate_constant_expr(char *op, struct expr_t *a, struct expr_t *b, struct
 			f=d;
 	
 		e->attrs.cint_val=f;
-		free_expr(a);
-		free_expr(b);
 		return true;
 	} else if (a->kind==const_int && b->kind!=const_int && a->attrs.cint_val==0 && optimize_dont_add_zero && !strcmp(op, "+")) {
 		*e2=b;
