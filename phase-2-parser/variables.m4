@@ -73,6 +73,7 @@ var_declaration: REGISTER var_declaration_start ';' {
 	struct tbody_t *tb=t->body=malloc(sizeof(struct tbody_t));
 	tb->size=pointer_size;
 	tb->is_func_pointer=true;
+	tb->attrs.func_ptr.has_var_args=false;
 
 	tb->refcount=t->refcount=v->refcount=1;
 	tb->attrs.func_ptr.return_type=$1;

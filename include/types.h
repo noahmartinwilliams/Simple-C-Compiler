@@ -26,6 +26,7 @@ struct tbody_t {
 		struct {
 			struct type_t *return_type;
 			struct type_t **arguments;
+			bool has_var_args;
 			int num_arguments;
 		} func_ptr;
 	} attrs;

@@ -62,6 +62,20 @@ noncomma_expression: CONST_INT {
 		e->attrs.var=v;
 		v->refcount++;
 		e->has_gotos=$3->has_gotos;
+		int x;
+		struct expr_t *tmp=$3;
+		for (x=0; tmp->right!=NULL; tmp=tmp->right) {
+			x++;
+		}
+		if (!v->type->body->attrs.func_ptr.has_var_args) {
+			if (x > v->type->body->attrs.func_ptr.num_arguments) {
+				yyerror("Too many arguments to function pointer.");
+				exit(1);
+			} else if (x < v->type->body->attrs.func_ptr.num_arguments) {
+				yyerror("Too few arguments to function pointer.");
+				exit(1);
+			}
+		}
 	} else {
 		e->kind=funccall;
 		e->right=$3;

@@ -6,7 +6,6 @@
 		code...
 	}
 	goto label;
-*modify if, if else, while, do while, expression statements, return statements, and for statements to properly take gotos from their expressions.
 *add typedefs with pointers as base type.
 *add arrays.
 *add putting structures within structures.
