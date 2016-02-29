@@ -132,41 +132,23 @@ noncomma_expression: CONST_INT {
 };
 
 postfix_expr: assignable_expr INC_OP {
-	if (is_constant_kind($1))
-		yyerror("can not increment constant.");
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->kind=post_un_op;
-	e->left=$1;
-	e->right=NULL;
-	e->attrs.un_op=strdup("++");
-	e->type=$1->type;
-	$1->type->refcount++;
-	$$=e;
+	$$=make_prefix_or_postfix_op("++", $1, $1->type, false);
 } | assignable_expr DEC_OP {
-	if (is_constant_kind($1))
-		yyerror("can not decrement constant.");
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->kind=post_un_op;
-	e->left=$1;
-	e->right=NULL;
-	e->attrs.un_op=strdup("--");
-	e->type=$1->type;
-	$1->type->refcount++;
-	$$=e;
+	$$=make_prefix_or_postfix_op("--", $1, $1->type, false);
 };
 
 prefix_expr: '&' assignable_expr {
-	$$=make_prefix_op("&", $2, increase_type_depth($2->type, 1));
+	$$=make_prefix_or_postfix_op("&", $2, increase_type_depth($2->type, 1), true);
 } | CHAR_LITERAL {
 	$$=create_const_int_expr((long int) $1, get_type_by_name("char", _normal));
 } | '!' noncomma_expression {
-	$$=make_prefix_op("!", $2, $2->type);
+	$$=make_prefix_or_postfix_op("!", $2, $2->type, true);
 } | INC_OP assignable_expr {
-	$$=make_prefix_op("++", $2, $2->type);
+	$$=make_prefix_or_postfix_op("++", $2, $2->type, true);
 } | '~' noncomma_expression {
-	$$=make_prefix_op("~", $2, $2->type);
+	$$=make_prefix_or_postfix_op("~", $2, $2->type, true);
 } | '-' noncomma_expression {
-	$$=make_prefix_op("-", $2, $2->type);
+	$$=make_prefix_or_postfix_op("-", $2, $2->type, true);
 };
 
 assignable_expr: IDENTIFIER {
@@ -203,7 +185,7 @@ assignable_expr: IDENTIFIER {
 		}
 	}
 } | '*' assignable_expr {
-	$$=make_prefix_op("*", $2, decrease_type_depth($2->type, 1));
+	$$=make_prefix_or_postfix_op("*", $2, decrease_type_depth($2->type, 1), true);
 } | assignable_expr '.' IDENTIFIER {
 	struct type_t *type=$1->type;
 	struct tbody_t *body=type->body;
@@ -296,16 +278,7 @@ binary_expr:  noncomma_expression '*' noncomma_expression {
 		yyerror("error: can not assign to constant.");
 		exit(1);
 	}
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	struct expr_t *a=$1, *b=$3;
-	parser_type_cmp(&a, &b);
-	e->type=b->type;
-	e->type->refcount++;
-	e->kind=bin_op;
-	e->left=a;
-	e->right=b;
-	e->attrs.bin_op=strdup("=");
-	$$=e;
+	$$=make_bin_op("=", $1, $3);
 } | noncomma_expression '<' noncomma_expression {
 	$$=make_bin_op("<", $1, $3);
 } | noncomma_expression '>' noncomma_expression {

@@ -7,6 +7,8 @@
 void init_var(struct var_t *v)
 {
 	v->is_register=false;
+	v->hidden=false;
+	v->scope_depth=scope_depth;
 }
 
 void add_var(struct var_t *v)

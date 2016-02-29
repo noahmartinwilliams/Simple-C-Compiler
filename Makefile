@@ -16,7 +16,7 @@ loader.o: phase-4-backend/*
 phase-4-backend/libx64-backend.so: phase-4-backend/* phase-4-backend/x64/*
 	$(MAKE) -C phase-4-backend/ libx64-backend.so
 
-generator.a: phase-3-generator/* 
+generator.a: phase-3-generator/*
 	$(MAKE) -C phase-3-generator/ ../generator.a
 
 handle.a: phase-2-parser/*
@@ -51,7 +51,11 @@ clena:
 	$(MAKE) clean
 
 .PHONY:
-clean: clean_intern
+clean: 
+	rm *.a 2>/dev/null || true
+	rm *.o 2>/dev/null || true
+	rm cc 2>/dev/null || true
+	rm main 2>/dev/null || true
 	$(MAKE) -C tests/ clean
 	$(MAKE) -C phase-1-lexer/ clean
 	$(MAKE) -C phase-2-parser/ clean

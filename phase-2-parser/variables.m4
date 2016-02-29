@@ -7,10 +7,9 @@ stars: %empty {
 struct_var_declarations: type IDENTIFIER ';' {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	init_statem(s);
-	s->kind=list;
+	s->kind=block;
 	s->left=malloc(sizeof(struct statem_t));
 	init_statem(s->left);
-	s->right=NULL;
 
 	struct statem_t *var=s->left;
 	var->kind=declare;
@@ -36,10 +35,9 @@ struct_var_declarations: type IDENTIFIER ';' {
 	latest->right=malloc(sizeof(struct statem_t));
 	struct statem_t *new=latest->right;
 	init_statem(new);
-	new->kind=list;
+	new->kind=block;
 	new->left=malloc(sizeof(struct statem_t));
 	init_statem(new->left);
-	new->right=NULL;
 	new->left->kind=declare;
 	new=new->left;
 	new->attrs.var=malloc(sizeof(struct var_t));
@@ -48,12 +46,11 @@ struct_var_declarations: type IDENTIFIER ';' {
 
 	struct var_t *v=new->attrs.var;
 
-	v->name=strdup($3);
+	v->name=$3;
 	v->type=$2;
 	$2->refcount++;
 	v->scope_depth=scope_depth;
 	v->refcount=1;
-	free($3);
 };
 
 var_declaration: REGISTER var_declaration_start ';' {
@@ -99,7 +96,6 @@ var_declaration: REGISTER var_declaration_start ';' {
 	init_statem(declaration);
 	declaration->kind=declare;
 	declaration->attrs.var=v;
-	declaration->expr=NULL;
 	v->scope_depth=scope_depth;
 	v->hidden=false;
 	add_var(v);
@@ -107,27 +103,23 @@ var_declaration: REGISTER var_declaration_start ';' {
 };
 
 var_declaration_start: type_with_stars IDENTIFIER {
-	if (read_const_keyword) {
+	if (read_const_keyword)
 		yyerror("constant not set at declaration");
-	}
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
-	$$->kind=list;
+	$$->kind=block;
 	struct statem_t *declaration=$$->left=malloc(sizeof(struct statem_t));
 	init_statem(declaration);
-	$$->right=NULL;
 	declaration->kind=declare;
 	struct var_t *v=declaration->attrs.var=malloc(sizeof(struct var_t));
 	init_var(v);
 
 	v->type=$1;
 	$1->refcount++;
-	v->name=strdup($2);
-	free($2);
+	v->name=$2;
 	v->refcount=2;
 	v->scope_depth=scope_depth;
 	v->hidden=false;
-	declaration->expr=NULL;
 	add_var(v);
 } | type_with_stars IDENTIFIER '=' noncomma_expression { 
 	if (read_const_keyword) {
@@ -136,7 +128,7 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	} else {
 		$$=malloc(sizeof(struct statem_t));
 		init_statem($$);
-		$$->kind=list;
+		$$->kind=block;
 		$$->right=NULL;
 		struct statem_t *declaration=$$->left=malloc(sizeof(struct statem_t));
 		init_statem(declaration);
@@ -145,10 +137,7 @@ var_declaration_start: type_with_stars IDENTIFIER {
 		v=malloc(sizeof(struct var_t));
 		init_var(v);
 
-		v->name=strdup($2);
-		free($2);
-		v->scope_depth=scope_depth;
-		v->hidden=false;
+		v->name=$2;
 		v->refcount=4;
 		add_var(v);
 		v->type=$1;
@@ -168,19 +157,16 @@ var_declaration_start: type_with_stars IDENTIFIER {
 		s->right=malloc(sizeof(struct statem_t));
 		init_statem(s->right);
 		s=s->right;
-		s->kind=list;
-		s->right=NULL;
+		init_statem(s);
+		s->kind=block;
 		struct statem_t *declaration=s->left=malloc(sizeof(struct statem_t));
 		init_statem(declaration);
 		declaration->kind=declare;
 		struct var_t *v=malloc(sizeof(struct var_t));
 		init_var(v);
 
-		v->name=strdup($4);
-		free($4);
+		v->name=$4;
 
-		v->scope_depth=scope_depth;
-		v->hidden=false;
 		v->type=increase_type_depth(current_type, $3);
 		v->type->refcount++;
 		v->refcount=2;
@@ -190,32 +176,27 @@ var_declaration_start: type_with_stars IDENTIFIER {
 		declaration->expr=$6;
 	}
 } | var_declaration_start ',' stars IDENTIFIER {
-	if (read_const_keyword) {
+	if (read_const_keyword) 
 		yyerror("constant not set at declaration");
-	}
 	$$=$1;
 	struct statem_t *s=$$;
 	for (; s->right!=NULL; s=s->right) {}
 	s->right=malloc(sizeof(struct statem_t));
 	init_statem(s->right);
 	s=s->right;
-	s->kind=list;
-	s->right=NULL;
+	init_statem(s);
+	s->kind=block;
 	struct statem_t *declaration=s->left=malloc(sizeof(struct statem_t));
 	init_statem(declaration);
 	declaration->kind=declare;
 	struct var_t *v=malloc(sizeof(struct var_t));
 	init_var(v);
 
-	v->name=strdup($4);
-	free($4);
+	v->name=$4;
 
-	v->scope_depth=scope_depth;
-	v->hidden=false;
 	v->type=increase_type_depth(current_type, $3);
 	v->refcount=2;
 	add_var(v);
 
 	declaration->attrs.var=v;
-	declaration->expr=NULL;
 }; 

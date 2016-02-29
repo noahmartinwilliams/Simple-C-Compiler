@@ -1,7 +1,7 @@
 statement_list: statement { 
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
-	$$->kind=list;
+	$$->kind=block;
 	$$->left=$1;
 } | statement_list statement {
 	$$=$1;
@@ -10,7 +10,7 @@ statement_list: statement {
 	s->right=malloc(sizeof(struct statem_t));
 	init_statem(s->right);
 	s=s->right;
-	s->kind=list;
+	s->kind=block;
 	s->right=NULL;
 	s->left=$2;
 };
@@ -36,13 +36,13 @@ statement: expression ';' {
 	$$->kind=_while;
 	$$->expr=$3;
 	$$->right=$5;
-	$$->has_gotos=$5->has_gotos;
-} | RETURN expression ';' {
+	$$->has_gotos=$5->has_gotos || $3->has_gotos;
+} | RETURN maybe_empty_expr ';' {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
 	$$->kind=ret;
 	$$->expr=$2;
-	$$->has_gotos=$2->has_gotos;
+	$$->has_gotos=$2==NULL ? false : $2->has_gotos;
 } | IF '(' expression ')' statement ELSE statement {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
@@ -50,7 +50,7 @@ statement: expression ';' {
 	$$->left=$5;
 	$$->right=$7;
 	$$->expr=$3;
-	$$->has_gotos=$5->has_gotos || $7->has_gotos;
+	$$->has_gotos=$3->has_gotos || $5->has_gotos || $7->has_gotos;
 } | IF '(' expression ')' statement %prec IFX{
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
@@ -62,26 +62,22 @@ statement: expression ';' {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
 	$$->kind=_break;
-	$$->has_gotos=false;
 } | CONTINUE ';' {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
 	$$->kind=_continue;
-	$$->has_gotos=false;
 } | IDENTIFIER ':' {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
 	$$->kind=label;
-	$$->attrs.label_name=strdup($1);
+	$$->attrs.label_name=$1;
 	$$->has_gotos=true;
-	free($1);
 } | GOTO IDENTIFIER ';' {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
 	$$->kind=_goto;
-	$$->attrs.label_name=strdup($2);
+	$$->attrs.label_name=$2;
 	$$->has_gotos=true;
-	free($2);
 } | DO statement WHILE '(' expression ')' ';' {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
@@ -96,11 +92,6 @@ statement: expression ';' {
 	$$->has_gotos=$6->has_gotos || $3->has_gotos;
 	$$->right=$6;
 	$$->expr=$3;
-} | RETURN ';' {
-	$$=malloc(sizeof(struct statem_t));
-	init_statem($$);
-	$$->kind=ret;
-	$$->has_gotos=false;
 } | FOR '(' maybe_empty_expr ';' maybe_empty_expr ';' maybe_empty_expr ')' statement {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
@@ -124,7 +115,7 @@ statement: expression ';' {
 switch_list: switch_element {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
-	$$->kind=list;
+	$$->kind=block;
 	$$->left=$1;
 	$$->right=NULL;
 } | switch_list switch_element {
@@ -132,7 +123,7 @@ switch_list: switch_element {
 	for (; s->right!=NULL; s=s->right) {}
 	s->right=malloc(sizeof(struct statem_t));
 	init_statem(s->right);
-	s->right->kind=list;
+	s->right->kind=block;
 	s->right->left=$2;
 	s->right->right=NULL;
 	$$=$1;

@@ -83,7 +83,7 @@ struct enum_element {
 	char *name;
 };
 
-static inline struct expr_t* make_prefix_op(char *op, struct expr_t *e, struct type_t *t)
+static inline struct expr_t* make_prefix_or_postfix_op(char *op, struct expr_t *e, struct type_t *t, bool is_prefix)
 {
 	if (is_constant_kind(e) && strcmp("-", op)) {
 		/*TODO: make the error message easier to read for programmers
@@ -93,10 +93,16 @@ static inline struct expr_t* make_prefix_op(char *op, struct expr_t *e, struct t
 	}
 
 	struct expr_t *new=malloc(sizeof(struct expr_t));
-	new->kind=pre_un_op;
+	if (is_prefix) {
+		new->kind=pre_un_op;
+		new->right=e;
+		new->left=NULL;
+	} else {
+		new->kind=post_un_op;
+		new->left=e;
+		new->right=NULL;
+	}
 	new->attrs.un_op=strdup(op);
-	new->right=e;
-	new->left=NULL;
 	new->type=t;
 	new->has_gotos=e->has_gotos;
 	t->refcount++;
@@ -120,7 +126,7 @@ static inline struct expr_t* make_prefix_op(char *op, struct expr_t *e, struct t
 %define parse.error verbose
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST RETURN STRUCT WHILE GE_TEST LE_TEST FOR INC_OP DO
 %token SHIFT_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF MULTI_ARGS STATIC INLINE SIZEOF
-%token POINTER_OP DEFAULT SWITCH CASE ALIGNOF ENUM
+%token POINTER_OP DEFAULT SWITCH CASE ALIGNOF ENUM LONG
 %token <str> STR_LITERAL 
 %token <type> TYPE
 %token <str> ASSIGN_OP
@@ -213,5 +219,6 @@ void yyerror(const char *s)
 		}
 		fprintf(stderr, "^\n");
 	}
+	exit (1);
 }
 

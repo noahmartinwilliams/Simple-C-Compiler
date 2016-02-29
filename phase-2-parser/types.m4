@@ -136,6 +136,11 @@ type: TYPE {
 		yyerror("Error: enumeration not known.");
 		exit(1);
 	}
+} | LONG type {
+	if (get_type_size($2)==int_size)
+		$$=get_type_by_name("long", _normal);
+} | LONG {
+	$$=get_type_by_name("long", _normal);
 };
 
 enum_elements: enum_element {

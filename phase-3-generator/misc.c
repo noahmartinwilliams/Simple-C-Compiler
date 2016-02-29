@@ -16,72 +16,73 @@ char* generate_global_string(FILE *fd, char *str)
 	return make_global_string(fd, str);
 }
 
+static inline void init_type(struct type_t *t)
+{
+	t->refcount=1;
+	t->native_type=true;
+	t->pointer_depth=0;
+}
+
+static inline void init_body(struct tbody_t *b)
+{
+	b->kind=_normal;
+	b->refcount=1;
+	b->is_func_pointer=false;
+	b->core_type=_INT;
+}
 
 void setup_types()
 {
-	num_types=5;
+	num_types=6;
 	types=realloc(types, num_types*sizeof(struct type_t*));
 	types[num_types-1]=malloc(sizeof(struct type_t));
 	struct type_t *i=types[num_types-1];
 	struct tbody_t *b=NULL;
 
 	i->name=strdup("int");
-	i->pointer_depth=0;
+	init_type(i);
 	b=i->body=malloc(sizeof(struct tbody_t));
+	init_body(b);
 	b->size=int_size;
-	b->kind=_normal;
-	b->refcount=1;
-	b->is_func_pointer=false;
-	i->refcount=1;
-	i->native_type=true;
-	b->core_type=_INT;
 
 	types[num_types-2]=malloc(sizeof(struct type_t));
 	i=types[num_types-2];
+	init_type(i);
 	i->name=strdup("char");
-	i->pointer_depth=0;
 	b=i->body=malloc(sizeof(struct tbody_t));
+	init_body(b);
 	b->size=char_size;
-	b->kind=_normal;
-	b->core_type=_INT;
-	b->is_func_pointer=false;
-	b->refcount=1;
-	i->refcount=1;
-	i->native_type=true;
 
 	types[num_types-3]=malloc(sizeof(struct type_t));
 	i=types[num_types-3];
+	init_type(i);
 	i->name=strdup("void");
-	i->pointer_depth=0;
 	i->body=NULL;
-	i->refcount=1;
-	i->native_type=true;
 
 	types[num_types-4]=malloc(sizeof(struct type_t));
 	i=types[num_types-4];
+	init_type(i);
 	i->name=strdup("size_t");
-	i->pointer_depth=0;
 	b=i->body=malloc(sizeof(struct tbody_t));
+	init_body(b);
 	b->size=sizeof(size_t);
-	b->kind=_normal;
-	b->is_func_pointer=false;
-	b->refcount=1;
-	i->refcount=1;
-	i->native_type=true;
-	b->core_type=_INT;
 
 	types[num_types-5]=malloc(sizeof(struct type_t));
 	i=types[num_types-5];
+	init_type(i);
 	i->name=strdup("float");
-	i->pointer_depth=0;
 	b=i->body=malloc(sizeof(struct tbody_t));
+	init_body(b);
 	b->size=float_size;
-	b->kind=_normal;
-	b->is_func_pointer=false;
-	b->refcount=1;
-	i->refcount=1;
-	i->native_type=true;
 	b->core_type=_FLOAT;
+
+	types[num_types-6]=malloc(sizeof(struct type_t));
+	i=types[num_types-6];
+	init_type(i);
+	i->name=strdup("long");
+	b=i->body=malloc(sizeof(struct tbody_t));
+	init_body(b);
+	b->size=long_size;
 }
 
 void setup_generator()
@@ -95,27 +96,24 @@ void generate_function(FILE *fd, struct func_t *f)
 	make_function(fd, f);
 	generate_statement(fd, f->statement_list);
 	return_from_call(fd);
-	fprintf(fd, "\t.cfi_endproc\n");
-	prepare_for_new_function();
+	prepare_for_new_function(fd);
 }
 
 char* prepare_var_assignment(FILE *fd, struct expr_t *dest)
 {
 	char *ret=NULL;
-	if (dest->kind==var) {
-		if (dest->attrs.var->scope_depth!=0) {
+	if (dest->kind==var)
+		if (dest->attrs.var->scope_depth!=0)
 			asprintf(&ret, "%ld(%%rbp)", dest->attrs.var->offset);
-		}
-	}
 	return ret;
 }
 
 void generate_global_vars(FILE *fd, struct statem_t *s)
 {
-	if (s->kind==list) {
+	if (s->kind==block)
 		for (; s!=NULL ; s=s->right)
 			generate_global_vars(fd, s->left);
-	} else if (s->kind==declare) {
+	else if (s->kind==declare) {
 		backend_make_global_var(fd, s->attrs.var);
 		s->attrs.var->scope_depth=0;
 	}

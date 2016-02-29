@@ -29,11 +29,12 @@ static void init_reg(struct reg_t *reg)
 	reg->in_use=false;
 }
 
-void prepare_for_new_function()
+void prepare_for_new_function(FILE *fd)
 {
 	int x=0;
 	for (x=0; x<num_regs; x++)
 		init_reg(regs[x]);
+	fprintf(fd, "\t.cfi_endproc\n");
 }
 
 void setup_backend()

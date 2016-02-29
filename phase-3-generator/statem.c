@@ -29,12 +29,12 @@ void generate_statement(FILE *fd, struct statem_t *s)
 	depth++;
 	struct reg_t *retu=get_ret_register(word_size, false);
 	struct expr_t *cond;
-	struct statem_t *block;
+	struct statem_t *_block;
 	if (s->kind==expr) {
 		place_comment(fd, "(");
 		generate_expression(fd, s->expr);
 		place_comment(fd, ");");
-	} else if (s->kind==list) {
+	} else if (s->kind==block) {
 		generate_statement(fd, s->left);
 		generate_statement(fd, s->right);
 	} else if (s->kind==ret) {
@@ -51,9 +51,9 @@ void generate_statement(FILE *fd, struct statem_t *s)
 		}
 		return;
 	} else if (s->kind==_if)
-		generate_if_statement(fd, s, retu, cond, block);
+		generate_if_statement(fd, s, retu, cond, _block);
 	else if (s->kind==_while)
-		generate_while_loop(fd, s, retu, cond, block);
+		generate_while_loop(fd, s, retu, cond, _block);
 	else if (s->kind==_break) {
 		int *n=pop(loop_stack);
 		char *jump_to;
@@ -81,10 +81,10 @@ void generate_statement(FILE *fd, struct statem_t *s)
 
 		place_label(fd, s->attrs.label_name);
 	} else if (s->kind==_for)
-		generate_for_loop(fd, s, retu, cond, block);
+		generate_for_loop(fd, s, retu, cond, _block);
 	else if (s->kind==do_while)
-		generate_do_while_loop(fd, s, retu, cond, block);
+		generate_do_while_loop(fd, s, retu, cond, _block);
 	else if (s->kind==_switch)
-		generate_switch_statement(fd, s, retu, cond, block);
+		generate_switch_statement(fd, s, retu, cond, _block);
 	depth--;
 }

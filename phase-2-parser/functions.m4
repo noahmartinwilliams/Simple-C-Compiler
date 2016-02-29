@@ -3,7 +3,8 @@ arg_declaration: type_with_stars IDENTIFIER{
 	a->vars=calloc(1, sizeof(struct var_t*));
 	a->vars[0]=malloc(sizeof(struct var_t));
 	struct var_t *v=a->vars[0];
-	v->name=strdup($2);
+	init_var(v);
+	v->name=$2;
 	v->type=$1;
 	v->type->refcount++;
 	v->scope_depth=1;
@@ -11,7 +12,6 @@ arg_declaration: type_with_stars IDENTIFIER{
 	v->refcount=2;
 	a->num_vars=1;
 	add_var(v);
-	free($2);
 	$$=a;
 } | arg_declaration ',' type_with_stars IDENTIFIER {
 	struct arguments_t *a=$1;
@@ -20,14 +20,13 @@ arg_declaration: type_with_stars IDENTIFIER{
 	int n=a->num_vars-1;
 	a->vars[n]=malloc(sizeof(struct var_t));
 	struct var_t *v=a->vars[n];
+	init_var(v);
 	v->scope_depth=1;
-	v->hidden=false;
 	v->refcount=2;
-	v->name=strdup($4);
+	v->name=$4;
 	v->type=$3;
 	v->type->refcount++;
 	add_var(v);
-	free($4);
 	free_type($3);
 	$$=a;
 };
@@ -36,12 +35,10 @@ function_header: type_with_stars IDENTIFIER '(' ')' {
 	$$=malloc(sizeof(struct func_t));
 	init_func($$);
 	$$->name=strdup($2);
-	$$->has_var_args=false;
 	$$->ret_type=$1;
 	$$->num_arguments=0;
 	$$->arguments=NULL;
 	$$->statement_list=NULL;
-	$$->do_inline=false;
 	free(current_function);
 	current_function=strdup($$->name);
 	free($2);
@@ -50,14 +47,12 @@ function_header: type_with_stars IDENTIFIER '(' ')' {
 	$$->name=strdup($2);
 	init_func($$);
 	$$->ret_type=$1;
-	$$->do_inline=false;
 	$1->refcount++;
 	$$->arguments=$4->vars;
 	$$->num_arguments=$4->num_vars;
 	free($4);
 	free(current_function);
-	current_function=strdup($2);
-	free($2);
+	current_function=$2;
 	$$->statement_list=NULL;
 } | EXTERN function_header {
 	$2->attributes|=_extern;
@@ -65,7 +60,7 @@ function_header: type_with_stars IDENTIFIER '(' ')' {
 } | type_with_stars IDENTIFIER '(' arg_declaration ',' MULTI_ARGS ')' {
 	struct func_t *f=malloc(sizeof(struct func_t));
 	init_func(f);
-	f->name=strdup($2);
+	f->name=$2;
 	f->ret_type=$1;
 	$1->refcount++;
 	f->num_arguments=0;
@@ -76,7 +71,6 @@ function_header: type_with_stars IDENTIFIER '(' ')' {
 	free($4);
 	free(current_function);
 	current_function=strdup($2);
-	free($2);
 	$$=f;
 } | STATIC function_header {
 	$2->attributes|=_static;

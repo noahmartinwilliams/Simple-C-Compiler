@@ -63,6 +63,7 @@ void init_statem(struct statem_t *s)
 {
 	s->expr=NULL;
 	s->left=s->right=NULL;
+	s->has_gotos=false;
 }
 
 void print_statem(char *pre, struct statem_t *s)
@@ -85,7 +86,7 @@ void print_statem(char *pre, struct statem_t *s)
 	case expr:
 		fprintf(stderr, "%s|_statement kind: expression\n", pre);
 		break;
-	case list:
+	case block:
 		fprintf(stderr, "%s|_statement kind: block\n", pre);
 		break;
 	case declare: 
