@@ -21,6 +21,7 @@ static inline void init_type(struct type_t *t)
 	t->refcount=1;
 	t->native_type=true;
 	t->pointer_depth=0;
+	t->is_signed=true;
 }
 
 static inline void init_body(struct tbody_t *b)

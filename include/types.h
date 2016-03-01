@@ -38,6 +38,7 @@ struct type_t {
 	char *name;
 	int pointer_depth;
 	struct tbody_t *body;
+	bool is_signed;
 };
 
 struct expr_t {

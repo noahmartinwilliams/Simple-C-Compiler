@@ -64,7 +64,7 @@ void jmp_ge(FILE *fd, char *name)
 
 void compare_registers(FILE *fd, struct reg_t *a, struct reg_t *b)
 {	
-	last_comparison_float=false;
+	last_comparison_float=(!a->is_signed) || (!b->is_signed);
 	if (a->size==char_size)
 		fprintf(fd, "\tcmpb %s, %s\n", reg_name(a), reg_name(b));
 
@@ -77,7 +77,7 @@ void compare_registers(FILE *fd, struct reg_t *a, struct reg_t *b)
 
 void compare_register_to_int(FILE *fd, struct reg_t *a, int i)
 {
-	last_comparison_float=false;
+	last_comparison_float=(!a->is_signed);
 	if (a->size==char_size)
 		fprintf(fd, "\tcmpb $%d, %s\n", i, reg_name(a));
 

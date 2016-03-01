@@ -25,6 +25,11 @@ off_t get_offset_of_member(struct type_t *t, char *name)
 	return -1;
 }
 
+bool is_signed(struct type_t *t)
+{
+	return t->is_signed;
+}
+
 struct var_t* get_var_member(struct type_t *t, char *name)
 {
 	register int x=0;

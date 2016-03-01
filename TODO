@@ -35,7 +35,7 @@
 *add type checking.
 *add argument type checking.
 *add stack offset calculations with stack pointer.
-*add long, short, signed, and unsigned keywords.
+*add short, signed, and keywords.
 *add statement expressions.
 *fix up TODOs.
 *get memory management cleared up.

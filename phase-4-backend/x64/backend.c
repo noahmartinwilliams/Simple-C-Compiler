@@ -27,6 +27,7 @@ static void init_reg(struct reg_t *reg)
 	reg->is_available=true;
 	reg->depths=NULL;
 	reg->in_use=false;
+	reg->is_signed=true;
 }
 
 void prepare_for_new_function(FILE *fd)
@@ -164,6 +165,7 @@ void place_comment(FILE *fd, char *str)
 
 void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest)
 {
+	dest->is_signed=src->is_signed;
 	if (dest->use==FLOAT || dest->use==FLOAT_RET) {
 		fprintf(fd, "\tmovsd %s, %s\n", reg_name(src), reg_name(dest));
 		return;
@@ -176,6 +178,7 @@ void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest)
 
 	else if (dest->size==pointer_size)
 		fprintf(fd, "\tmovq %s, %s\n", get_reg_name(src, dest->size), reg_name(dest));
+
 }
 
 void assign_constant(FILE *fd, struct expr_t *e)

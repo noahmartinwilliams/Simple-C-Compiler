@@ -50,9 +50,9 @@ static inline void print_assign_var(FILE *fd, char *operator, struct reg_t *reg,
 void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 {
 	if (dest->is_register) {
-		if (dest->reg->use==FLOAT) {
+		if (dest->reg->use==FLOAT)
 			fprintf(fd, "\tmovsd %s, %s\n", reg_name(src), reg_name(dest->reg));
-		} else {
+		else {
 			if (src->size==word_size)
 				fprintf(fd, "\tmovl %s, %s\n", reg_name(src), reg_name(dest->reg));
 			else
@@ -103,6 +103,7 @@ static inline void print_read_var(FILE *fd, char *operator, char *reg, struct va
 
 void read_var(FILE *fd, struct var_t *v)
 {
+	get_ret_register(word_size, false)->is_signed=is_signed(v->type);
 	if (v->is_register) {
 		if (v->reg->size==word_size)
 			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(v->reg));
@@ -124,11 +125,8 @@ void read_var(FILE *fd, struct var_t *v)
 			print_read_var(fd, "movq", "%rax", v);
 		else
 			error("read_var", size);
-	} else {
-		if (get_type_size(v->type)==word_size) {
+	} else if (get_type_size(v->type)==word_size)
 			fprintf(fd, "\tmovl %s(%%rip), %%eax\n", v->name);
-		}
-	}
 }
 
 void dereference(FILE *fd, struct reg_t *reg, size_t size)

@@ -156,6 +156,7 @@ static inline int hextoi(char *str)
 "."	{ count(yytext); return '.'; }
 "->"	{ count(yytext); return POINTER_OP; }
 "..."	{ count(yytext); return MULTI_ARGS; }
+"unsigned"	{ count(yytext); return UNSIGNED; }
 "long"	{ count(yytext); return LONG; }
 "enum"	{ count(yytext); return ENUM; }
 "const"	{ count(yytext); read_const_keyword=true; return CONST; }

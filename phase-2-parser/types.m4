@@ -141,6 +141,14 @@ type: TYPE {
 		$$=get_type_by_name("long", _normal);
 } | LONG {
 	$$=get_type_by_name("long", _normal);
+} | UNSIGNED type {
+	$$=malloc(sizeof(struct type_t));
+	memcpy($$, $2, sizeof(struct type_t));
+	asprintf(&($$->name), "unsigned %s", $2->name);
+	$$->is_signed=false;
+	$$->native_type=false;
+	$$->refcount=1;
+	$$->body->refcount++;
 };
 
 enum_elements: enum_element {

@@ -1,7 +1,9 @@
 #ifndef __HANDLE_TYPES_H__
 #define __HANDLE_TYPES_H__
+#include <stdbool.h>
 #include "types.h"
 
+extern bool is_signed(struct type_t *t);
 extern void free_type(struct type_t *t);
 extern void free_tbody(struct tbody_t *t);
 extern int get_type_index_by_name(char *name);
