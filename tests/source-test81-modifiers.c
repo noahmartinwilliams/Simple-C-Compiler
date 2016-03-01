@@ -13,8 +13,17 @@ void _unsigned()
 		exit(2);
 }
 
+void _signed()
+{
+	signed int x=~ ((signed int) 0);
+	x=~((signed int) 0);
+	if (!(x < 0))
+		exit(3);
+}
+
 int main()
 {
 	_long();
 	_unsigned();
+	_signed();
 }

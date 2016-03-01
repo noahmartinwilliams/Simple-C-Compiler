@@ -149,6 +149,11 @@ type: TYPE {
 	$$->native_type=false;
 	$$->refcount=1;
 	$$->body->refcount++;
+} | SIGNED type {
+	$$=copy_type($2);
+	free($$->name);
+	asprintf(&($$->name), "signed %s", $2->name);
+	$$->is_signed=true;
 };
 
 enum_elements: enum_element {

@@ -225,3 +225,15 @@ size_t get_alignof(struct type_t *t)
 {
 	return t->body->attrs.vars.alignment;
 }
+
+struct type_t* copy_type(struct type_t *t)
+{
+	struct type_t *ret=malloc(sizeof(struct type_t));
+	memcpy(ret, t, sizeof(struct type_t));
+	ret->name=strdup(t->name);
+	ret->is_signed=false;
+	ret->native_type=false;
+	ret->refcount=1;
+	ret->body->refcount++;
+	return ret;
+}
