@@ -2,6 +2,9 @@ type_with_stars: type | type_with_stars '*' {
 	$$=increase_type_depth($1, 1);
 };
 
+possibly_blank_ident: IDENTIFIER | %empty {
+	$$=NULL;
+};
 type: TYPE {
 	if ($1==NULL) {
 		yyerror("type not known\n");
@@ -11,11 +14,16 @@ type: TYPE {
 	current_type=$1;
 	current_type->refcount+=2;
 	$$=$1;
-} | STRUCT IDENTIFIER '{' struct_var_declarations '}' {
+} | STRUCT possibly_blank_ident '{' struct_var_declarations '}' {
 	/* TODO: check to see if there's already a struct prototyped by this name, and use that instead if it exists. */
 	struct type_t *type=malloc(sizeof(struct type_t));
 	type->refcount=2;
-	type->name=strdup($2);
+	if ($2==NULL) {
+		char *name;
+		asprintf(&name, "<struct_anonymous%p>", &name);
+		type->name=name;
+	} else
+		type->name=$2;
 	type->pointer_depth=0;
 	type->body=malloc(sizeof(struct tbody_t));
 
@@ -50,7 +58,6 @@ type: TYPE {
 	add_type(type);
 	$$=type;
 	current_type=type;
-	free($2);
 } | UNION IDENTIFIER '{' struct_var_declarations '}' {
 	struct type_t *type=malloc(sizeof(struct type_t));
 	type->refcount=2;

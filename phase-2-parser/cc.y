@@ -134,6 +134,7 @@ static inline struct expr_t* make_prefix_or_postfix_op(char *op, struct expr_t *
 %token <str> IDENTIFIER
 %token <chr> CHAR_LITERAL
 %token UNION REGISTER CONST
+%type <str> possibly_blank_ident
 %type <vars> arg_declaration
 %type <enum_elements> enum_elements
 %type <enum_element> enum_element
