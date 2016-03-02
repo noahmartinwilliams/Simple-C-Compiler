@@ -35,6 +35,7 @@ void setup_backend()
 	pointer_size=*((size_t *) dlsym(lib, "pointer_size"));
 	int_size=*((size_t *) dlsym(lib, "int_size"));
 	char_size=*((size_t *) dlsym(lib, "char_size"));
+	short_size=*((size_t *) dlsym(lib, "short_size"));
 	long_size=*((size_t *) dlsym(lib, "long_size"));
 	float_size=*((size_t *) dlsym(lib, "float_size"));
 	byte_size=*((size_t *) dlsym(lib, "byte_size"));

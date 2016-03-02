@@ -99,7 +99,7 @@ noncomma_expression: CONST_INT {
 	free($1);
 	$$=e;
 } | postfix_expr | SIZEOF '(' type_with_stars ')' {
-	$$=create_const_int_expr(get_type_size($3), get_type_by_name("size_t", _normal));
+	$$=create_const_int_expr(get_type_size($3), get_type_by_name("long", _normal));
 } | noncomma_expression '?' noncomma_expression ':' noncomma_expression {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=bin_op;

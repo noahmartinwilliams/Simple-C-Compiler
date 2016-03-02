@@ -21,6 +21,7 @@ extern size_t long_size;
 extern bool multiple_functions;
 extern size_t current_stack_offset;
 extern size_t float_size;
+extern size_t short_size;
 
 extern bool in_main;
 

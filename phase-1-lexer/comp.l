@@ -153,6 +153,7 @@ static inline int hextoi(char *str)
 \/\/.*$	{ count(yytext); }
 ^\#[[:space:]]*[0-9]+[[:space:]]*\".*\".*$	{ handle_preproc_token(yytext); count(yytext); }
 0x[0-9a-fA-F]+	{ count(yytext); yylval.l=hextoi(yytext); return CONST_INT; }
+"short"	{ count(yytext); return SHORT; }
 "."	{ count(yytext); return '.'; }
 "->"	{ count(yytext); return POINTER_OP; }
 "..."	{ count(yytext); return MULTI_ARGS; }

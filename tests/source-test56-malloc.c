@@ -1,4 +1,4 @@
-extern int* malloc(size_t s);
+extern int* malloc(long int s);
 extern void free(int* f);
 int main()
 {

@@ -226,6 +226,14 @@ size_t get_alignof(struct type_t *t)
 	return t->body->attrs.vars.alignment;
 }
 
+struct tbody_t* copy_body(struct tbody_t *b)
+{
+	struct tbody_t *ret=malloc(sizeof(struct tbody_t));
+	memcpy(ret, b, sizeof(struct tbody_t));
+	ret->refcount=1;
+	return ret;
+}
+
 struct type_t* copy_type(struct type_t *t)
 {
 	struct type_t *ret=malloc(sizeof(struct type_t));

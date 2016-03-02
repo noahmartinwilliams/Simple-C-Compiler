@@ -95,6 +95,39 @@ type: TYPE {
 	$$=current_type=get_type_by_name($2, _struct);
 	$$->refcount+=2;
 	free($2);
+} | ENUM '{' enum_elements '}' {
+	free_type(current_type);
+	int x;
+	for (x=0; $3[x]!=NULL; x++) {}
+	int num_enums=++x;
+	struct type_t *type=malloc(sizeof(struct type_t));
+	type->refcount=2;
+
+	struct tbody_t *bod=type->body=malloc(sizeof(struct tbody_t));
+	bod->refcount=1;
+	bod->base_pointer_depth=type->pointer_depth=0;
+	bod->kind=_enum;
+	bod->is_func_pointer=false;
+	bod->size=num_enums%byte_size>0 ? ((num_enums-(num_enums%byte_size))+byte_size)/byte_size : num_enums/byte_size;
+	bod->core_type=_INT;
+
+	asprintf(&(type->name), "<enum_%p>", $3);
+	type->native_type=false;
+
+	add_type(type);
+	struct const_t **consts=calloc(num_enums, sizeof(struct const_t*));
+
+	for (x=0; $3[x]!=NULL; x++) {
+		struct expr_t *e=create_const_int_expr($3[x]->i >=0 ? $3[x]->i : 1 << x, type);
+		add_constant($3[x]->name, scope_depth, e);
+	}
+
+	for (x=0; $3[x]!=NULL; x++)
+		free($3[x]);
+	free($3);
+	current_type=type;
+	type->refcount++;
+	$$=type;
 } | ENUM IDENTIFIER '{' enum_elements '}' {
 	free_type(current_type);
 	int x;
@@ -154,6 +187,12 @@ type: TYPE {
 	free($$->name);
 	asprintf(&($$->name), "signed %s", $2->name);
 	$$->is_signed=true;
+} | SHORT type {
+	$$=copy_type($2);
+	free($$->name);
+	asprintf(&($$->name), "signed %s", $2->name);
+	$$->body=copy_body($$->body);
+	$$->body->size/=2;
 };
 
 enum_elements: enum_element {

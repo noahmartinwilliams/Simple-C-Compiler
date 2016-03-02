@@ -34,7 +34,7 @@ static inline void init_body(struct tbody_t *b)
 
 void setup_types()
 {
-	num_types=6;
+	num_types=5;
 	types=realloc(types, num_types*sizeof(struct type_t*));
 	types[num_types-1]=malloc(sizeof(struct type_t));
 	struct type_t *i=types[num_types-1];
@@ -63,22 +63,14 @@ void setup_types()
 	types[num_types-4]=malloc(sizeof(struct type_t));
 	i=types[num_types-4];
 	init_type(i);
-	i->name=strdup("size_t");
-	b=i->body=malloc(sizeof(struct tbody_t));
-	init_body(b);
-	b->size=sizeof(size_t);
-
-	types[num_types-5]=malloc(sizeof(struct type_t));
-	i=types[num_types-5];
-	init_type(i);
 	i->name=strdup("float");
 	b=i->body=malloc(sizeof(struct tbody_t));
 	init_body(b);
 	b->size=float_size;
 	b->core_type=_FLOAT;
 
-	types[num_types-6]=malloc(sizeof(struct type_t));
-	i=types[num_types-6];
+	types[num_types-5]=malloc(sizeof(struct type_t));
+	i=types[num_types-5];
 	init_type(i);
 	i->name=strdup("long");
 	b=i->body=malloc(sizeof(struct tbody_t));

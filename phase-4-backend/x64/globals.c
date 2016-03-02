@@ -9,6 +9,7 @@ size_t pointer_size=8;
 size_t char_size=1;
 size_t long_size=8;
 size_t float_size=sizeof(float);
+size_t short_size=2;
 
 /* Architecture specific globals start here. */
 bool last_comparison_float=false;

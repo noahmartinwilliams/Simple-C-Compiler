@@ -181,22 +181,6 @@ void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest)
 
 }
 
-void assign_constant(FILE *fd, struct expr_t *e)
-{
-	if (get_type_size(e->type)==char_size)
-		fprintf(fd, "\tmovb $%ld, %%al\n", e->attrs.cint_val);
-	else if (get_type_size(e->type)==word_size)
-		fprintf(fd, "\tmovl $%ld, %%eax\n", e->attrs.cint_val);
-	else if (get_type_size(e->type)==pointer_size)
-		fprintf(fd, "\tmovq $%ld, %%rax\n", e->attrs.cint_val);
-	else 
-		size_error("assign_constant", get_type_size(e->type));
-}
-
-void assign_constant_int(FILE *fd, int e)
-{
-	fprintf(fd, "\tmovl $%d, %%eax\n", e);
-}
 
 
 void add_readonly_data(FILE *fd, struct expr_t *e)

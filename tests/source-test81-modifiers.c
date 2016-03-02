@@ -21,9 +21,18 @@ void _signed()
 		exit(3);
 }
 
+void _short()
+{
+	if (sizeof(short int) >= sizeof(int))
+		exit(4);
+
+	return;
+}
+
 int main()
 {
 	_long();
 	_unsigned();
 	_signed();
+	_short();
 }

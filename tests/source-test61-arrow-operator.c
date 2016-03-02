@@ -3,7 +3,7 @@ struct a_t {
 	char c;
 } ;
 
-extern struct a_t* malloc(size_t s);
+extern struct a_t* malloc(long int s);
 extern void free(struct a_t *s);
 
 int main()
