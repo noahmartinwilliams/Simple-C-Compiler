@@ -33,19 +33,19 @@ struct tbody_t {
 };
 
 struct type_t {
-	bool native_type;
 	int refcount;
 	char *name;
 	int pointer_depth;
 	struct tbody_t *body;
+	bool native_type;
 	bool is_signed;
+	bool is_constant;
 };
 
 struct expr_t {
 	enum { bin_op=0x01, pre_un_op=0x02, post_un_op=0x03, question=0x04, const_int=0x05, const_float=0x06, var=0x07, funccall=0x08, arg=0x09, const_str=0x0A, const_size_t=0x0B, func_val=0x0C, func_ptr_call=0x0D, convert=0x0E } kind;
 	struct expr_t *left, *right;
 	struct type_t *type;
-	bool has_gotos;
 	union {
 		struct var_t *var;
 		long int cint_val;

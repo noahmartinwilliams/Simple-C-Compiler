@@ -161,7 +161,7 @@ static inline int hextoi(char *str)
 "unsigned"	{ count(yytext); return UNSIGNED; }
 "long"	{ count(yytext); return LONG; }
 "enum"	{ count(yytext); return ENUM; }
-"const"	{ count(yytext); read_const_keyword=true; return CONST; }
+"const"	{ count(yytext); return CONST; }
 "__alignof__"	{ count(yytext); return ALIGNOF; }
 "register"	{ count(yytext); return REGISTER; }
 "default"	{ count(yytext); return DEFAULT; }
@@ -216,6 +216,8 @@ static inline int hextoi(char *str)
 "?"	{ count(yytext); return '?'; }
 "&"	{ count(yytext); return '&'; }
 "~"	{ count(yytext); return '~'; }
+"["	{ count(yytext); return '['; }
+"]"	{ count(yytext); return ']'; }
 [ \t\n]	{ count(yytext); }
 [_a-zA-Z][_a-zA-Z0-9]*	{ count(yytext); 
 	haiku_easter_egg(yytext); 
@@ -230,6 +232,7 @@ static inline int hextoi(char *str)
 <in_comment>"*"+[^*/\n]*	{ count(yytext); }
 <in_comment>\n	{ count(yytext); }
 <in_comment>"*"+"/"	{ count(yytext); BEGIN(INITIAL); }
+.	{ count(yytext); yyerror("Unknown token."); }
 %%
 
 void count(char *s)

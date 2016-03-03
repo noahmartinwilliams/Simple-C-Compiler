@@ -1,5 +1,6 @@
-extern int* malloc(long int size);
-extern void free(int* i);
+#include "stddef.h"
+extern void* malloc(size_t size);
+extern void free(void* i);
 
 int main()
 {

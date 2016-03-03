@@ -3,7 +3,7 @@ AR=ar crT $@ $^
 ifdef DEBUG
 YACC=bison -d --report=all --verbose --debug
 CC=gcc -I $(INCLUDE) $(OPT) -ggdb -D DEBUG
-LEX=flex -s -d
+LEX=flex -d
 else
 YACC=bison -d
 CC=gcc -I $(INCLUDE) $(OPT)

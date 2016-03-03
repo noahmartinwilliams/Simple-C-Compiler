@@ -17,6 +17,7 @@ type: TYPE {
 } | STRUCT possibly_blank_ident '{' struct_var_declarations '}' {
 	/* TODO: check to see if there's already a struct prototyped by this name, and use that instead if it exists. */
 	struct type_t *type=malloc(sizeof(struct type_t));
+	init_type(type);
 	type->refcount=2;
 	if ($2==NULL) {
 		char *name;
@@ -60,6 +61,7 @@ type: TYPE {
 	current_type=type;
 } | UNION IDENTIFIER '{' struct_var_declarations '}' {
 	struct type_t *type=malloc(sizeof(struct type_t));
+	init_type(type);
 	type->refcount=2;
 	type->pointer_depth=0;
 	type->name=strdup($2);
@@ -108,6 +110,7 @@ type: TYPE {
 	for (x=0; $3[x]!=NULL; x++) {}
 	int num_enums=++x;
 	struct type_t *type=malloc(sizeof(struct type_t));
+	init_type(type);
 	type->refcount=2;
 
 	struct tbody_t *bod=type->body=malloc(sizeof(struct tbody_t));
@@ -125,7 +128,7 @@ type: TYPE {
 	struct const_t **consts=calloc(num_enums, sizeof(struct const_t*));
 
 	for (x=0; $3[x]!=NULL; x++) {
-		struct expr_t *e=create_const_int_expr($3[x]->i >=0 ? $3[x]->i : 1 << x, type);
+		struct expr_t *e=const_int_expr($3[x]->i >=0 ? $3[x]->i : 1 << x, type);
 		add_constant($3[x]->name, scope_depth, e);
 	}
 
@@ -141,6 +144,7 @@ type: TYPE {
 	for (x=0; $4[x]!=NULL; x++) {}
 	int num_enums=++x;
 	struct type_t *type=malloc(sizeof(struct type_t));
+	init_type(type);
 	type->refcount=2;
 
 	struct tbody_t *bod=type->body=malloc(sizeof(struct tbody_t));
@@ -158,7 +162,7 @@ type: TYPE {
 	struct const_t **consts=calloc(num_enums, sizeof(struct const_t*));
 
 	for (x=0; $4[x]!=NULL; x++) {
-		struct expr_t *e=create_const_int_expr($4[x]->i >=0 ? $4[x]->i : 1 << x, type);
+		struct expr_t *e=const_int_expr($4[x]->i >=0 ? $4[x]->i : 1 << x, type);
 		add_constant($4[x]->name, scope_depth, e);
 	}
 
@@ -183,6 +187,7 @@ type: TYPE {
 	$$=get_type_by_name("long", _normal);
 } | UNSIGNED type {
 	$$=malloc(sizeof(struct type_t));
+	init_type($$);
 	memcpy($$, $2, sizeof(struct type_t));
 	asprintf(&($$->name), "unsigned %s", $2->name);
 	$$->is_signed=false;
@@ -200,6 +205,13 @@ type: TYPE {
 	asprintf(&($$->name), "signed %s", $2->name);
 	$$->body=copy_body($$->body);
 	$$->body->size/=2;
+} | CONST type {
+	$$=copy_type($2);
+	free($$->name);
+	asprintf(&($$->name), "const %s", $2->name);
+	$$->is_constant=true;
+	$$->refcount++;
+	current_type=$$;
 };
 
 enum_elements: enum_element {

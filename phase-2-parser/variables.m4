@@ -58,9 +58,6 @@ var_declaration: REGISTER var_declaration_start ';' {
 	for (; s!=NULL; s=s->right)
 		make_register_variable(s->left->attrs.var);
 	$$=$2;
-} | CONST var_declaration_start ';' {
-	$$=$2;
-	read_const_keyword=false;
 } | var_declaration_start ';' {
 	$$=$1;
 } | type_with_stars '(' stars IDENTIFIER ')' '(' arg_declaration ')' ';' {
@@ -103,7 +100,7 @@ var_declaration: REGISTER var_declaration_start ';' {
 };
 
 var_declaration_start: type_with_stars IDENTIFIER {
-	if (read_const_keyword)
+	if (current_type->is_constant)
 		yyerror("constant not set at declaration");
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
@@ -122,7 +119,7 @@ var_declaration_start: type_with_stars IDENTIFIER {
 	v->hidden=false;
 	add_var(v);
 } | type_with_stars IDENTIFIER '=' noncomma_expression { 
-	if (read_const_keyword) {
+	if (current_type->is_constant) {
 		add_constant($2, scope_depth, $4);
 		$$=NULL;
 	} else {
@@ -143,11 +140,14 @@ var_declaration_start: type_with_stars IDENTIFIER {
 		v->type=$1;
 		$1->refcount++;
 		declaration->attrs.var=v;
-		declaration->expr=$4;
+		if (!is_complete_type($4->type))
+			declaration->expr=convert_expr($4, $1);
+		else
+			declaration->expr=$4;
 	}
 
 } | var_declaration_start ',' stars IDENTIFIER '=' noncomma_expression {
-	if (read_const_keyword) {
+	if (current_type->is_constant) {
 		$$=NULL;
 		add_constant($4, scope_depth, $6);
 	} else {
@@ -176,7 +176,7 @@ var_declaration_start: type_with_stars IDENTIFIER {
 		declaration->expr=$6;
 	}
 } | var_declaration_start ',' stars IDENTIFIER {
-	if (read_const_keyword) 
+	if (current_type->is_constant) 
 		yyerror("constant not set at declaration");
 	$$=$1;
 	struct statem_t *s=$$;

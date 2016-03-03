@@ -9,7 +9,6 @@
 #include "generator/backend-exported.h"
 #include "handle-types.h"
 #include "handle-funcs.h"
-#include "stack.h"
 
 void generate_binary_expression(FILE *fd, struct expr_t *e);
 void generate_pre_unary_expression(FILE *fd, struct expr_t *e);
@@ -97,6 +96,9 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, "(");
 		load_function_ptr(fd, e->attrs.function, ret);
 		place_comment(fd, ")");
+	} else if (e->kind==convert && e->type->pointer_depth > 0 && e->right->type->pointer_depth> 0 && get_type_size(e->type) == get_type_size(e->right->type)) {
+		
+		generate_expression(fd, e->right);
 	} else if (e->kind==convert && e->type->body->core_type==_INT && e->right->type->body->core_type==_FLOAT) {
 		generate_expression(fd, e->right);
 		convert_float_to_int(fd, get_ret_register(get_type_size(e->type), true), get_ret_register(get_type_size(e->type), false));

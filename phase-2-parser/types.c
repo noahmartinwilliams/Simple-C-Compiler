@@ -5,6 +5,22 @@
 #include "types.h"
 #include "handle-vars.h"
 
+void init_type(struct type_t *t)
+{
+	t->refcount=1;
+	t->native_type=true;
+	t->pointer_depth=0;
+	t->is_constant=false;
+	t->is_signed=true;
+}
+
+void init_body(struct tbody_t *b)
+{
+	b->kind=_normal;
+	b->refcount=1;
+	b->is_func_pointer=false;
+	b->core_type=_INT;
+}
 size_t get_type_size(struct type_t *t);
 off_t get_offset_of_member(struct type_t *t, char *name)
 {
@@ -208,6 +224,10 @@ struct type_t* increase_type_depth(struct type_t *t, int n)
 	return new;
 }
 
+bool is_complete_type(struct type_t *t)
+{
+	return !(t->body==NULL);
+}
 struct type_t* decrease_type_depth(struct type_t *t, int n)
 {
 	struct type_t *new=malloc(sizeof(struct type_t));

@@ -7,8 +7,6 @@
 #include "generator/generator.h"
 #include "globals.h"
 #include "types.h"
-#include "backend/backend.h"
-#include "backend/registers.h"
 #include "backend/int-arithmetic.h"
 #include "backend/float-arithmetic.h"
 

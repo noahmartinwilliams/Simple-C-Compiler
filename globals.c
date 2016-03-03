@@ -29,8 +29,6 @@ int scope_depth=0;
 struct const_t **constants=NULL;
 int num_consts=0;
 
-bool read_const_keyword=false;
-
 #ifdef HAIKU_EASTER_EGG
 int number_of_syllables=0;
 int current_haiku_line=1;

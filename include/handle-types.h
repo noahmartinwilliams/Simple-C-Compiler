@@ -3,6 +3,9 @@
 #include <stdbool.h>
 #include "types.h"
 
+extern bool is_complete_type(struct type_t *t);
+extern void init_body(struct tbody_t *b);
+extern void init_type(struct type_t *t);
 extern bool is_signed(struct type_t *t);
 extern void free_type(struct type_t *t);
 extern void free_tbody(struct tbody_t *t);

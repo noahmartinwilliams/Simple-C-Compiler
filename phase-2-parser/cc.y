@@ -24,45 +24,6 @@ extern int yydebug;
 extern FILE* yyin;
 FILE *output;
 
-static inline struct expr_t* make_bin_op(char *X, struct expr_t *Y, struct expr_t *Z)
-{
-	/* TODO: Make sure that integers added to pointers get multiplied by the size of the pointer base type */
-	if (strlen(X)==2 && X[1]=='=' && X[0]!='='  && X[0]!='<' && X[0]!='>' && X[0]!='!' ) {
-		struct expr_t *assignment=malloc(sizeof(struct expr_t));
-		struct expr_t *or=malloc(sizeof(struct expr_t));
-		assignment->kind=or->kind=bin_op;
-		assignment->attrs.bin_op=strdup("=");
-		assignment->type=Y->type;
-		Y->type->refcount+=2;
-		assignment->left=Y;
-		assignment->right=or;
-
-		or->attrs.bin_op=calloc(2, sizeof(char));
-		or->attrs.bin_op[1]='\0';
-		or->attrs.bin_op[0]=X[0];
-		or->type=assignment->type;
-
-		or->left=copy_expression(Y);
-		or->right=Z;
-		return assignment;
-	}
-	struct expr_t *e=malloc(sizeof(struct expr_t)); 
-	struct expr_t *a=Y, *b=Z;
-	parser_type_cmp(&a, &b);
-	if (!is_test_op(X))
-		e->type=b->type;
-	else
-		e->type=get_type_by_name("int", _normal);
-	e->type->refcount++;
-	if (!evaluate_constant_expr(X, a, b, &e)) {
-		e->kind=bin_op;
-		e->left=a;
-		e->right=b;
-		e->attrs.bin_op=strdup(X);
-	}
-
-	return e;
-}
 
 struct type_t *current_type=NULL;
 
@@ -73,40 +34,19 @@ struct arguments_t {
 
 static bool found_inline_in_function=false;
 
-static inline bool is_constant_kind(struct expr_t *e)
-{
-	return e->kind==const_int || e->kind==const_float || e->kind==const_str;
-}
 
 struct enum_element {
 	int i;
 	char *name;
 };
 
-static inline struct expr_t* make_prefix_or_postfix_op(char *op, struct expr_t *e, struct type_t *t, bool is_prefix)
+static inline struct expr_t* make_postfix_expr(char *op, struct expr_t *e, struct type_t *t)
 {
-	if (is_constant_kind(e) && strcmp("-", op)) {
-		/*TODO: make the error message easier to read for programmers
-		who aren't experts on how compilers work. */
-		yyerror("can not do prefix operator on constant expression.");
-		exit (1);
-	}
-
-	struct expr_t *new=malloc(sizeof(struct expr_t));
-	if (is_prefix) {
-		new->kind=pre_un_op;
-		new->right=e;
-		new->left=NULL;
-	} else {
-		new->kind=post_un_op;
-		new->left=e;
-		new->right=NULL;
-	}
-	new->attrs.un_op=strdup(op);
-	new->type=t;
-	new->has_gotos=e->has_gotos;
-	t->refcount++;
-	return new;
+	return make_prefix_or_postfix_op(op, e, t, false);
+}
+static inline struct expr_t* make_prefix_expr(char *op, struct expr_t *e, struct type_t *t)
+{
+	return make_prefix_or_postfix_op(op, e, t, true);
 }
 
 %}
@@ -160,7 +100,7 @@ static inline struct expr_t* make_prefix_or_postfix_op(char *op, struct expr_t *
 %left SHIFT_LEFT SHIFT_RIGHT
 %left '+' '-'
 %left '*' '/' '%'
-%left '(' ')' '.' POINTER_OP
+%left '(' ')' '[' ']' '.' POINTER_OP
 %left ','
 %nonassoc IFX
 %nonassoc ELSE

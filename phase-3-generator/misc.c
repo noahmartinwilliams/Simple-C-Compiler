@@ -16,21 +16,6 @@ char* generate_global_string(FILE *fd, char *str)
 	return make_global_string(fd, str);
 }
 
-static inline void init_type(struct type_t *t)
-{
-	t->refcount=1;
-	t->native_type=true;
-	t->pointer_depth=0;
-	t->is_signed=true;
-}
-
-static inline void init_body(struct tbody_t *b)
-{
-	b->kind=_normal;
-	b->refcount=1;
-	b->is_func_pointer=false;
-	b->core_type=_INT;
-}
 
 void setup_types()
 {
@@ -50,6 +35,7 @@ void setup_types()
 	i=types[num_types-2];
 	init_type(i);
 	i->name=strdup("char");
+	i->is_signed=false;
 	b=i->body=malloc(sizeof(struct tbody_t));
 	init_body(b);
 	b->size=char_size;

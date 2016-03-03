@@ -1,4 +1,4 @@
-arg_declaration: type_with_stars IDENTIFIER{
+arg_declaration: type_with_stars IDENTIFIER {
 	struct arguments_t *a=malloc(sizeof(struct arguments_t));
 	a->vars=calloc(1, sizeof(struct var_t*));
 	a->vars[0]=malloc(sizeof(struct var_t));
@@ -8,7 +8,6 @@ arg_declaration: type_with_stars IDENTIFIER{
 	v->type=$1;
 	v->type->refcount++;
 	v->scope_depth=1;
-	v->hidden=false;
 	v->refcount=2;
 	a->num_vars=1;
 	add_var(v);
