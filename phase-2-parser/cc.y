@@ -6,12 +6,12 @@
 #include <stdbool.h>
 #include "generator/generator.h"
 #include "globals.h"
-#include "handle-exprs.h"
-#include "handle-funcs.h"
-#include "handle-statems.h"
-#include "handle-types.h"
-#include "handle-consts.h"
-#include "handle-vars.h"
+#include "parser/exprs.h"
+#include "parser/funcs.h"
+#include "parser/statems.h"
+#include "parser/types.h"
+#include "parser/consts.h"
+#include "parser/vars.h"
 #include "generator/backend-exported.h"
 #ifdef DEBUG
 #include "printer.h"
@@ -40,13 +40,13 @@ struct enum_element {
 	char *name;
 };
 
-static inline struct expr_t* make_postfix_expr(char *op, struct expr_t *e, struct type_t *t)
+static inline struct expr_t* postfix_expr(char *op, struct expr_t *e, struct type_t *t)
 {
-	return make_prefix_or_postfix_op(op, e, t, false);
+	return prefix_or_postfix_expr(op, e, t, false);
 }
-static inline struct expr_t* make_prefix_expr(char *op, struct expr_t *e, struct type_t *t)
+static inline struct expr_t* prefix_expr(char *op, struct expr_t *e, struct type_t *t)
 {
-	return make_prefix_or_postfix_op(op, e, t, true);
+	return prefix_or_postfix_expr(op, e, t, true);
 }
 
 %}
@@ -62,6 +62,11 @@ static inline struct expr_t* make_prefix_expr(char *op, struct expr_t *e, struct
 	char chr;
 	struct enum_element **enum_elements;
 	struct enum_element *enum_element;
+	struct {
+		size_t *dimensions;
+		int num_dimensions;
+		char *name;
+	} declare_ident;
 }
 %define parse.error verbose
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST RETURN STRUCT WHILE GE_TEST LE_TEST FOR INC_OP DO
@@ -76,10 +81,11 @@ static inline struct expr_t* make_prefix_expr(char *op, struct expr_t *e, struct
 %token UNION REGISTER CONST
 %type <str> possibly_blank_ident
 %type <vars> arg_declaration
+%type <declare_ident> declared_ident
 %type <enum_elements> enum_elements
 %type <enum_element> enum_element
 %type <expr> noncomma_expression expression binary_expr assignable_expr prefix_expr call_arg_list postfix_expr
-%type <expr> maybe_empty_expr
+%type <expr> possibly_blank_expr possibly_blank_assignment
 %type <statem> statement statement_list var_declaration struct_var_declarations
 %type <type> type 
 %type <type> type_with_stars

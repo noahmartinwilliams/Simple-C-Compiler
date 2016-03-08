@@ -1,0 +1,7 @@
+*make prefix_or_postfix_expr arguments more intuitive.
+*get all tests to use get-arc-name.sh
+*put libx64-backend.so in its own special location.
+*be more consistent with naming scheme for dimension attributes.
+*write down garuantees of get_type_size and start being more consistent with it.
+*be more consistent with when it comes to increment reference counts.
+*in phase-2-parser/exprs.c change argument names in bin_expr.

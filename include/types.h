@@ -35,8 +35,9 @@ struct tbody_t {
 struct type_t {
 	int refcount;
 	char *name;
-	int pointer_depth;
 	struct tbody_t *body;
+	size_t *array_dimensions;
+	int num_arrays;
 	bool native_type;
 	bool is_signed;
 	bool is_constant;

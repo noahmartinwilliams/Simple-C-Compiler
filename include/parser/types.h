@@ -1,8 +1,12 @@
-#ifndef __HANDLE_TYPES_H__
-#define __HANDLE_TYPES_H__
+#ifndef __PARSER_TYPES_H__
+#define __PARSER_TYPES_H__
 #include <stdbool.h>
-#include "types.h"
+#include <stddef.h>
+#include "../types.h"
 
+extern struct type_t* add_array_dimensions(struct type_t *t, int num_dimensions, size_t *dimensions);
+extern size_t get_array_size(struct type_t *t);
+extern size_t get_deref_type_size(struct type_t *t);
 extern bool is_complete_type(struct type_t *t);
 extern void init_body(struct tbody_t *b);
 extern void init_type(struct type_t *t);

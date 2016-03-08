@@ -7,12 +7,12 @@
 #include "globals.h"
 #include "generator/types.h"
 #include "generator/backend-exported.h"
-#include "handle-types.h"
-#include "handle-funcs.h"
+#include "parser/types.h"
+#include "parser/funcs.h"
 
-void generate_binary_expression(FILE *fd, struct expr_t *e);
-void generate_pre_unary_expression(FILE *fd, struct expr_t *e);
-void generate_post_unary_expression(FILE *fd, struct expr_t *e);
+static inline void generate_binary_expression(FILE *fd, struct expr_t *e);
+static inline void generate_pre_unary_expression(FILE *fd, struct expr_t *e);
+static inline void generate_post_unary_expression(FILE *fd, struct expr_t *e);
 
 void generate_expression(FILE *fd, struct expr_t *e)
 {
@@ -96,7 +96,7 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, "(");
 		load_function_ptr(fd, e->attrs.function, ret);
 		place_comment(fd, ")");
-	} else if (e->kind==convert && e->type->pointer_depth > 0 && e->right->type->pointer_depth> 0 && get_type_size(e->type) == get_type_size(e->right->type)) {
+	} else if (e->kind==convert && e->type->num_arrays > 0 && e->right->type->num_arrays> 0 && get_type_size(e->type) == get_type_size(e->right->type)) {
 		
 		generate_expression(fd, e->right);
 	} else if (e->kind==convert && e->type->body->core_type==_INT && e->right->type->body->core_type==_FLOAT) {
@@ -129,9 +129,8 @@ void generate_expression(FILE *fd, struct expr_t *e)
 	depth--;
 }
 
-void generate_post_unary_expression(FILE *fd, struct expr_t *e)
+static inline void generate_post_unary_expression(FILE *fd, struct expr_t *e)
 {
-	depth++;
 	struct reg_t *ret=get_ret_register(get_type_size(e->type), expr_is_float(e));
 	struct reg_t *lhs=get_free_register(fd, get_type_size(e->type), depth, expr_is_float(e));
 	place_comment(fd, "(");
@@ -168,12 +167,10 @@ void generate_post_unary_expression(FILE *fd, struct expr_t *e)
 	}
 	place_comment(fd, ")");
 	free_register(fd, lhs);
-	depth--;
 }
 
-void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
+static inline void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 {
-	depth++;
 	size_t s=get_type_size(e->right->type);
 
 	register struct reg_t *ret=get_ret_register(s, expr_is_float(e));
@@ -223,13 +220,11 @@ void generate_pre_unary_expression(FILE *fd, struct expr_t *e)
 			int_neg(fd, ret);
 	}
 	place_comment(fd, ")");
-	depth--;
 }
 
 
-static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*comparitor)(FILE*, char*), char *true_string, char *false_string, struct reg_t *lhs)
+static inline void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*comparitor)(FILE*, char*), char *true_string, char *false_string, struct reg_t *lhs)
 {
-	depth++;
 	struct reg_t *ret=get_ret_register(get_type_size(e->left->type), expr_is_float(e->left));
 
 	place_comment(fd, "(");
@@ -266,14 +261,11 @@ static void generate_comparison_expression(FILE *fd, struct expr_t *e, void (*co
 
 	free(is_true);
 	free(is_false);
-	depth--;
-
 }
 
 
-void generate_binary_expression(FILE *fd, struct expr_t *e)
+static inline void generate_binary_expression(FILE *fd, struct expr_t *e)
 {
-	depth++;
 	struct reg_t *ret=get_ret_register(get_type_size(e->type), expr_is_float(e));
 	struct reg_t *lhs, *rhs;
 	char *op=e->attrs.bin_op;
@@ -308,6 +300,7 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		generate_expression(fd, e->left);
 		place_comment(fd, ") , (");
 		generate_expression(fd, e->right);
+		place_comment(fd, ")");
 		place_comment(fd, ")");
 	} else {
 		size_t size=get_type_size(e->type);
@@ -400,5 +393,4 @@ void generate_binary_expression(FILE *fd, struct expr_t *e)
 		free_register(fd, rhs);
 		free_register(fd, lhs);
 	}
-	depth--;
 }

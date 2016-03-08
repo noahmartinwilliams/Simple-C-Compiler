@@ -25,7 +25,7 @@ type: TYPE {
 		type->name=name;
 	} else
 		type->name=$2;
-	type->pointer_depth=0;
+	type->num_arrays=0;
 	type->body=malloc(sizeof(struct tbody_t));
 
 	struct tbody_t *body=type->body;
@@ -63,7 +63,7 @@ type: TYPE {
 	struct type_t *type=malloc(sizeof(struct type_t));
 	init_type(type);
 	type->refcount=2;
-	type->pointer_depth=0;
+	type->num_arrays=0;
 	type->name=strdup($2);
 	struct tbody_t *body=type->body=malloc(sizeof(struct tbody_t));
 	body->core_type=_INT;
@@ -115,7 +115,7 @@ type: TYPE {
 
 	struct tbody_t *bod=type->body=malloc(sizeof(struct tbody_t));
 	bod->refcount=1;
-	bod->base_pointer_depth=type->pointer_depth=0;
+	bod->base_pointer_depth=type->num_arrays=0;
 	bod->kind=_enum;
 	bod->is_func_pointer=false;
 	bod->size=num_enums%byte_size>0 ? ((num_enums-(num_enums%byte_size))+byte_size)/byte_size : num_enums/byte_size;
@@ -149,7 +149,7 @@ type: TYPE {
 
 	struct tbody_t *bod=type->body=malloc(sizeof(struct tbody_t));
 	bod->refcount=1;
-	bod->base_pointer_depth=type->pointer_depth=0;
+	bod->base_pointer_depth=type->num_arrays=0;
 	bod->kind=_enum;
 	bod->is_func_pointer=false;
 	bod->size=num_enums%byte_size>0 ? ((num_enums-(num_enums%byte_size))+byte_size)/byte_size : num_enums/byte_size;

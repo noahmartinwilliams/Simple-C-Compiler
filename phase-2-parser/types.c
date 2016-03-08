@@ -3,13 +3,23 @@
 #include "globals.h"
 #include "generator/globals.h"
 #include "types.h"
-#include "handle-vars.h"
+#include "parser/vars.h"
 
+struct type_t* add_array_dimensions(struct type_t *type, int num_dimensions, size_t *dimensions)
+{
+	struct type_t *t=copy_type(type);
+	int n=t->num_arrays;
+	t->num_arrays+=num_dimensions;
+	t->array_dimensions=realloc(t->array_dimensions, sizeof(size_t)*t->num_arrays);
+	memcpy(t->array_dimensions+n, dimensions+n, (t->num_arrays-n)*sizeof(size_t));
+	return t;
+}
 void init_type(struct type_t *t)
 {
 	t->refcount=1;
 	t->native_type=true;
-	t->pointer_depth=0;
+	t->array_dimensions=NULL;
+	t->num_arrays=0;
 	t->is_constant=false;
 	t->is_signed=true;
 }
@@ -97,6 +107,38 @@ void add_type(struct type_t *t)
 	types[num_types-1]=t;
 }
 
+size_t get_deref_type_size(struct type_t *t)
+{
+	int x;
+	size_t size;
+	if (t->body!=NULL)
+		size=t->body->size;
+	else
+		size=1;
+
+	if (t->array_dimensions!=NULL)
+		for (x=0; x<t->num_arrays; x++)
+			size*=t->array_dimensions[x];
+	return size;
+}
+
+size_t get_array_size(struct type_t *t)
+{
+	if (t->body==NULL)
+		return 0;
+	int ret=t->body->size;
+	int x;
+	if (t->num_arrays==0)
+		return 0;
+
+	for (x=0; x<t->num_arrays; x++)
+		if (t->array_dimensions[x]==0)
+			ret=pointer_size;
+		else
+			ret*=t->array_dimensions[x];
+	return ret;
+}
+
 size_t get_type_size(struct type_t *t)
 {
 	if (t==NULL) {
@@ -104,18 +146,18 @@ size_t get_type_size(struct type_t *t)
 		exit(1);
 	}
 
-	if (t->body==NULL && t->pointer_depth >0)
+	if (t->body==NULL && t->num_arrays >0)
 		return pointer_size;
 
-	else if (t->body==NULL && t->pointer_depth<=0)
+	else if (t->body==NULL && t->num_arrays<=0)
 		return 0;
 
-	if (t->body==NULL && t->pointer_depth==0)
+	if (t->body==NULL && t->num_arrays==0)
 		return 0;
-	else if (t->body==NULL && t->pointer_depth>0)
+	else if (t->body==NULL && t->num_arrays>0)
 		return pointer_size;
 
-	if (t->pointer_depth>0)
+	if (t->num_arrays>0)
 		return pointer_size;
 	else 
 		return t->body->size;
@@ -205,10 +247,6 @@ void parser_type_cmp(struct expr_t **a, struct expr_t **b)
 		yyerror("Internal error: Expression is missing type when passed to parser_type_cmp");
 		exit(1);
 	}
-	if ((*a)->type->pointer_depth!=(*b)->type->pointer_depth) {
-		yyerror("Type mismatch");
-		exit(1);
-	}
 }
 
 struct type_t* increase_type_depth(struct type_t *t, int n)
@@ -218,7 +256,16 @@ struct type_t* increase_type_depth(struct type_t *t, int n)
 	new->native_type=false;
 	new->name=strdup(t->name);
 	new->refcount=1;
-	new->pointer_depth+=n;
+	int num_elements=t->num_arrays+n;
+	new->array_dimensions=calloc(num_elements, sizeof(size_t));
+	if (t->array_dimensions!=NULL)
+		memcpy(new->array_dimensions, t->array_dimensions, t->num_arrays*sizeof(size_t));
+	int x;
+	for (x=t->num_arrays; x<num_elements; x++) {
+		new->array_dimensions[x]=0;
+	}
+	new->num_arrays=num_elements;
+
 	if (new->body!=NULL)
 		new->body->refcount++;
 	return new;
@@ -234,7 +281,10 @@ struct type_t* decrease_type_depth(struct type_t *t, int n)
 	memcpy(new, t, sizeof(struct type_t));
 	new->refcount=1;
 	new->native_type=false;
-	new->pointer_depth-=n;
+	int num_elements=t->num_arrays-n;
+	new->array_dimensions=calloc(num_elements, sizeof(size_t));
+	memcpy(new->array_dimensions, t->array_dimensions, num_elements*sizeof(size_t));
+	new->num_arrays=num_elements;
 	if (new->body!=NULL)
 		new->body->refcount++;
 	new->name=strdup(t->name);
@@ -259,7 +309,10 @@ struct type_t* copy_type(struct type_t *t)
 	struct type_t *ret=malloc(sizeof(struct type_t));
 	memcpy(ret, t, sizeof(struct type_t));
 	ret->name=strdup(t->name);
-	ret->is_signed=false;
+	if (ret->array_dimensions!=NULL) {
+		ret->array_dimensions=calloc(ret->num_arrays, sizeof(size_t));
+		memcpy(ret->array_dimensions, t->array_dimensions, ret->num_arrays*sizeof(size_t));
+	}
 	ret->native_type=false;
 	ret->refcount=1;
 	ret->body->refcount++;

@@ -6,7 +6,7 @@
 #include "print-tree.h"
 #include "types.h"
 #include "optimization-globals.h"
-#include "handle-types.h"
+#include "parser/types.h"
 
 bool is_test_op(char *op)
 {
@@ -49,18 +49,18 @@ void print_expr(char *pre, struct expr_t *e)
 			break;
 		case convert:
 			if (e->type->body->core_type==_INT)
-				fprintf(stderr, "conversion type: %s, type_size: %ld, pointer_depth: %ld, core_type: INT", e->type->name, get_type_size(e->type), e->type->pointer_depth);
+				fprintf(stderr, "conversion type: %s, type_size: %ld, pointer_depth: %ld, core_type: INT", e->type->name, get_type_size(e->type), e->type->num_arrays);
 			else
-				fprintf(stderr, "conversion type: %s, type_size: %ld, pointer_depth: %ld, core_type: FLOAT", e->type->name, get_type_size(e->type), e->type->pointer_depth);
+				fprintf(stderr, "conversion type: %s, type_size: %ld, pointer_depth: %ld, core_type: FLOAT", e->type->name, get_type_size(e->type), e->type->num_arrays);
 		}
 		if (e->type->body==NULL) {
 			fprintf(stderr, "\n");
 			return;
 		}
 		if (e->type->body->core_type==_INT)
-			fprintf(stderr, ", type: %s, type_size: %ld, pointer_depth: %ld, core_type: INT\n", e->type->name, get_type_size(e->type), e->type->pointer_depth);
+			fprintf(stderr, ", type: %s, type_size: %ld, pointer_depth: %ld, core_type: INT\n", e->type->name, get_type_size(e->type), e->type->num_arrays);
 		else
-			fprintf(stderr, ", type: %s, type_size: %ld, pointer_depth: %ld, core_type: FLOAT\n", e->type->name, get_type_size(e->type), e->type->pointer_depth);
+			fprintf(stderr, ", type: %s, type_size: %ld, pointer_depth: %ld, core_type: FLOAT\n", e->type->name, get_type_size(e->type), e->type->num_arrays);
 	}
 
 	else if (e->kind==arg) {
@@ -73,6 +73,26 @@ void print_expr(char *pre, struct expr_t *e)
 }
 #endif
 
+struct expr_t* var_expr(struct var_t *v)
+{
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->type=v->type;
+	v->type->refcount++;
+	e->left=e->right=NULL;
+	e->kind=var;
+	e->attrs.var=v;
+	v->refcount++;
+	return e;
+}
+
+struct expr_t* const_int_expr(size_t i, struct type_t *t);
+struct expr_t* get_array_lower_size(struct expr_t *e)
+{
+	struct type_t *t=e->type;
+	size_t size=get_deref_type_size(t);
+	return const_int_expr(size, t);
+}
+
 struct expr_t* convert_expr(struct expr_t *e, struct type_t *t)
 {
 	t->refcount++;
@@ -84,7 +104,7 @@ struct expr_t* convert_expr(struct expr_t *e, struct type_t *t)
 	return ret;
 }
 
-struct expr_t* const_int_expr(int i, struct type_t *t)
+struct expr_t* const_int_expr(size_t i, struct type_t *t)
 {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=const_int;
@@ -248,47 +268,49 @@ bool is_constant_kind(struct expr_t *e)
 }
 
 
-struct expr_t* bin_expr(char *X, struct expr_t *Y, struct expr_t *Z)
+struct expr_t* bin_expr(char *op, struct expr_t *lhs, struct expr_t *rhs, struct type_t *ret_type)
 {
-	/* TODO: Make sure that integers added to pointers get multiplied by the size of the pointer base type */
-	if (strlen(X)==2 && X[1]=='=' && X[0]!='='  && X[0]!='<' && X[0]!='>' && X[0]!='!' ) {
+	if (strlen(op)==2 && op[1]=='=' && op[0]!='='  && op[0]!='<' && op[0]!='>' && op[0]!='!' ) {
 		struct expr_t *assignment=malloc(sizeof(struct expr_t));
 		struct expr_t *or=malloc(sizeof(struct expr_t));
 		assignment->kind=or->kind=bin_op;
 		assignment->attrs.bin_op=strdup("=");
-		assignment->type=Y->type;
-		Y->type->refcount+=2;
-		assignment->left=Y;
+		assignment->type=lhs->type;
+		lhs->type->refcount+=2;
+		assignment->left=lhs;
 		assignment->right=or;
 
 		or->attrs.bin_op=calloc(2, sizeof(char));
 		or->attrs.bin_op[1]='\0';
-		or->attrs.bin_op[0]=X[0];
+		or->attrs.bin_op[0]=op[0];
 		or->type=assignment->type;
 
-		or->left=copy_expression(Y);
-		or->right=Z;
+		or->left=copy_expression(lhs);
+		or->right=rhs;
 		return assignment;
 	}
 	struct expr_t *e=malloc(sizeof(struct expr_t)); 
-	struct expr_t *a=Y, *b=Z;
+	struct expr_t *a=lhs, *b=rhs;
 	parser_type_cmp(&a, &b);
-	if (!is_test_op(X))
+	if (!is_test_op(op) && ret_type==NULL)
 		e->type=b->type;
-	else
+	else if (!is_test_op(op) && ret_type!=NULL) {
+		e->type=ret_type;
+		ret_type->refcount++;
+	} else
 		e->type=get_type_by_name("int", _normal);
 	e->type->refcount++;
-	if (!evaluate_constant_expr(X, a, b, &e)) {
+	if (!evaluate_constant_expr(op, a, b, &e)) {
 		e->kind=bin_op;
 		e->left=a;
 		e->right=b;
-		e->attrs.bin_op=strdup(X);
+		e->attrs.bin_op=strdup(op);
 	}
 
 	return e;
 }
 
-struct expr_t* make_prefix_or_postfix_op(char *op, struct expr_t *e, struct type_t *t, bool is_prefix)
+struct expr_t* prefix_or_postfix_expr(char *op, struct expr_t *e, struct type_t *t, bool is_prefix)
 {
 	if (is_constant_kind(e) && strcmp("-", op)) {
 		/*TODO: make the error message easier to read for programmers

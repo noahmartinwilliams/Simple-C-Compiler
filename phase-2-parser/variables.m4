@@ -4,6 +4,22 @@ stars: %empty {
 	$$=$1 + 1;
 } ;
 
+possibly_blank_assignment: %empty {
+	$$=NULL;
+} | '=' noncomma_expression {
+	$$=$2;
+};
+
+declared_ident: IDENTIFIER {
+	$$.dimensions=NULL;
+	$$.num_dimensions=0;
+	$$.name=$1;
+} | declared_ident '[' CONST_INT ']' {
+	$$=$1;
+	$$.num_dimensions++;
+	$$.dimensions=realloc($$.dimensions, $$.num_dimensions*sizeof(size_t));
+	$$.dimensions[$$.num_dimensions-1]=$3;
+};
 struct_var_declarations: type IDENTIFIER ';' {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	init_statem(s);
@@ -63,23 +79,24 @@ var_declaration: REGISTER var_declaration_start ';' {
 } | type_with_stars '(' stars IDENTIFIER ')' '(' arg_declaration ')' ';' {
 	struct var_t *v=malloc(sizeof(struct var_t));
 	init_var(v);
-	struct type_t *t=v->type=malloc(sizeof(struct type_t));
-	struct tbody_t *tb=t->body=malloc(sizeof(struct tbody_t));
+	struct type_t *t=$1;
+	struct tbody_t *tb=malloc(sizeof(struct tbody_t));
 	tb->size=pointer_size;
 	tb->is_func_pointer=true;
 	tb->attrs.func_ptr.has_var_args=false;
 
-	tb->refcount=t->refcount=v->refcount=1;
+	tb->refcount=v->refcount=1;
 	tb->attrs.func_ptr.return_type=$1;
-	t->pointer_depth=$3;
-	t->native_type=false;
+	v->name=$4;
 
-	v->name=strdup($4);
-	free($4);
 
-	t->body->kind=_normal;
+	struct statem_t *declaration=malloc(sizeof(struct statem_t));
+	init_statem(declaration);
+	declaration->kind=declare;
+	declaration->attrs.var=v;
+	t=increase_type_depth(t, $3);
+	t->body=tb;
 	t->body->is_func_pointer=true;
-
 	t->body->attrs.func_ptr.arguments=calloc($7->num_vars, $7->num_vars*sizeof(struct type_t));
 
 	int x;
@@ -88,39 +105,15 @@ var_declaration: REGISTER var_declaration_start ';' {
 		$7->vars[x]->type->refcount++;
 		free_var($7->vars[x]);
 	}
-
-	struct statem_t *declaration=malloc(sizeof(struct statem_t));
-	init_statem(declaration);
-	declaration->kind=declare;
-	declaration->attrs.var=v;
-	v->scope_depth=scope_depth;
-	v->hidden=false;
+	v->type=t;
 	add_var(v);
+
 	$$=declaration;
 };
 
-var_declaration_start: type_with_stars IDENTIFIER {
-	if (current_type->is_constant)
-		yyerror("constant not set at declaration");
-	$$=malloc(sizeof(struct statem_t));
-	init_statem($$);
-	$$->kind=block;
-	struct statem_t *declaration=$$->left=malloc(sizeof(struct statem_t));
-	init_statem(declaration);
-	declaration->kind=declare;
-	struct var_t *v=declaration->attrs.var=malloc(sizeof(struct var_t));
-	init_var(v);
-
-	v->type=$1;
-	$1->refcount++;
-	v->name=$2;
-	v->refcount=2;
-	v->scope_depth=scope_depth;
-	v->hidden=false;
-	add_var(v);
-} | type_with_stars IDENTIFIER '=' noncomma_expression { 
+var_declaration_start: type_with_stars declared_ident possibly_blank_assignment {
 	if (current_type->is_constant) {
-		add_constant($2, scope_depth, $4);
+		add_constant($2.name, scope_depth, $3);
 		$$=NULL;
 	} else {
 		$$=malloc(sizeof(struct statem_t));
@@ -134,22 +127,36 @@ var_declaration_start: type_with_stars IDENTIFIER {
 		v=malloc(sizeof(struct var_t));
 		init_var(v);
 
-		v->name=$2;
+		v->name=$2.name;
 		v->refcount=4;
 		add_var(v);
-		v->type=$1;
+		if ($2.num_dimensions!=0) {
+			v->type=add_array_dimensions($1, $2.num_dimensions, $2.dimensions);
+			declaration->expr=bin_expr("+",
+				prefix_expr("&", 
+					var_expr(v),
+					v->type),
+				const_int_expr(
+					pointer_size,
+					v->type),
+				NULL
+				);
+
+		} else
+			v->type=$1;
 		$1->refcount++;
 		declaration->attrs.var=v;
-		if (!is_complete_type($4->type))
-			declaration->expr=convert_expr($4, $1);
-		else
-			declaration->expr=$4;
+		if ($3!=NULL)
+			if (!is_complete_type($3->type))
+				declaration->expr=convert_expr($3, $1);
+			else
+				declaration->expr=$3;
 	}
 
-} | var_declaration_start ',' stars IDENTIFIER '=' noncomma_expression {
+} | var_declaration_start ',' stars IDENTIFIER possibly_blank_assignment {
 	if (current_type->is_constant) {
 		$$=NULL;
-		add_constant($4, scope_depth, $6);
+		add_constant($4, scope_depth, $5);
 	} else {
 		$$=$1;
 		struct statem_t *s=$$;
@@ -173,30 +180,6 @@ var_declaration_start: type_with_stars IDENTIFIER {
 		add_var(v);
 
 		declaration->attrs.var=v;
-		declaration->expr=$6;
+		declaration->expr=$5;
 	}
-} | var_declaration_start ',' stars IDENTIFIER {
-	if (current_type->is_constant) 
-		yyerror("constant not set at declaration");
-	$$=$1;
-	struct statem_t *s=$$;
-	for (; s->right!=NULL; s=s->right) {}
-	s->right=malloc(sizeof(struct statem_t));
-	init_statem(s->right);
-	s=s->right;
-	init_statem(s);
-	s->kind=block;
-	struct statem_t *declaration=s->left=malloc(sizeof(struct statem_t));
-	init_statem(declaration);
-	declaration->kind=declare;
-	struct var_t *v=malloc(sizeof(struct var_t));
-	init_var(v);
-
-	v->name=$4;
-
-	v->type=increase_type_depth(current_type, $3);
-	v->refcount=2;
-	add_var(v);
-
-	declaration->attrs.var=v;
-}; 
+} ; 

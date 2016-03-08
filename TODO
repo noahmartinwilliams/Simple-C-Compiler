@@ -1,10 +1,23 @@
-*Check out _setjmp
-*Solve this issue for, while, and do while
-	if (0) {
-		label:
-		code...
+*work on setting arrays initially hint: go to phase-2-parser/variables.m4 line 139.
+*finish work on arrays.
+*size finding logic:
+	If not pointer:
+		return size;
+	if pointer:
+		return 8;
+	
+*array logic:
+	a[b]=*(a+(typeof(a)) f(a)*b);
+	int f(struct type_t *t) 
+	{
+		int x;
+		int accum=t->body->base_size;
+		for (x=0; x<t->num_arrays-1; x++) {
+			accum*=t->array_dimensions[x];
+		}
+		return accum;
 	}
-	goto label;
+*Check out _setjmp
 *add typedefs with pointers as base type.
 *add arrays.
 *add putting structures within structures.

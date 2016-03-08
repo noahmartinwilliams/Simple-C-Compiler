@@ -6,8 +6,8 @@
 #include "generator/generator-expr.h"
 #include "globals.h"
 #include "generator/types.h"
-#include "handle-types.h"
-#include "handle-funcs.h"
+#include "parser/types.h"
+#include "parser/funcs.h"
 #include "stack.h"
 #include "generator/generator-statem.h"
 
@@ -152,7 +152,20 @@ off_t get_var_offset(struct statem_t *s, off_t current_off)
 	if (s->expr!=NULL)
 		o+=get_var_offset_expr(s->expr, current_off+o);
 	if (s->kind==declare) {
+		int x;
 		o=get_type_size(s->attrs.var->type);
+		if (s->attrs.var->type->num_arrays!=0) {
+			size_t offset=get_type_size(s->attrs.var->type);
+			for (x=0; x<s->attrs.var->type->num_arrays; x++) {
+				if (s->attrs.var->type->array_dimensions[x]==0)
+					offset=pointer_size;
+				else
+					offset*=s->attrs.var->type->array_dimensions[x];
+			}
+			offset+=pointer_size;
+			o+=offset;
+
+		}
 		s->attrs.var->offset=-(o+current_off);
 	} else if (s->kind==_for) {
 		o+=get_var_offset_expr(s->attrs._for.initial, current_off+o);

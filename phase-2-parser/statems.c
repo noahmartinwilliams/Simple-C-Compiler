@@ -3,12 +3,10 @@
 #include <stdio.h>
 #ifdef DEBUG
 #include "print-tree.h"
-#include "printer.h"
 #endif
-#include "handle-types.h"
+#include "parser/types.h"
 #include "globals.h"
-#include "handle-exprs.h"
-#include "handle-exprs.h"
+#include "parser/exprs.h"
 
 void free_statem(struct statem_t *s)
 {
@@ -90,7 +88,7 @@ void print_statem(char *pre, struct statem_t *s)
 		fprintf(stderr, "%s|_statement kind: block\n", pre);
 		break;
 	case declare: 
-		fprintf(stderr, "%s|_statment kind: declare, var: %s, type: %s, pointer_depth: %d, size: %ld \n", pre, s->attrs.var->name, s->attrs.var->type->name, s->attrs.var->type->pointer_depth, get_type_size(s->attrs.var->type));
+		fprintf(stderr, "%s|_statment kind: declare, var: %s, type: %s, pointer_depth: %d, size: %ld \n", pre, s->attrs.var->name, s->attrs.var->type->name, s->attrs.var->type->num_arrays, get_type_size(s->attrs.var->type));
 		break;
 	case _while:
 		fprintf(stderr, "%s|_statement kind: while loop\n", pre);

@@ -1,7 +1,7 @@
 #include "types.h"
 #include <stdlib.h>
 #include "globals.h"
-#include "handle-types.h"
+#include "parser/types.h"
 #include <stdio.h>
 
 void init_var(struct var_t *v)

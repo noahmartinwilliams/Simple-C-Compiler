@@ -16,7 +16,7 @@ static bool doing_inline=false;
 static struct func_t *current_func=NULL;
 static int current_arg=0;
 
-static void expand_stack_space(FILE *fd, off_t off)
+void expand_stack_space(FILE *fd, off_t off)
 {
 	if (off!=0)
 		fprintf(fd, "\tsubq $%ld, %%rsp\n", off);

@@ -21,7 +21,7 @@ call_arg_list: noncomma_expression {
 };
 
 expression: noncomma_expression | noncomma_expression ',' noncomma_expression {
-	$$=bin_expr(",", $1, $3);
+	$$=bin_expr(",", $1, $3, NULL);
 };
 noncomma_expression:  CONST_INT {
 	$$=const_int_expr($1, NULL);
@@ -100,7 +100,7 @@ noncomma_expression:  CONST_INT {
 } | postfix_expr | SIZEOF '(' type_with_stars ')' {
 	$$=const_int_expr(get_type_size($3), get_type_by_name("long", _normal));
 } | noncomma_expression '?' noncomma_expression ':' noncomma_expression {
-	$$=bin_expr("?", $1, bin_expr(":", $3, $5));
+	$$=bin_expr("?", $1, bin_expr(":", $3, $5, NULL), NULL);
 } | ALIGNOF '(' type ')' {
 	$$=const_int_expr(get_alignof($3), NULL);
 	free_type($3);
@@ -109,23 +109,23 @@ noncomma_expression:  CONST_INT {
 };
 
 postfix_expr: assignable_expr INC_OP {
-	$$=make_postfix_expr("++", $1, $1->type);
+	$$=postfix_expr("++", $1, $1->type);
 } | assignable_expr DEC_OP {
-	$$=make_postfix_expr("--", $1, $1->type);
+	$$=postfix_expr("--", $1, $1->type);
 };
 
 prefix_expr: '&' assignable_expr {
-	$$=make_prefix_expr("&", $2, increase_type_depth($2->type, 1));
+	$$=prefix_expr("&", $2, increase_type_depth($2->type, 1));
 } | CHAR_LITERAL {
 	$$=const_int_expr((long int) $1, get_type_by_name("char", _normal));
 } | '!' noncomma_expression {
-	$$=make_prefix_expr("!", $2, $2->type);
+	$$=prefix_expr("!", $2, $2->type);
 } | INC_OP assignable_expr {
-	$$=make_prefix_expr("++", $2, $2->type);
+	$$=prefix_expr("++", $2, $2->type);
 } | '~' noncomma_expression {
-	$$=make_prefix_expr("~", $2, $2->type);
+	$$=prefix_expr("~", $2, $2->type);
 } | '-' noncomma_expression {
-	$$=make_prefix_expr("-", $2, $2->type);
+	$$=prefix_expr("-", $2, $2->type);
 };
 
 assignable_expr: IDENTIFIER {
@@ -161,101 +161,112 @@ assignable_expr: IDENTIFIER {
 		}
 	}
 } | '*' assignable_expr {
-	$$=make_prefix_expr("*", $2, decrease_type_depth($2->type, 1));
+	$$=prefix_expr("*", $2, decrease_type_depth($2->type, 1));
 } | assignable_expr '.' IDENTIFIER {
 	struct type_t *type=$1->type;
 	struct tbody_t *body=type->body;
 	if (body->kind==_union) {
-		struct expr_t *e=malloc(sizeof(struct expr_t));
-		memcpy(e, $1, sizeof(struct expr_t));
-		e->type=get_struct_or_union_attr_type(type, $3);
-		if (e->type==NULL)
-			yyerror("Identifier is not a valid attribute.");
+		$$=$1;
+		free_type($$->type);
+		$$->type=get_struct_or_union_attr_type(type, $3);
 		free($3);
-		$$=e;
 	} else if (body->kind==_struct) {
 		/* a.b ---> *(&a+offsetof(typeof(a), b)) */
 		/* TODO: ensure that a.b.c works properly */
-		struct expr_t *deref;
-		struct expr_t *addition;
-		struct expr_t *ref;
-		struct expr_t *constant;
-		constant=const_int_expr(get_offset_of_member(type, $3), get_type_by_name("int", _normal));
 
-		ref=make_prefix_expr(strdup("&"),  $1, increase_type_depth(type, 1));
-		addition=bin_expr(strdup("+"), ref, convert_expr(constant, ref->type));
-		free_type(addition->type);
-		addition->type=ref->type;
-		addition->type->refcount++;
-
+		struct type_t *t=increase_type_depth(type, 1);
 		type->refcount++;
-		deref=make_prefix_expr("*", addition,  get_var_member(type, $3)->type);
-		$$=deref;
+		$$=prefix_expr("*",
+			bin_expr("+", 
+				prefix_expr("&",  
+					$1, t), 
+				convert_expr(
+					const_int_expr(
+						get_offset_of_member(type, $3), 
+						get_type_by_name("int", _normal)
+					),
+					t),
+				t
+				),
+			get_var_member(type, $3)->type);
 		free($3);
 	}
 } | assignable_expr POINTER_OP IDENTIFIER {
 	/* a->b ---> *(a+offsetof(typeof(a), b)) */
-	struct expr_t *pointer;
-	struct expr_t *offset=malloc(sizeof(struct expr_t));
-
-	offset=const_int_expr(get_offset_of_member($1->type, $3), increase_type_depth(get_type_by_name("int", _normal), 1));
-	
-	struct expr_t *addition=bin_expr("+", $1, offset);
-	pointer=make_prefix_expr("*", addition, get_struct_or_union_attr_type($1->type, $3));
+	$$=prefix_expr("*", 
+		bin_expr("+", 
+			$1, 
+			const_int_expr(
+				get_offset_of_member($1->type, $3), 
+				increase_type_depth(get_type_by_name("int", _normal), 1)
+			),
+			NULL
+			), 
+		get_struct_or_union_attr_type($1->type, $3)
+		);
 
 
 	free($3);
-
-	$$=pointer;
 } | assignable_expr '[' expression ']' {
-	$$=make_prefix_expr("*",  bin_expr("+", $1, convert_expr($3, $1->type)), decrease_type_depth($1->type, 1));
+	$$=prefix_expr("*",  
+		bin_expr("+", 
+			$1, 
+			bin_expr("*", 
+				get_array_lower_size($1), 
+				convert_expr($3, $1->type),
+				NULL
+				),
+			NULL
+			), 
+			decrease_type_depth($1->type, 1)
+			);
 };
 
 binary_expr:  noncomma_expression '*' noncomma_expression {
-	$$=bin_expr("*", $1, $3);
+	$$=bin_expr("*", $1, $3, NULL);
 } | noncomma_expression '/' noncomma_expression {
-	$$=bin_expr("/", $1, $3);
+	$$=bin_expr("/", $1, $3, NULL);
 } | noncomma_expression '+' noncomma_expression {
-	$$=bin_expr("+", $1, $3);
+	$$=bin_expr("+", $1, $3, NULL);
 } | noncomma_expression '-' noncomma_expression {
-	$$=bin_expr("-", $1, $3);
+	$$=bin_expr("-", $1, $3, NULL);
 } | assignable_expr '=' noncomma_expression {
 	if (is_constant_kind($1)) {
 		/* This can happen due to the const keyword. */
 		yyerror("error: can not assign to constant.");
 		exit(1);
 	}
-	$$=bin_expr("=", $1, $3);
+	$$=bin_expr("=", $1, $3, NULL);
 } | noncomma_expression '<' noncomma_expression {
-	$$=bin_expr("<", $1, $3);
+	$$=bin_expr("<", $1, $3, NULL);
 } | noncomma_expression '>' noncomma_expression {
-	$$=bin_expr(">", $1, $3);
+	$$=bin_expr(">", $1, $3, NULL);
 } | noncomma_expression NE_TEST noncomma_expression {
-	$$=bin_expr("!=", $1, $3);
+	$$=bin_expr("!=", $1, $3, NULL);
 } | assignable_expr ASSIGN_OP noncomma_expression {
 	if (is_constant_kind($1))
 		yyerror("can't assign to constant.");
-	$$=bin_expr($2, $1, $3);
+	$$=bin_expr($2, $1, $3, NULL);
 } | noncomma_expression GE_TEST noncomma_expression {
-	$$=bin_expr(">=", $1, $3);
+	$$=bin_expr(">=", $1, $3, NULL);
 } | noncomma_expression LE_TEST noncomma_expression {
-	$$=bin_expr("<=", $1, $3);
+	$$=bin_expr("<=", $1, $3, NULL);
 } | noncomma_expression SHIFT_LEFT noncomma_expression {
-	$$=bin_expr("<<", $1, $3);
+	$$=bin_expr("<<", $1, $3, NULL);
 } | noncomma_expression SHIFT_RIGHT noncomma_expression {
-	$$=bin_expr(">>", $1, $3);
+	$$=bin_expr(">>", $1, $3, NULL);
 } | noncomma_expression '|' noncomma_expression {
-	$$=bin_expr("|", $1, $3);
+	$$=bin_expr("|", $1, $3, NULL);
 } | noncomma_expression '&' noncomma_expression {
-	$$=bin_expr("&", $1, $3);
+	$$=bin_expr("&", $1, $3, NULL);
 } | noncomma_expression '^' noncomma_expression {
-	$$=bin_expr("^", $1, $3);
+	$$=bin_expr("^", $1, $3, NULL);
 } | noncomma_expression TEST_OR noncomma_expression {
-	$$=bin_expr("||", $1, $3);
+	$$=bin_expr("||", $1, $3, NULL);
 } | noncomma_expression TEST_AND noncomma_expression {
-	$$=bin_expr("&&", $1, $3);
+	$$=bin_expr("&&", $1, $3, NULL);
 } | noncomma_expression EQ_TEST noncomma_expression {
-	$$=bin_expr("==", $1, $3);
+	$$=bin_expr("==", $1, $3, NULL);
 } | noncomma_expression '%' noncomma_expression {
-	$$=bin_expr("%", $1, $3);
+	$$=bin_expr("%", $1, $3, NULL);
 };

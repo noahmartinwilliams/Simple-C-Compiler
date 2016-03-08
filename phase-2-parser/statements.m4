@@ -16,7 +16,7 @@ statement_list: statement {
 };
 
 
-maybe_empty_expr: %empty {
+possibly_blank_expr: %empty {
 	$$=NULL;
 } | expression {
 	$$=$1;
@@ -37,7 +37,7 @@ statement: expression ';' {
 	$$->expr=$3;
 	$$->right=$5;
 	$$->has_gotos=$5->has_gotos;
-} | RETURN maybe_empty_expr ';' {
+} | RETURN possibly_blank_expr ';' {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
 	$$->kind=ret;
@@ -92,7 +92,7 @@ statement: expression ';' {
 	$$->has_gotos=$6->has_gotos;
 	$$->right=$6;
 	$$->expr=$3;
-} | FOR '(' maybe_empty_expr ';' maybe_empty_expr ';' maybe_empty_expr ')' statement {
+} | FOR '(' possibly_blank_expr ';' possibly_blank_expr ';' possibly_blank_expr ')' statement {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
 	$$->kind=_for;

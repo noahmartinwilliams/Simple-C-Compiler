@@ -3,8 +3,8 @@
 #include "globals.h"
 #include <stdlib.h>
 #include <string.h>
-#include "handle-types.h"
-#include "handle-consts.h"
+#include "parser/types.h"
+#include "parser/consts.h"
 void count(char *s);
 
 #ifdef HAIKU_EASTER_EGG

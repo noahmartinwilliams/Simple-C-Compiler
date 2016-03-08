@@ -1,6 +1,6 @@
 #ifndef __HANDLE_CONSTS_H__
 #define __HANDLE_CONSTS_H__
-#include "types.h"
+#include "../types.h"
 
 extern struct expr_t* is_constant(char *name);
 extern void add_constant(char *name, int scope, struct expr_t *e);
