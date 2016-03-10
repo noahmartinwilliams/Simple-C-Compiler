@@ -1,23 +1,13 @@
 #define IN_BACKEND
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "generator/globals.h"
 #include "generator/types.h"
-#include "generator/generator.h"
-#include "globals.h"
 #include "types.h"
 #include "backend/backend.h"
 #include "backend/registers.h"
-#include "parser/types.h"
 
 extern bool last_comparison_float;
-static inline void size_error(char *message, size_t size)
-{
-	fprintf(stderr, "Internal Error: unknown size: %ld passed to %s\n", size, message);
-	exit(1);
-}
-
 void compare_float_registers(FILE *fd, struct reg_t *b, struct reg_t *a)
 {
 	last_comparison_float=true;

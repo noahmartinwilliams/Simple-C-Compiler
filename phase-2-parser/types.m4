@@ -111,6 +111,7 @@ type: TYPE {
 	int num_enums=++x;
 	struct type_t *type=malloc(sizeof(struct type_t));
 	init_type(type);
+	type->is_signed=false;
 	type->refcount=2;
 
 	struct tbody_t *bod=type->body=malloc(sizeof(struct tbody_t));
@@ -145,6 +146,7 @@ type: TYPE {
 	int num_enums=++x;
 	struct type_t *type=malloc(sizeof(struct type_t));
 	init_type(type);
+	type->is_signed=false;
 	type->refcount=2;
 
 	struct tbody_t *bod=type->body=malloc(sizeof(struct tbody_t));

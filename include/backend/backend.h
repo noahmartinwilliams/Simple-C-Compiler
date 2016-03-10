@@ -13,6 +13,7 @@
 #include "backend/calls.h"
 #include "backend/variables.h"
 
+extern void size_error(char *message, size_t size);
 extern void cleanup_backend();
 extern void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest);
 extern void assign_constant_int(FILE *fd, int e);

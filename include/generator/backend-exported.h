@@ -51,7 +51,7 @@ extern void (*get_address)(FILE *fd, struct expr_t *var);
 extern void (*dereference)(FILE *fd, struct reg_t *reg, size_t size);
 extern void (*assign_var)(FILE *fd, struct reg_t *src, struct var_t *dest);
 extern char* (*make_global_string)(FILE *fd, char *str);
-extern void (*assign_constant_int)(FILE *fd, int e);
+extern void (*assign_constant_int)(FILE *fd, long int e);
 extern void (*assign_constant)(FILE *fd, struct expr_t *e);
 extern void (*assign_constant_float)(FILE *fd, struct expr_t *e);
 extern void (*compare_float_registers)(FILE *fd, struct reg_t *a, struct reg_t *b);
@@ -64,4 +64,5 @@ extern void (*_div)(FILE *fd, struct reg_t *a, struct reg_t *b);
 extern void (*convert_float_to_int)(FILE *fd, struct reg_t *a, struct reg_t *b);
 extern void (*make_register_variable)(struct var_t *v);
 extern void (*prepare_for_new_function)(FILE *fd);
+extern void (*convert_int_size)(FILE *fd, struct reg_t *r, size_t new_size, bool is_signed);
 #endif

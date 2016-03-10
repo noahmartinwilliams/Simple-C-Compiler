@@ -182,6 +182,10 @@ void invert(FILE *fd, struct reg_t *r)
 		fprintf(fd, "\tnotl %s\n", reg_name(r));
 		if (r->use!=RET)
 			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(r));
+	} else if (r->size==long_size) {
+		fprintf(fd, "\tnotq %s\n", reg_name(r));
+		if (r->use!=RET)
+			fprintf(fd, "\tmovq %s, %%rax\n", reg_name(r));
 	} else {
 		fprintf(stderr, "Internal Error: invalid register size: %d passed to invert\n", r->size);
 		exit(1);

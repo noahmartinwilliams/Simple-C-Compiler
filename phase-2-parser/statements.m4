@@ -1,9 +1,9 @@
-statement_list: statement { 
+block: statement { 
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
 	$$->kind=block;
 	$$->left=$1;
-} | statement_list statement {
+} | block statement {
 	$$=$1;
 	struct statem_t *s=$1;
 	for (; s->right!=NULL; s=s->right) {}
@@ -28,7 +28,7 @@ statement: expression ';' {
 	$$->kind=expr;
 	$$->expr=$1;
 	$$->has_gotos=false;
-} | '{' statement_list '}' {
+} | '{' block '}' {
 	$$=$2;
 } | var_declaration | WHILE '(' expression ')' statement {
 	$$=malloc(sizeof(struct statem_t));
@@ -101,7 +101,6 @@ statement: expression ';' {
 		struct expr_t *e=malloc(sizeof(struct expr_t));
 		e->kind=const_int;
 		e->attrs.cint_val=1;
-		e->left=e->right=NULL;
 		e->type=get_type_by_name("int", _normal);
 		$$->expr=e;
 	} else
@@ -128,24 +127,20 @@ switch_list: switch_element {
 	$$=$1;
 } ;
 
-switch_element: CASE expression ':' statement_list {
+switch_element: CASE expression ':' block {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
 	$$->kind=_case;
-	$$->left=NULL;
 	$$->right=$4;
 	$$->expr=$2;
-} | DEFAULT ':' statement_list {
+} | DEFAULT ':' block {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
 	$$->kind=_default;
 	$$->right=$3;
-	$$->left=NULL;
-	$$->expr=NULL;
 } | CASE expression ':' {
 	$$=malloc(sizeof(struct statem_t));
 	init_statem($$);
 	$$->kind=_case;
 	$$->expr=$2;
-	$$->left=$$->right=NULL;
 }

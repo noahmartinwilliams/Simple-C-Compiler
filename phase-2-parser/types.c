@@ -4,6 +4,7 @@
 #include "generator/globals.h"
 #include "types.h"
 #include "parser/vars.h"
+#include "parser/exprs.h"
 
 struct type_t* add_array_dimensions(struct type_t *type, int num_dimensions, size_t *dimensions)
 {
@@ -246,6 +247,12 @@ void parser_type_cmp(struct expr_t **a, struct expr_t **b)
 	if ((*a)->type==NULL || (*b)->type==NULL) {
 		yyerror("Internal error: Expression is missing type when passed to parser_type_cmp");
 		exit(1);
+	}
+
+	if (get_type_size((*a)->type) > get_type_size((*b)->type)) {
+		*b=convert_expr(*b, (*a)->type);
+	} else if (get_type_size((*a)->type) < get_type_size((*b)->type)) {
+		*a=convert_expr(*a, (*b)->type);
 	}
 }
 

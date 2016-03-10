@@ -1,8 +1,14 @@
 extern void exit(int status);
+extern int printf(char *msg, ...);
 void _long()
 {
 	if (sizeof(long int) <= sizeof(int))
 		exit(1);
+
+	int x=-1;
+	long int y=(long int) x;
+	if (y>=0)
+		exit(5);
 }
 
 void _unsigned()

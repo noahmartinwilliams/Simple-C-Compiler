@@ -2,8 +2,11 @@
 #define __GENERATOR_H__
 #include "types.h"
 #include "generator/misc.h"
-#include "generator/generator-expr.h"
-#include "generator/generator-statem.h"
+#include "generator/expr.h"
+#include "generator/statem.h"
 #include "generator/globals.h"
+#include "generator/vars.h"
+#include "generator/type-functions.h"
+#include "generator/functions.h"
 
 #endif

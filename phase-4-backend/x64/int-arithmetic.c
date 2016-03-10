@@ -175,3 +175,41 @@ void int_neg(FILE *fd, struct reg_t *r)
 		}
 	}
 }
+
+void convert_int_size(FILE *fd, struct reg_t *r, size_t new_size, bool is_signed)
+{
+	struct reg_t *ret=get_ret_register(new_size, false);
+	if (r->size < new_size && is_signed) {
+		assign_reg(fd, r, ret);
+		char *conv_instr=calloc(4, sizeof(char));
+		conv_instr[0]='c';
+		conv_instr[2]='t';
+		if (r->size==char_size)
+			conv_instr[1]='b';
+		if (r->size==short_size)
+			conv_instr[1]='w';
+		if (r->size==word_size)
+			conv_instr[1]='l';
+		if (r->size==long_size)
+			conv_instr[1]='q';
+
+		if (new_size==char_size)
+			conv_instr[3]='b';
+		if (new_size==short_size)
+			conv_instr[3]='w';
+		if (new_size==word_size)
+			conv_instr[3]='l';
+		if (new_size==long_size)
+			conv_instr[3]='q';
+		fprintf(fd, "\t%s\n", conv_instr);
+			
+	} else if (r->size < new_size && !is_signed) {
+		assign_constant_int(fd, 0);
+		set_register_size(r, new_size);
+		assign_reg(fd, r, ret);
+	} else {
+		set_register_size(ret, new_size);
+		set_register_size(r, new_size);
+		assign_reg(fd, r, ret);
+	}
+}

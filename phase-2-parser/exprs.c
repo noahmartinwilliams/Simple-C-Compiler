@@ -119,6 +119,7 @@ struct expr_t* const_int_expr(size_t i, struct type_t *t)
 	}
 	return e;
 }
+
 void free_expr(struct expr_t *e)
 {
 	if (e==NULL)
@@ -297,8 +298,9 @@ struct expr_t* bin_expr(char *op, struct expr_t *lhs, struct expr_t *rhs, struct
 	else if (!is_test_op(op) && ret_type!=NULL) {
 		e->type=ret_type;
 		ret_type->refcount++;
-	} else
+	} else {
 		e->type=get_type_by_name("int", _normal);
+	}
 	e->type->refcount++;
 	if (!evaluate_constant_expr(op, a, b, &e)) {
 		e->kind=bin_op;

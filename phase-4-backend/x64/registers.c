@@ -12,6 +12,16 @@
 struct reg_t **regs=NULL;
 int num_regs=0;
 
+bool has_size(struct reg_t *r, size_t size)
+{
+	int x;
+	for (x=0; x<r->num_sizes; x++) 
+		if (r->sizes[x].size==size)
+			return true;
+
+	return false;
+}
+
 void set_register_size(struct reg_t *r, size_t s);
 char* get_reg_name(struct reg_t *reg, size_t size)
 {

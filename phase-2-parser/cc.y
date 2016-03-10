@@ -12,7 +12,6 @@
 #include "parser/types.h"
 #include "parser/consts.h"
 #include "parser/vars.h"
-#include "generator/backend-exported.h"
 #ifdef DEBUG
 #include "printer.h"
 #include "print-tree.h"
@@ -44,6 +43,7 @@ static inline struct expr_t* postfix_expr(char *op, struct expr_t *e, struct typ
 {
 	return prefix_or_postfix_expr(op, e, t, false);
 }
+
 static inline struct expr_t* prefix_expr(char *op, struct expr_t *e, struct type_t *t)
 {
 	return prefix_or_postfix_expr(op, e, t, true);
@@ -72,13 +72,13 @@ static inline struct expr_t* prefix_expr(char *op, struct expr_t *e, struct type
 %token BREAK SHIFT_LEFT CONTINUE ELSE EQ_TEST IF NE_TEST RETURN STRUCT WHILE GE_TEST LE_TEST FOR INC_OP DO
 %token SHIFT_RIGHT EXTERN GOTO TEST_OR TEST_AND DEC_OP TYPEDEF MULTI_ARGS STATIC INLINE SIZEOF
 %token POINTER_OP DEFAULT SWITCH CASE ALIGNOF ENUM LONG UNSIGNED SIGNED SHORT
+%token UNION REGISTER CONST
 %token <str> STR_LITERAL 
 %token <type> TYPE
 %token <str> ASSIGN_OP
 %token <l> CONST_INT
 %token <str> IDENTIFIER
 %token <chr> CHAR_LITERAL
-%token UNION REGISTER CONST
 %type <str> possibly_blank_ident
 %type <vars> arg_declaration
 %type <declare_ident> declared_ident
@@ -86,7 +86,7 @@ static inline struct expr_t* prefix_expr(char *op, struct expr_t *e, struct type
 %type <enum_element> enum_element
 %type <expr> noncomma_expression expression binary_expr assignable_expr prefix_expr call_arg_list postfix_expr
 %type <expr> possibly_blank_expr possibly_blank_assignment
-%type <statem> statement statement_list var_declaration struct_var_declarations
+%type <statem> statement block var_declaration struct_var_declarations
 %type <type> type 
 %type <type> type_with_stars
 %type <func> function function_header

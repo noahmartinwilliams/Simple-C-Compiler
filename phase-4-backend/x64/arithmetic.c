@@ -1,11 +1,8 @@
 #define IN_BACKEND
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "generator/globals.h"
 #include "generator/types.h"
-#include "generator/generator.h"
-#include "globals.h"
 #include "types.h"
 #include "backend/int-arithmetic.h"
 #include "backend/float-arithmetic.h"

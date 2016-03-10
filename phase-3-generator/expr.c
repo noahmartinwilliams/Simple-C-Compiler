@@ -109,19 +109,12 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		free(comment);
 
 		ret=get_ret_register(get_type_size(e->type), false);
-		struct reg_t *tmp=get_free_register(fd, get_type_size(e->type), depth, false);
-		int x=0;
-		int power=1;
-		for (; x<byte_size; x++)
-			power*=2;
-		power--;
-		assign_constant_int(fd, power);
-		assign_reg(fd, ret, tmp);
+		struct reg_t *tmp=get_free_register(fd, get_type_size(e->right->type), depth, false);
 		generate_expression(fd, e->right);
-		set_register_size(ret, get_type_size(e->type));
-		
-		and(fd, tmp, ret);
+		assign_reg(fd, ret, tmp);
+		convert_int_size(fd, tmp, get_type_size(e->type), e->right->type->is_signed);
 		free_register(fd, tmp);
+		
 		place_comment(fd, ")");
 	}
 

@@ -79,7 +79,7 @@ function_header: type_with_stars IDENTIFIER '(' ')' {
 	$$=$2;
 };
 
-function: function_header '{' statement_list '}' {
+function: function_header '{' block '}' {
 	$1->statement_list=$3;
 	if (found_inline_in_function && $1->attributes&_inline){
 		yyerror ("Inline functions must not contain other inline functions");

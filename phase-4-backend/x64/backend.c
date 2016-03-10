@@ -10,7 +10,7 @@
 #include "types.h"
 #include "backend/globals.h"
 
-static inline void size_error(char *message, size_t size)
+void size_error(char *message, size_t size)
 {
 	fprintf(stderr, "Internal Error: unknown size: %ld passed to %s\n", size, message);
 	exit(1);

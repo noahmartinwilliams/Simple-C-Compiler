@@ -1,3 +1,10 @@
+*move phase-2-parser/types.c to phase-0-utilities/types.c and update headers accordingly.
+*remove unneeded header includes from headers and c files.
+*be more consistent with abbreviations.
+*split up phase-3-generator/misc.c
+*eliminate print_tree function.
+*rename "type modifier" to "type qualifier".
+*add standard size error function.
 *make prefix_or_postfix_expr arguments more intuitive.
 *get all tests to use get-arc-name.sh
 *put libx64-backend.so in its own special location.

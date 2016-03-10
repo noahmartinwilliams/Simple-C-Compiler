@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include "types.h"
 #include "generator/globals.h"
-#include "generator/generator-expr.h"
+#include "generator/expr.h"
 #include "generator/misc.h"
 #include "globals.h"
 #include "generator/types.h"

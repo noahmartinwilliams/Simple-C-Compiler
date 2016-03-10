@@ -36,8 +36,8 @@ void assign_constant(FILE *fd, struct expr_t *e)
 		size_error("assign_constant", get_type_size(e->type));
 }
 
-void assign_constant_int(FILE *fd, int e)
+void assign_constant_int(FILE *fd, long int e)
 {
-	fprintf(fd, "\tmovl $%d, %%eax\n", e);
+	fprintf(fd, "\tmovq $%ld, %%rax\n", e);
 }
 

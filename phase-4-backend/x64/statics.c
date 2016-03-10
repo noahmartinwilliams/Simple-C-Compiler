@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 extern int unique_num;
-void load_global_string (FILE *fd, char *str)
+void load_global_string(FILE *fd, char *str)
 {
 	fprintf(fd, "\tmovq $%s, %%rax\n", str);
 }

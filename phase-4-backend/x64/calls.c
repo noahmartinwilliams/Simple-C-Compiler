@@ -233,7 +233,6 @@ void return_from_call(FILE *fd)
 	fprintf(fd, "\tmovq %%rbp, %%rsp\n\tpopq %%rbp\n\t.cfi_def_cfa 7, 8\n\tret\n");
 }
 
-
 void make_function(FILE *fd, struct func_t *f)
 {
 	fprintf(fd, "\t.text\n");
