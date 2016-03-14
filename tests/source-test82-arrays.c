@@ -22,9 +22,17 @@ void b()
 	if (a[0]!=1)
 		exit(2);
 }
+
+struct a_st {
+	int i[2];
+};
+
 int main()
 {
 	a();
 	b();
-	return 0;
+	struct a_st z;
+	z.i[0]=1;
+	z.i[1]=0;
+	return z.i[1];
 }

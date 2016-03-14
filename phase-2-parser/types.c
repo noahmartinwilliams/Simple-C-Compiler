@@ -118,7 +118,7 @@ size_t get_deref_type_size(struct type_t *t)
 		size=1;
 
 	if (t->array_dimensions!=NULL)
-		for (x=0; x<t->num_arrays; x++)
+		for (x=0; x<t->num_arrays-1; x++)
 			size*=t->array_dimensions[x];
 	return size;
 }

@@ -106,7 +106,7 @@ static inline struct expr_t* prefix_expr(char *op, struct expr_t *e, struct type
 %left SHIFT_LEFT SHIFT_RIGHT
 %left '+' '-'
 %left '*' '/' '%'
-%left '(' ')' '[' ']' '.' POINTER_OP
+%left '(' ')'  '.' POINTER_OP '[' ']'
 %left ','
 %nonassoc IFX
 %nonassoc ELSE

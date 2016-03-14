@@ -20,7 +20,7 @@ declared_ident: IDENTIFIER {
 	$$.dimensions=realloc($$.dimensions, $$.num_dimensions*sizeof(size_t));
 	$$.dimensions[$$.num_dimensions-1]=$3;
 };
-struct_var_declarations: type IDENTIFIER ';' {
+struct_var_declarations: type declared_ident ';' {
 	struct statem_t *s=malloc(sizeof(struct statem_t));
 	init_statem(s);
 	s->kind=block;
@@ -31,17 +31,16 @@ struct_var_declarations: type IDENTIFIER ';' {
 	var->kind=declare;
 	var->attrs.var=malloc(sizeof(struct var_t));
 	init_var(var->attrs.var);
-	var->expr=NULL;
-
 	struct var_t *v=var->attrs.var;
-	v->refcount=1;
+	if ($2.num_dimensions!=0)
+		v->type=add_array_dimensions($1, $2.num_dimensions, $2.dimensions);
+	else {
+		v->type=$1;
+		$1->refcount++;
+	}
 
-	v->type=$1;
-	$1->refcount++;
 	v->refcount=1;
-	v->scope_depth=scope_depth;
-	v->name=strdup($2);
-	free($2);
+	v->name=$2.name;
 	$$=s;
 } | struct_var_declarations type_with_stars IDENTIFIER ';' {
 	$$=$1;
@@ -119,7 +118,6 @@ var_declaration_start: type_with_stars declared_ident possibly_blank_assignment 
 		$$=malloc(sizeof(struct statem_t));
 		init_statem($$);
 		$$->kind=block;
-		$$->right=NULL;
 		struct statem_t *declaration=$$->left=malloc(sizeof(struct statem_t));
 		init_statem(declaration);
 		declaration->kind=declare;

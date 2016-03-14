@@ -210,7 +210,10 @@ assignable_expr: IDENTIFIER {
 } | assignable_expr '[' expression ']' {
 	$$=prefix_expr("*",  
 		bin_expr("+", 
-			$1, 
+			prefix_expr("&", 
+				$1, 
+				increase_type_depth($1->type, 1)
+				),
 			bin_expr("*", 
 				get_array_lower_size($1), 
 				convert_expr($3, $1->type),
@@ -218,7 +221,7 @@ assignable_expr: IDENTIFIER {
 				),
 			NULL
 			), 
-			decrease_type_depth($1->type, 1)
+			$1->type
 			);
 };
 

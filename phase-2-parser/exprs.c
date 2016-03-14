@@ -324,6 +324,12 @@ struct expr_t* prefix_or_postfix_expr(char *op, struct expr_t *e, struct type_t 
 	struct expr_t *new=malloc(sizeof(struct expr_t));
 	if (is_prefix) {
 		new->kind=pre_un_op;
+		if (e->kind==pre_un_op && !strcmp(e->attrs.un_op, "*") && !strcmp(op, "&")) {
+			struct expr_t *e2=e->right;
+			e->right=NULL;
+			free_expr(e);
+			return e2;
+		}
 		new->right=e;
 		new->left=NULL;
 	} else {
