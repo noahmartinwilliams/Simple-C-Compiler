@@ -13,12 +13,22 @@ include ../include/config.mk
 exported.c: list-of-exported-functions.txt
 	./update-header.sh
 
-libx64-backend.so: x64/*
-	$(MAKE) -C x64/ ../libx64-backend.so
+.PHONY:
+arch:
+	$(MAKE) lib$$(uname -m)-backend.so
+
+libarmv6l-backend.so: armv6l/*
+	$(MAKE) -C armv6l/ ../libarmv6l-backend.so
+	cp libarmv6l-backend.so ..
+
+libx86_64-backend.so: x86_64/*
+	$(MAKE) -C x86_64/ ../libx86_64-backend.so
+	cp libx86_64-backend.so ..
 
 .PHONY:
 clean: 
-	$(MAKE) -C x64/ clean
+	$(MAKE) -C x86_64/ clean
+	$(MAKE) -C armv6l/ clean
 	rm comp.tab.c 2>/dev/null || true
 	rm comp.y 2>/dev/null || true
 	rm *.o 2>/dev/null || true

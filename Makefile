@@ -13,8 +13,9 @@ exported.o: phase-4-backend/*
 loader.o: phase-4-backend/*
 	$(MAKE) -C phase-4-backend/ ../loader.o
 
-phase-4-backend/libx64-backend.so: phase-4-backend/* phase-4-backend/x64/*
-	$(MAKE) -C phase-4-backend/ libx64-backend.so
+.PHONY:
+phase-4-backend/arch: phase-4-backend/* phase-4-backend/*/*
+	$(MAKE) -C phase-4-backend/ arch
 
 generator.a: phase-3-generator/*
 	$(MAKE) -C phase-3-generator/ ../generator.a
@@ -29,7 +30,7 @@ lex.yy.o: phase-1-lexer/* handle.a
 	$(CMP)
 
 .PHONY:
-main2: main phase-4-backend/libx64-backend.so
+main2: main phase-4-backend/arch
 	echo "done"
 
 .PHONY:
@@ -56,6 +57,7 @@ clean:
 	rm *.o 2>/dev/null || true
 	rm cc 2>/dev/null || true
 	rm main 2>/dev/null || true
+	rm lib*.so 2>/dev/null || true
 	$(MAKE) -C tests/ clean
 	$(MAKE) -C phase-1-lexer/ clean
 	$(MAKE) -C phase-2-parser/ clean

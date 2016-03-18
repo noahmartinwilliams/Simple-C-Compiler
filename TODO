@@ -1,3 +1,4 @@
+*add function to backend for ending functions.
 *add arrays to data structures. hint: translate a[b] to *(&a + (void*) b * sizeof(a))
 *work on setting arrays initially hint: go to phase-2-parser/variables.m4 line 139.
 *finish work on arrays.

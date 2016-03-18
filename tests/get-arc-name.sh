@@ -1,3 +1,3 @@
 #! /bin/bash
 
-echo ../phase-4-backend/libx64-backend.so
+echo ../lib$(uname -m)-backend.so
