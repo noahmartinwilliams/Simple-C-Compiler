@@ -48,18 +48,8 @@ void int_num(FILE *fd, struct reg_t *a, struct reg_t *b)
 
 void int_add(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
-	if (a->size==char_size) {
-		fprintf(fd, "\taddb %s, %s\n", get_reg_name(a, word_size), get_reg_name(b, word_size));
-		fprintf(fd, "\tmovb %s, %%al\n", get_reg_name(b, word_size));
-	} else if (a->size==word_size) {
-		fprintf(fd, "\taddl %s, %s\n", get_reg_name(a, word_size), get_reg_name(b, word_size));
-		if (b->use!=RET)
-			fprintf(fd, "\tmovl %s, %%eax\n", get_reg_name(b, word_size));
-	} else if (a->size==pointer_size) {
-		fprintf(fd, "\taddq %s, %s\n", get_reg_name(a, pointer_size), get_reg_name(b, pointer_size));
-		if (b->use!=RET)
-			fprintf(fd, "\tmovq %s, %%rax\n", get_reg_name(b, pointer_size));
-	}
+	fprintf(fd, "\tadd %s, %s, %s\n", reg_name(b), reg_name(b), reg_name(a));
+	fprintf(fd, "\tmov r0, %s\n", reg_name(b));
 }
 
 void int_sub(FILE *fd, struct reg_t *b, struct reg_t *a)

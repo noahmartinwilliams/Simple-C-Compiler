@@ -12,6 +12,7 @@
 struct reg_t **regs=NULL;
 int num_regs=0;
 
+
 bool has_size(struct reg_t *r, size_t size)
 {
 	int x;
@@ -100,6 +101,13 @@ char* reg_name(struct reg_t *a)
 	return get_reg_name(a, a->size);
 }
 
+void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest)
+{
+	dest->is_signed=src->is_signed;
+	fprintf(fd, "\tmov %s, %s\n", reg_name(dest), reg_name(src));
+
+}
+
 struct reg_t* get_ret_register(size_t s, bool is_float)
 {
 	if (is_float)
@@ -133,7 +141,7 @@ struct reg_t* get_free_register (FILE *fd, size_t s, int depth, bool is_float)
 	struct reg_t *r;
 	for (x=0; x<num_regs; x++) {
 		r=regs[x];
-		if (!r->in_use && r->use==INT && r->is_available) {
+		if (!r->in_use && r->use==INT && r->is_available && has_size(r, s)) {
 			regs[x]->in_use=true;
 			regs[x]->size=s;
 			return r;

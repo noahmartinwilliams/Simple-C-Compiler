@@ -244,6 +244,9 @@ void make_function(FILE *fd, struct func_t *f)
 		fprintf(fd, "\t.globl %s\n%s:\n", f->name, f->name);
 	fprintf(fd, "\tstr\tfp, [sp, #-4]!\n");
 	fprintf(fd, "\tadd\tfp, sp, #0\n");
+	off_t o=get_var_offset(f->statement_list, 0);
+	o+=8;
+	fprintf(fd, "\tsub\tsp, sp, #%zd\n", o);
 	if (!strcmp("main", f->name))
 		in_main=true;
 	else

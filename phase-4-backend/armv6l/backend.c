@@ -41,7 +41,7 @@ void setup_backend()
 		regs[x]->size=4; //purely guessing here.
 		regs[x]->num_sizes=1;
 		regs[x]->sizes=malloc(sizeof(struct reg_size));
-		regs[x]->sizes->size=1;
+		regs[x]->sizes->size=4;
 		asprintf(&(regs[x]->sizes->name), "r%d", x);
 		init_reg(regs[x]);
 		regs[x]->use=INT;
@@ -73,15 +73,6 @@ void place_comment(FILE *fd, char *str)
 {
 	fprintf(fd, "\t@%s\n", str);
 }
-
-void assign_reg(FILE *fd, struct reg_t *src, struct reg_t *dest)
-{
-	dest->is_signed=src->is_signed;
-	fprintf(fd, "\tmov %s, %s\n", reg_name(dest), reg_name(src));
-
-}
-
-
 
 void add_readonly_data(FILE *fd, struct expr_t *e)
 {

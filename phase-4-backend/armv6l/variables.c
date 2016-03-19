@@ -23,14 +23,7 @@ void backend_make_global_var(FILE *fd, struct var_t *v)
 
 static void inc_by_int(FILE *fd, int i, char *dest, size_t size)
 {
-	if (size==char_size)
-		fprintf(fd, "\taddb $%d, %s\n", i, dest);
-	else if (size==word_size)
-		fprintf(fd, "\taddl $%d, %s\n", i, dest);
-	else if (size==pointer_size)
-		fprintf(fd, "\taddq $%d, %s\n", i, dest);
-	else
-		error("inc_by_int", size);
+	fprintf(fd, "\tadd %s, %s, %d\n", dest, dest, i);
 }
 
 void get_address(FILE *fd, struct expr_t *_var)
@@ -80,15 +73,7 @@ void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 
 	size_t size=get_type_size(dest->type);
 	if (dest->scope_depth!=0) {
-		fprintf(fd, "\t.equ var$%s$%d, %ld\n", dest->name, dest->scope_depth, dest->offset);
-		if (size==char_size)
-			print_assign_var(fd, "movb", src, dest);
-		else if (size==word_size)
-			print_assign_var(fd, "movl", src, dest);
-		else if (size==pointer_size)
-			print_assign_var(fd, "movq", src, dest);
-		else
-			error("assign_var", size);
+		fprintf(fd, "\tstr\tr0, [fp, #%zd]\n", dest->offset);
 	} else 
 		if (size==word_size)
 			fprintf(fd, "\tmovl %s, %s(%%rip)\n", reg_name(src), dest->name);
@@ -105,28 +90,13 @@ void read_var(FILE *fd, struct var_t *v)
 {
 	get_ret_register(word_size, false)->is_signed=is_signed(v->type);
 	if (v->is_register) {
-		if (v->reg->size==word_size)
-			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(v->reg));
-		else if (v->reg->size==pointer_size)
-			fprintf(fd, "\tmovq %s, %%rax\n", reg_name(v->reg));
-		else
-			error("read_var", v->reg->size);
-
-		return;
+			fprintf(fd, "\tmov %s, %%r0\n", reg_name(v->reg));
 	}
-	fprintf(fd, "\t.equ var$%s$%d, %d\n", v->name, v->scope_depth, v->offset);
 	if (v->scope_depth!=0) {
 		size_t size=get_type_size(v->type);
-		if (size==char_size)
-			print_read_var(fd, "movb", "%al", v);
-		else if (size==word_size)
-			print_read_var(fd, "movl", "%eax", v);
-		else if (size==pointer_size)
-			print_read_var(fd, "movq", "%rax", v);
-		else
-			error("read_var", size);
+		fprintf(fd, "\tldr\tr0, [fp, #%zd]\n", v->offset);
 	} else if (get_type_size(v->type)==word_size)
-			fprintf(fd, "\tmovl %s(%%rip), %%eax\n", v->name);
+			fprintf(fd, "\tmov r0, [ sp, #%zd ]\n", v->offset);
 }
 
 void dereference(FILE *fd, struct reg_t *reg, size_t size)

@@ -24,11 +24,11 @@ static inline void size_error(char *message, size_t size)
 
 void assign_constant(FILE *fd, struct expr_t *e)
 {
-	fprintf(fd, "\tmov r0, #0\n");
+	fprintf(fd, "\tmov r0, #%ld\n", e->attrs.cint_val);
 }
 
 void assign_constant_int(FILE *fd, long int e)
 {
-	fprintf(fd, "\tmov r0, #0\n");
+	fprintf(fd, "\tmov r0, #%ld\n", e);
 }
 

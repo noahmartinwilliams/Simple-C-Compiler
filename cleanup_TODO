@@ -1,3 +1,5 @@
+*fix get_free_register in x86_64
+*add function to backend for ending functions.
 *move phase-2-parser/types.c to phase-0-utilities/types.c and update headers accordingly.
 *remove unneeded header includes from headers and c files.
 *be more consistent with abbreviations.
