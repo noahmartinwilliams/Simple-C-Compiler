@@ -52,20 +52,10 @@ void int_add(FILE *fd, struct reg_t *a, struct reg_t *b)
 	fprintf(fd, "\tmov r0, %s\n", reg_name(b));
 }
 
-void int_sub(FILE *fd, struct reg_t *b, struct reg_t *a)
+void int_sub(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
-	if (a->size==char_size) {
-		fprintf(fd, "\tsubb %s, %s\n", reg_name(a), reg_name(b));
-		fprintf(fd, "\tmovb %s, %%al\n", reg_name(b));
-	} else if (a->size==word_size) {
-		fprintf(fd, "\tsubl %s, %s\n", reg_name(a), reg_name(b));
-		if (b->use!=RET)
-			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(b));
-	} else if (a->size==pointer_size) {
-		fprintf(fd, "\tsubq %s, %s\n", reg_name(a), reg_name(b));
-		if (b->use!=RET)
-			fprintf(fd, "\tmovq %s, %%rax\n", reg_name(b));
-	}
+	fprintf(fd, "\tsub %s, %s, %s\n", reg_name(b), reg_name(a), reg_name(b));
+	fprintf(fd, "\tmov r0, %s\n", reg_name(b));
 }
 
 void int_div(FILE *fd, struct reg_t *a, struct reg_t *b)

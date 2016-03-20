@@ -12,6 +12,7 @@ include ../include/config.mk
 
 exported.c: list-of-exported-functions.txt
 	./update-header.sh
+	./update-header.sh # I don't know why, but for some reason this only works when it's run twice.
 
 .PHONY:
 arch:
