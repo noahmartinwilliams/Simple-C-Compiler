@@ -84,21 +84,8 @@ void int_div(FILE *fd, struct reg_t *a, struct reg_t *b)
 
 void int_mul(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
-	/* The nice people at Intel need to learn to be more F*cking consistent. D:< */
-
-	if (a->size==word_size) {
-		if (b->use!=RET && a->use==RET)
-			fprintf(fd, "\tmull %s\n", reg_name(b));
-		else if (b->use==RET && a->use!=RET)
-			fprintf(fd, "\tmull %s\n", reg_name(a));
-		else if (b->use!=RET && a->use!=RET) {
-			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(b));
-			fprintf(fd, "\tmull %s\n", reg_name(a));
-			fprintf(fd, "\tmovl %%eax, %s\n", reg_name(b));
-		}
-	} else if (a->size==pointer_size)
-		fprintf(fd, "\tmulq %s\n", reg_name(b));
-
+	fprintf(fd, "\tmul %s, %s, %s\n", reg_name(b), reg_name(b), reg_name(a));
+	fprintf(fd, "\tmov r0, %s\n", reg_name(b));
 }
 
 void int_inc(FILE *fd, struct reg_t *r)
