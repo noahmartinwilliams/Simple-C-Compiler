@@ -2,8 +2,9 @@ INCLUDE=./include
 include include/config.mk
 
 
-main: main.c globals.o handle.a lex.yy.o generator.a optimization-globals.o loader.o exported.o
-	$(CMB) -ldl
+main: main.o globals.o handle.o lex.yy.o generator.o optimization-globals.o loader.o exported.o
+	$(CMBPROG) -ldl
+	chmod +x $@
 	cp $@ cc
 
 exported.o: phase-4-backend/*
@@ -17,13 +18,13 @@ loader.o: phase-4-backend/*
 phase-4-backend/arch: phase-4-backend/* phase-4-backend/*/*
 	$(MAKE) -C phase-4-backend/ arch
 
-generator.a: phase-3-generator/*
-	$(MAKE) -C phase-3-generator/ ../generator.a
+generator.o: phase-3-generator/*
+	$(MAKE) -C phase-3-generator/ ../generator.o
 
-handle.a: phase-2-parser/*
-	$(MAKE) -C phase-2-parser/ ../handle.a
+handle.o: phase-2-parser/*
+	$(MAKE) -C phase-2-parser/ ../handle.o
 
-lex.yy.o: phase-1-lexer/* handle.a
+lex.yy.o: phase-1-lexer/* handle.o
 	$(MAKE) -C phase-1-lexer/ ../lex.yy.o
 
 %.o: %.c

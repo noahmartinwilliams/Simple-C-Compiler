@@ -57,13 +57,6 @@ static inline char* fill_with_branches(char *pre, int num_branches)
 	return new_pre;
 }
 
-void init_statem(struct statem_t *s)
-{
-	s->expr=NULL;
-	s->left=s->right=NULL;
-	s->has_gotos=false;
-}
-
 void print_statem(char *pre, struct statem_t *s)
 {
 	if (s==NULL) {
@@ -164,3 +157,11 @@ void print_statem(char *pre, struct statem_t *s)
 	free(new_pre);
 }
 #endif
+
+void init_statem(struct statem_t *s)
+{
+	s->expr=NULL;
+	s->left=s->right=NULL;
+	s->has_gotos=false;
+}
+

@@ -11,11 +11,11 @@ comp.y: cc.y statements.m4 expressions.m4 functions.m4 variables.m4 types.m4 ../
 	$(M4) $< >$@
 
 ifdef DEBUG
-../handle.a: types.o exprs.o statems.o funcs.o vars.o print-tree.o comp.tab.o consts.o
-	$(AR)
+../handle.o: types.o exprs.o statems.o funcs.o vars.o print-tree.o comp.tab.o consts.o
+	$(CMB)
 else
-../handle.a: types.o exprs.o statems.o funcs.o vars.o comp.tab.o consts.o
-	$(AR)
+../handle.o: types.o exprs.o statems.o funcs.o vars.o comp.tab.o consts.o
+	$(CMB)
 endif
 
 %.o: %.c

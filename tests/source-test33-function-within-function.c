@@ -1,8 +1,8 @@
-extern void puts(char *str);
+extern int printf(char *str,...);
 
 void printer()
 {
-	puts("hello world");
+	printf("hello world");
 }
 
 int main()

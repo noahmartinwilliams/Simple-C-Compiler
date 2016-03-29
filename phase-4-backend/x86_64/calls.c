@@ -151,7 +151,7 @@ void start_call(FILE *fd, struct func_t *f)
 	}
 	reset_used_for_call();
 	push_registers(fd);
-	if (f->num_arguments==0 && f->ret_type->body->kind==_struct) {
+	if (f->num_arguments==0 && f->ret_type->body!=NULL && f->ret_type->body->kind==_struct) {
 		return;
 	}
 }
