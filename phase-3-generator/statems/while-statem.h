@@ -51,8 +51,8 @@ static inline void generate_while_loop(FILE *fd, struct statem_t *s, struct reg_
 		free(pop(loop_stack));
 		return;
 	}
-	generate_expression(fd, cond);
 	#endif
+	generate_expression(fd, cond);
 
 	compare_register_to_int(fd, retu, 0);
 	jmp_eq(fd, loop_end);

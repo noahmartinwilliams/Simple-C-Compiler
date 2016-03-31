@@ -251,7 +251,9 @@ bool evaluate_constant_expr(char *op, struct expr_t *a, struct expr_t *b, struct
 	
 		e->attrs.cint_val=f;
 		return true;
-	} else if (a->kind==const_int && b->kind!=const_int && a->attrs.cint_val==0 && optimize_dont_add_zero && !strcmp(op, "+")) {
+	}
+	#ifdef OPTIMIZE_DONT_ADD_ZERO
+	else if (a->kind==const_int && b->kind!=const_int && a->attrs.cint_val==0 && optimize_dont_add_zero && !strcmp(op, "+")) {
 		*e2=b;
 		free_expr(a);
 		return true;
@@ -260,6 +262,7 @@ bool evaluate_constant_expr(char *op, struct expr_t *a, struct expr_t *b, struct
 		free_expr(b);
 		return true;
 	}
+	#endif 
 	return false;
 }
 
