@@ -20,7 +20,6 @@
 	}
 *Check out _setjmp
 *add typedefs with pointers as base type.
-*add arrays.
 *add putting structures within structures.
 *add returning of structures to function calls.
 *add passing of structures to function calls.
@@ -39,7 +38,6 @@
 *add pointer arithmetic.
 *add ptrdiff_t, off_t, __uint8_t, __uint16_t, __uint32_t, __uint64_t, __int8_t, __int16_t, __int32_t, __int64_t, _Bool, and double data types.
 *add type conversion.
-*add automagic type conversion.
 *add __nosideeffects keyword
 *add volatile keyword.
 *add typedefs for function pointers.
@@ -48,7 +46,6 @@
 *add type checking.
 *add argument type checking.
 *add stack offset calculations with stack pointer.
-*add short keyword.
 *add statement expressions.
 *fix up TODOs.
 *get memory management cleared up.

@@ -150,6 +150,9 @@ static inline int hextoi(char *str)
 "/*"	{ count(yytext); BEGIN(in_comment); }
 \"(\\\\|[^"\\]|\\n)*\"	{ count(yytext); yylval.str=strdup(yytext); return STR_LITERAL; }
 '.'	{ count(yytext); yylval.chr=yytext[1]; return CHAR_LITERAL; }
+'\\\\'	{ count(yytext); yylval.chr='\\'; return CHAR_LITERAL; }
+'\\n'	{ count(yytext); yylval.chr='\n'; return CHAR_LITERAL; }
+'\\0'	{ count(yytext); yylval.chr='\0'; return CHAR_LITERAL; }
 \/\/.*$	{ count(yytext); }
 ^\#[[:space:]]*[0-9]+[[:space:]]*\".*\".*$	{ handle_preproc_token(yytext); count(yytext); }
 0x[0-9a-fA-F]+	{ count(yytext); yylval.l=hextoi(yytext); return CONST_INT; }
