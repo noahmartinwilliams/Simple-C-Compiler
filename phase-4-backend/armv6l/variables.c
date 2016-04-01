@@ -23,14 +23,14 @@ void backend_make_global_var(FILE *fd, struct var_t *v)
 
 static void inc_by_int(FILE *fd, int i, char *dest, size_t size)
 {
-	fprintf(fd, "\tadd %s, %s, %d\n", dest, dest, i);
+	fprintf(fd, "\tadd %s, %s, #%d\n", dest, dest, i);
 }
 
 void get_address(FILE *fd, struct expr_t *_var)
 {
 	struct reg_t *ret=get_ret_register(pointer_size, false);
 	if (_var->kind==var) {
-		fprintf(fd, "\tmovq %%rbp, %s\n", get_reg_name(ret, pointer_size));
+		fprintf(fd, "\tmov %s, fp\n", get_reg_name(ret, pointer_size));
 		inc_by_int(fd, _var->attrs.var->offset, get_reg_name(ret, pointer_size), pointer_size);
 	}
 }
@@ -43,14 +43,7 @@ static inline void print_assign_var(FILE *fd, char *operator, struct reg_t *reg,
 void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 {
 	if (dest->is_register) {
-		if (dest->reg->use==FLOAT)
-			fprintf(fd, "\tmovsd %s, %s\n", reg_name(src), reg_name(dest->reg));
-		else {
-			if (src->size==word_size)
-				fprintf(fd, "\tmovl %s, %s\n", reg_name(src), reg_name(dest->reg));
-			else
-				error("assign_var", src->size);
-		}
+		fprintf(fd, "\tmov %s, %s\n", reg_name(src), reg_name(dest->reg));
 		return;
 	}
 			
@@ -101,7 +94,7 @@ void read_var(FILE *fd, struct var_t *v)
 
 void dereference(FILE *fd, struct reg_t *reg, size_t size)
 {
-	fprintf(fd, "\tmovq (%s), %%rax\n", reg_name(reg));
+	fprintf(fd, "\tldr r0, [%s]\n", reg_name(reg));
 }
 
 void assign_dereference(FILE *fd, struct reg_t *assign_from, struct reg_t *assign_to)
