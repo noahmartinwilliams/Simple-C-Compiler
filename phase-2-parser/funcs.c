@@ -49,6 +49,7 @@ void init_func(struct func_t *f)
 	f->num_calls=0;
 	f->has_var_args=false;
 	f->do_inline=false;
+	f->calls_function=false;
 }
 
 void parser_handle_inline_func(int num_calls, struct func_t *f)

@@ -39,10 +39,12 @@ void setup_backend()
 	for (x=0; x<13; x++) {
 		regs[x]=malloc(sizeof(struct reg_t));
 		regs[x]->size=4; //purely guessing here.
-		regs[x]->num_sizes=1;
-		regs[x]->sizes=malloc(sizeof(struct reg_size));
-		regs[x]->sizes->size=4;
-		asprintf(&(regs[x]->sizes->name), "r%d", x);
+		regs[x]->num_sizes=2;
+		regs[x]->sizes=calloc(2, sizeof(struct reg_size));
+		regs[x]->sizes[0].size=1;
+		regs[x]->sizes[1].size=4;
+		asprintf(&(regs[x]->sizes[0].name), "r%d", x);
+		asprintf(&(regs[x]->sizes[1].name), "r%d", x);
 		init_reg(regs[x]);
 		regs[x]->use=INT;
 	}

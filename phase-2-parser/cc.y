@@ -114,6 +114,8 @@ static inline struct expr_t* prefix_expr(char *op, struct expr_t *e, struct type
 %%
 file: file_entry | file file_entry ;
 file_entry:  function {
+	if (calls_function)
+		$1->calls_function=true;
 	add_func($1);
 	#ifdef DEBUG
 	if (print_trees)
@@ -121,6 +123,7 @@ file_entry:  function {
 	#endif
 	if (!$1->do_inline)
 		generate_function(output, $1);
+	calls_function=false;
 } | var_declaration {
 	if ($1!=NULL)
 		generate_global_vars(output, $1);

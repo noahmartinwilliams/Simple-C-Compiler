@@ -8,6 +8,7 @@ extern bool print_trees;
 extern int yydebug;
 #endif 
 
+extern bool calls_function;
 extern int current_line;
 extern int current_char;
 extern char *current_file;

@@ -39,6 +39,7 @@ noncomma_expression:  CONST_INT {
 } | assignable_expr | binary_expr | '(' expression ')' {
 	$$=$2;
 } | prefix_expr | IDENTIFIER '(' ')' {
+	calls_function=true;
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=funccall;
 	e->left=e->right=NULL;
@@ -51,6 +52,7 @@ noncomma_expression:  CONST_INT {
 	free($1);
 	$$=e;
 } | IDENTIFIER '(' call_arg_list ')' {
+	calls_function=true;
 	struct var_t *v=get_var_by_name($1);
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	if (v!=NULL && v->type->body->is_func_pointer) {

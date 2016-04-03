@@ -8,6 +8,7 @@
 #include "types.h"
 #include "backend/backend.h"
 #include "backend/registers.h"
+#include "backend/errors.h"
 #include "stack.h"
 
 static struct stack_t *pushed_registers=NULL;
@@ -218,21 +219,21 @@ void call_function_pointer(FILE *fd, struct reg_t *r)
 void call(FILE *fd, struct func_t *f)
 {
 
-	if (has_float)
-		fprintf(fd, "\tmovl $1, %%eax\n");
-	else
-		fprintf(fd, "\tmovl $0, %%eax\n");
-	fprintf(fd, "\tcall %s\n", f->name);
-
+	fprintf(fd, "\tbl\t%s\n", f->name);
 	pop_registers(fd);
 	current_arg=0;
 }
 
 void return_from_call(FILE *fd)
 {
-	fprintf(fd, "\tsub\tsp, fp, #0\n");
-	fprintf(fd, "\tldr\tfp, [sp], #4\n");
-	fprintf(fd, "\tbx\tlr\n");
+	if (calls_function) {
+		fprintf(fd, "\tsub\tsp, fp, #4\n");
+		fprintf(fd, "\tldmfd\tsp!, {fp, pc}\n");
+	} else {
+		fprintf(fd, "\tsub\tsp, fp, #0\n");
+		fprintf(fd, "\tldr\tfp, [sp], #4\n");
+		fprintf(fd, "\tbx\tlr\n");
+	}
 }
 
 void make_function(FILE *fd, struct func_t *f)
@@ -242,36 +243,17 @@ void make_function(FILE *fd, struct func_t *f)
 		fprintf(fd, "%s:\n", f->name);
 	else
 		fprintf(fd, "\t.globl %s\n%s:\n", f->name, f->name);
-	fprintf(fd, "\tstr\tfp, [sp, #-4]!\n");
-	fprintf(fd, "\tadd\tfp, sp, #0\n");
+	if (f->calls_function)
+		fprintf(fd, "\tstmfd\tsp!, {fp, lr}\n");
+	else
+		fprintf(fd, "\tstr\tfp, [sp, #-4]!\n");
 	off_t o=get_var_offset(f->statement_list, 0);
-	o+=8;
+	fprintf(fd, "\tadd\tfp, sp, #%zd\n", o);
 	fprintf(fd, "\tsub\tsp, sp, #%zd\n", o);
 	if (!strcmp("main", f->name))
 		in_main=true;
 	else
 		multiple_functions=true;
-
-	//fprintf(fd, "\tsubq $16, %%rsp\n");
-	/* off_t o=get_var_offset(f->statement_list, 0);
-	expand_stack_space(fd, o);
-	int x, y=0;
-	for (x=0; x<f->num_arguments; x++) {
-		size_t size=get_type_size(f->arguments[x]->type);
-		if (size==word_size || size==pointer_size) {
-			fprintf(fd, "\tsubq $%d, %%rsp\n", pointer_size);
-			fprintf(fd, "\tmovq %s, -%d(%%rbp)\n", get_next_call_register(INT), pointer_size);
-			current_stack_offset+=pointer_size;
-			f->arguments[x]->offset=-pointer_size;
-			y++;
-		} else {
-			f->arguments[x]->offset=8*y+16;
-			y++;
-		}
-	}
-
-	for (x=0; x<num_regs; x++)
-		regs[x]->used_for_call=false; */
 
 	in_main=false;
 }

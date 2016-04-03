@@ -7,6 +7,7 @@ bool print_trees=false;
 int yydebug=0;
 #endif
 
+bool calls_function=false;
 char *current_line_str=NULL;
 int current_line=0;
 int current_char=0;

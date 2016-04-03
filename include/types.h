@@ -102,6 +102,7 @@ struct func_t {
 	int num_arguments;
 	bool has_var_args;
 	bool do_inline;
+	bool calls_function;
 
 	int num_calls;
 };

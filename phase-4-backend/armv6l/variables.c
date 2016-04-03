@@ -6,14 +6,10 @@
 #include "generator/generator.h"
 #include "parser/types.h"
 #include "backend/registers.h"
+#include "backend/errors.h"
 #include "globals.h"
 #include "backend/registers.h"
 #include "types.h"
-
-static inline void error(char *name, size_t size)
-{
-	fprintf(stderr, "Internal Error: size %ld passed to function %s, no handler found.\n", size, name);
-}
 
 void backend_make_global_var(FILE *fd, struct var_t *v)
 {
@@ -66,12 +62,17 @@ void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 
 	size_t size=get_type_size(dest->type);
 	if (dest->scope_depth!=0) {
-		fprintf(fd, "\tstr\tr0, [fp, #%zd]\n", dest->offset);
+		if (size==char_size)
+			fprintf(fd, "\tstrb\tr0, [fp, #%zd]\n", dest->offset);
+		else if (size==word_size)
+			fprintf(fd, "\tstr\tr0, [fp, #%zd]\n", dest->offset);
+		else
+			error(__func__, size);
 	} else 
 		if (size==word_size)
 			fprintf(fd, "\tmovl %s, %s(%%rip)\n", reg_name(src), dest->name);
 		else
-			error("assign_var", size);
+			size_error(size);
 } 
 
 static inline void print_read_var(FILE *fd, char *operator, char *reg, struct var_t *var)
@@ -82,14 +83,19 @@ static inline void print_read_var(FILE *fd, char *operator, char *reg, struct va
 void read_var(FILE *fd, struct var_t *v)
 {
 	get_ret_register(word_size, false)->is_signed=is_signed(v->type);
-	if (v->is_register) {
+	if (v->is_register)
 			fprintf(fd, "\tmov %s, %%r0\n", reg_name(v->reg));
-	}
+
 	if (v->scope_depth!=0) {
 		size_t size=get_type_size(v->type);
-		fprintf(fd, "\tldr\tr0, [fp, #%zd]\n", v->offset);
-	} else if (get_type_size(v->type)==word_size)
-			fprintf(fd, "\tmov r0, [ sp, #%zd ]\n", v->offset);
+		if (size==char_size)
+			fprintf(fd, "\tldrb\tr0, [fp, #%zd]\n", v->offset);
+		else if (size==word_size)
+			fprintf(fd, "\tldr\tr0, [fp, #%zd]\n", v->offset);
+		else
+			size_error(size);
+
+	} 
 }
 
 void dereference(FILE *fd, struct reg_t *reg, size_t size)
