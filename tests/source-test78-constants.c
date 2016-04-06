@@ -7,9 +7,13 @@ int main()
 			x=2;
 		#endif
 		const int y=0xaf;
-		if (y==175)
-			return 0;
-		else
+		if (y==175) {
+			const int z=010;
+			if (z==8)
+				return 0;
+			else
+				return 3;
+		} else
 			return 2;
 	} else
 		return 1;

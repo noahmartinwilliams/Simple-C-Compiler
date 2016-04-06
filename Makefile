@@ -2,7 +2,7 @@ INCLUDE=./include
 include include/config.mk
 
 
-main: main.o globals.o handle.o lex.yy.o generator.o optimization-globals.o loader.o exported.o
+main: main.o globals.o handle.o lexer.a generator.o optimization-globals.o loader.o exported.o
 	$(CMBPROG) -ldl
 	chmod +x $@
 	cp $@ cc
@@ -24,8 +24,8 @@ generator.o: phase-3-generator/*
 handle.o: phase-2-parser/*
 	$(MAKE) -C phase-2-parser/ ../handle.o
 
-lex.yy.o: phase-1-lexer/* handle.o
-	$(MAKE) -C phase-1-lexer/ ../lex.yy.o
+lexer.a: phase-1-lexer/* handle.o
+	$(MAKE) -C phase-1-lexer/ ../lexer.a
 
 %.o: %.c
 	$(CMP)

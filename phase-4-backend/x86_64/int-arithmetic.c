@@ -9,6 +9,7 @@
 #include "types.h"
 #include "backend/backend.h"
 #include "backend/registers.h"
+#include "backend/errors.h"
 
 void int_num(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
@@ -40,10 +41,8 @@ void int_num(FILE *fd, struct reg_t *a, struct reg_t *b)
 		} else if (a->use==RET && b->use!=RET) {
 			fprintf(fd, "\tidivl %s\n", reg_name(b));
 		}
-	} else {
-		fprintf(stderr, "Internal error: int_num passed size: %ld. No size handler found.\n", a->size);
-		exit(1);
-	}
+	} else 
+		size_error(a->size);
 }
 
 void int_add(FILE *fd, struct reg_t *a, struct reg_t *b)
@@ -59,7 +58,8 @@ void int_add(FILE *fd, struct reg_t *a, struct reg_t *b)
 		fprintf(fd, "\taddq %s, %s\n", get_reg_name(a, pointer_size), get_reg_name(b, pointer_size));
 		if (b->use!=RET)
 			fprintf(fd, "\tmovq %s, %%rax\n", get_reg_name(b, pointer_size));
-	}
+	} else
+		size_error(a->size);
 }
 
 void int_sub(FILE *fd, struct reg_t *b, struct reg_t *a)
@@ -75,7 +75,8 @@ void int_sub(FILE *fd, struct reg_t *b, struct reg_t *a)
 		fprintf(fd, "\tsubq %s, %s\n", reg_name(a), reg_name(b));
 		if (b->use!=RET)
 			fprintf(fd, "\tmovq %s, %%rax\n", reg_name(b));
-	}
+	} else
+		size_error(a->size);
 }
 
 void int_div(FILE *fd, struct reg_t *a, struct reg_t *b)
@@ -118,6 +119,8 @@ void int_mul(FILE *fd, struct reg_t *a, struct reg_t *b)
 		}
 	} else if (a->size==pointer_size)
 		fprintf(fd, "\tmulq %s\n", reg_name(b));
+	else
+		size_error(a->size);
 
 }
 
@@ -127,10 +130,8 @@ void int_inc(FILE *fd, struct reg_t *r)
 		fprintf(fd, "\tincl %s\n", reg_name(r));
 		if (r->use!=RET) 
 			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(r));
-	} else {
-		fprintf(stderr, "Internal Error: unknown size: %ld passed to int_inc\n", r->size);
-		exit(1);
-	}
+	} else 
+		size_error(r->size);
 }
 
 void int_dec(FILE *fd, struct reg_t *r)
@@ -139,10 +140,8 @@ void int_dec(FILE *fd, struct reg_t *r)
 		fprintf(fd, "\tdecl %s\n", reg_name(r));
 		if (r->use!=RET) 
 			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(r));
-	} else {
-		fprintf(stderr, "Internal Error: unknown size: %ld passed to int_dec\n", r->size);
-		exit(1);
-	}
+	} else 
+		size_error(r->size);
 }
 
 void int_neg(FILE *fd, struct reg_t *r)
@@ -169,10 +168,8 @@ void int_neg(FILE *fd, struct reg_t *r)
 			fprintf(fd, "\tnegl %s\n", reg_name(r));
 		else if (s==pointer_size)
 			fprintf(fd, "\tnegq %s\n", reg_name(r));
-		else {
-			fprintf(fd, "Internal error: %d size passed to int_neg\n", s);
-			exit(1);
-		}
+		else 
+			size_error(s);
 	}
 }
 

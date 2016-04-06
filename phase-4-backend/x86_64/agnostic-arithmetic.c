@@ -57,7 +57,8 @@ void shift_right(FILE *fd, struct reg_t *src, struct reg_t *dest)
 			fprintf(fd, "\tmovl %s, %s\n", reg_name(src), reg_name(dest));
 			fprintf(fd, "\tpopq %%rcx\n");
 		}
-	}
+	} else
+		size_error(src->size);
 }
 
 void or(FILE *fd, struct reg_t *a, struct reg_t *b)
@@ -66,7 +67,8 @@ void or(FILE *fd, struct reg_t *a, struct reg_t *b)
 		fprintf(fd, "\torl %s, %s\n", reg_name(a), reg_name(b));
 		if (b->use!=RET)
 			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(b));
-	}
+	} else
+		size_error(a->size);
 }
 
 void and(FILE *fd, struct reg_t *a, struct reg_t *b)
@@ -75,7 +77,8 @@ void and(FILE *fd, struct reg_t *a, struct reg_t *b)
 		fprintf(fd, "\tandl %s, %s\n", reg_name(a), reg_name(b));
 		if (b->use!=RET)
 			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(b));
-	}
+	} else
+		size_error(a->size);
 }
 
 void xor(FILE *fd, struct reg_t *a, struct reg_t *b)
@@ -84,7 +87,8 @@ void xor(FILE *fd, struct reg_t *a, struct reg_t *b)
 		fprintf(fd, "\txorl %s, %s\n", reg_name(a), reg_name(b));
 		if (b->use!=RET)
 			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(b));
-	}
+	} else
+		size_error(a->size);
 }
 
 void test_or(FILE *fd, struct reg_t *a, struct reg_t *b)
@@ -106,7 +110,8 @@ void test_or(FILE *fd, struct reg_t *a, struct reg_t *b)
 		if (b->use!=RET)
 			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(b));
 		fprintf(fd, "\ttest$or$%d$false:\n", unique_num);
-	}
+	} else
+		size_error(a->size);
 }
 
 void test_and(FILE *fd, struct reg_t *a, struct reg_t *b)
@@ -152,7 +157,8 @@ void test_and(FILE *fd, struct reg_t *a, struct reg_t *b)
 
 		fprintf(fd, "\ttest$and$%d$true:\n", unique_num);
 
-	}
+	} else
+		size_error(a->size);
 }
 
 void test_invert(FILE *fd, struct reg_t *r)
@@ -173,7 +179,8 @@ void test_invert(FILE *fd, struct reg_t *r)
 		if (r->use!=RET)
 			fprintf(fd, "\tmovl $1, %%eax\n");
 		fprintf(fd, "\tinvert$%d$true:\n", unique_num);
-	}
+	} else
+		size_error(r->size);
 }
 
 void invert(FILE *fd, struct reg_t *r)
@@ -186,8 +193,6 @@ void invert(FILE *fd, struct reg_t *r)
 		fprintf(fd, "\tnotq %s\n", reg_name(r));
 		if (r->use!=RET)
 			fprintf(fd, "\tmovq %s, %%rax\n", reg_name(r));
-	} else {
-		fprintf(stderr, "Internal Error: invalid register size: %d passed to invert\n", r->size);
-		exit(1);
-	}
+	} else 
+		size_error(r->size);
 }

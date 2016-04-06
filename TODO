@@ -1,3 +1,4 @@
+*add __complex__ and __builtin_complex keywords.
 *add arrays to data structures. hint: translate a[b] to *(&a + (void*) b * sizeof(a))
 *work on setting arrays initially hint: go to phase-2-parser/variables.m4 line 139.
 *finish work on arrays.
@@ -50,7 +51,7 @@
 *fix up TODOs.
 *get memory management cleared up.
 *add asm keyword.
-*add binary, and octal number formats.
+*add binary number format.
 *add until, and unless keywords.
 *add passing of arrays to functions.
 *add returning of arrays from functions.

@@ -1,8 +1,8 @@
 INCLUDE=../include
 include ../include/config.mk
 
-../lex.yy.o: lex.yy.c
-	$(CMP)
+../lexer.a: lex.yy.o bases.o
+	$(AR)
 
 lex.yy.c: comp.l $(INCLUDE)/*
 	$(LEX) $<
