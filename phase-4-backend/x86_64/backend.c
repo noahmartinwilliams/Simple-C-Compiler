@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "parser/types.h"
+#include "utilities/types.h"
 #include "generator/types.h"
 #include "generator/generator.h"
 #include "generator/globals.h"

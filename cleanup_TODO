@@ -1,4 +1,3 @@
-*move phase-2-parser/types.c to phase-0-utilities/types.c and update headers accordingly.
 *be more consistent with abbreviations.
 *eliminate print_tree function.
 *be more consistent with naming scheme for dimension attributes.

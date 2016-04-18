@@ -5,7 +5,7 @@
 #include "generator/globals.h"
 #include "generator/expr.h"
 #include "globals.h"
-#include "parser/types.h"
+#include "utilities/types.h"
 #include "generator/statem.h"
 
 void setup_types()

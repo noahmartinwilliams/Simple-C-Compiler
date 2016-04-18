@@ -6,7 +6,7 @@
 #include "generator/types.h"
 #include "globals.h"
 #include "types.h"
-#include "parser/types.h"
+#include "utilities/types.h"
 #include "backend/float-arithmetic.h"
 
 struct reg_t **regs=NULL;

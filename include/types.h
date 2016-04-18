@@ -37,6 +37,7 @@ struct type_t {
 	char *name;
 	struct tbody_t *body;
 	size_t *array_dimensions;
+	enum type_kind fake_kind;
 	int num_arrays;
 	bool native_type;
 	bool is_signed;

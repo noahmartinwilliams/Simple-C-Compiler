@@ -2,7 +2,7 @@ INCLUDE=./include
 include include/config.mk
 
 
-main: main.o globals.o handle.o lexer.a generator.o optimization-globals.o loader.o exported.o
+main: main.o globals.o handle.o lexer.a generator.o optimization-globals.o loader.o exported.o utilities.o
 	$(CMBPROG) -ldl
 	chmod +x $@
 	cp $@ cc
@@ -10,6 +10,9 @@ main: main.o globals.o handle.o lexer.a generator.o optimization-globals.o loade
 exported.o: phase-4-backend/*
 	$(MAKE) -C phase-4-backend/ ../exported.o
 
+
+utilities.o: phase-0-utilities/*
+	$(MAKE) -C phase-0-utilities/ ../utilities.o
 
 loader.o: phase-4-backend/*
 	$(MAKE) -C phase-4-backend/ ../loader.o
@@ -60,6 +63,7 @@ clean:
 	rm main 2>/dev/null || true
 	rm lib*.so 2>/dev/null || true
 	$(MAKE) -C tests/ clean
+	$(MAKE) -C phase-0-utilities/ clean
 	$(MAKE) -C phase-1-lexer/ clean
 	$(MAKE) -C phase-2-parser/ clean
 	$(MAKE) -C phase-3-generator/ clean

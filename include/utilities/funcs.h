@@ -1,5 +1,5 @@
-#ifndef __HANDLE_FUNCS_H__
-#define __HANDLE_FUNCS_H__
+#ifndef __UTILITIES_FUNCS_H__
+#define __UTILITIES_FUNCS_H__
 #include "types.h"
 
 extern struct func_t* get_func_by_name(char *name);

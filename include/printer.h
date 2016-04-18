@@ -2,8 +2,8 @@
 #define __PRINTER_H__
 #include <stddef.h>
 #include "print-tree.h"
-#include "parser/exprs.h"
-#include "parser/statems.h"
+#include "utilities/exprs.h"
+#include "utilities/statems.h"
 
 
 static inline void print_s(struct statem_t *s)

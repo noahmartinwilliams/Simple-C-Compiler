@@ -3,7 +3,7 @@
 #include "globals.h"
 #include <stdlib.h>
 #include <string.h>
-#include "parser/types.h"
+#include "utilities/types.h"
 #include "parser/consts.h"
 #include "lexer/bases.h"
 void count(char *s);

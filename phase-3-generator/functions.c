@@ -5,8 +5,8 @@
 #include "generator/globals.h"
 #include "generator/expr.h"
 #include "globals.h"
-#include "parser/types.h"
-#include "parser/funcs.h"
+#include "utilities/types.h"
+#include "utilities/funcs.h"
 #include "stack.h"
 #include "generator/statem.h"
 

@@ -4,7 +4,7 @@
 #include <string.h>
 #include "generator/types.h"
 #include "generator/generator.h"
-#include "parser/types.h"
+#include "utilities/types.h"
 #include "backend/registers.h"
 #include "globals.h"
 #include "backend/registers.h"

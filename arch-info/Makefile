@@ -5,7 +5,7 @@ main: sizes
 	echo "done"
 
 %: %.c
-	$(CMB)
+	$(CMBPROG)
 	./$@
 
 clean:

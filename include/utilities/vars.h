@@ -1,5 +1,5 @@
-#ifndef __HANDLE_VARS_H__
-#define __HANDLE_VARS_H__
+#ifndef __UTILITIES_VARS_H__
+#define __UTILITIES_VARS_H__
 #include "types.h"
 
 extern void free_var(struct var_t *v);

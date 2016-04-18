@@ -4,9 +4,9 @@
 #ifdef DEBUG
 #include "print-tree.h"
 #endif
-#include "parser/types.h"
+#include "utilities/types.h"
 #include "globals.h"
-#include "parser/exprs.h"
+#include "utilities/exprs.h"
 
 void free_statem(struct statem_t *s)
 {

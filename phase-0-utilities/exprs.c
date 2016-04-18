@@ -6,7 +6,7 @@
 #include "print-tree.h"
 #include "types.h"
 #include "optimization-globals.h"
-#include "parser/types.h"
+#include "utilities/types.h"
 
 bool is_test_op(char *op)
 {

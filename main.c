@@ -4,12 +4,12 @@
 #include <stdbool.h>
 #include "generator/generator.h"
 #include "globals.h"
-#include "parser/exprs.h"
-#include "parser/funcs.h"
+#include "utilities/exprs.h"
+#include "utilities/funcs.h"
 #include "parser/consts.h"
-#include "parser/statems.h"
-#include "parser/types.h"
-#include "parser/vars.h"
+#include "utilities/statems.h"
+#include "utilities/types.h"
+#include "utilities/vars.h"
 #ifdef DEBUG
 #include "printer.h"
 #include "print-tree.h"

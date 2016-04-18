@@ -18,6 +18,7 @@ type: TYPE {
 	/* TODO: check to see if there's already a struct prototyped by this name, and use that instead if it exists. */
 	struct type_t *type=malloc(sizeof(struct type_t));
 	init_type(type);
+	type->fake_kind=_struct;
 	type->refcount=2;
 	if ($2==NULL) {
 		char *name;
@@ -62,6 +63,7 @@ type: TYPE {
 } | UNION IDENTIFIER '{' struct_var_declarations '}' {
 	struct type_t *type=malloc(sizeof(struct type_t));
 	init_type(type);
+	type->fake_kind=_union;
 	type->refcount=2;
 	type->num_arrays=0;
 	type->name=strdup($2);
@@ -146,6 +148,7 @@ type: TYPE {
 	int num_enums=++x;
 	struct type_t *type=malloc(sizeof(struct type_t));
 	init_type(type);
+	type->fake_kind=_enum;
 	type->is_signed=false;
 	type->refcount=2;
 

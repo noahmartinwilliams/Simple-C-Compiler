@@ -7,8 +7,8 @@
 #include "globals.h"
 #include "generator/types.h"
 #include "generator/backend-exported.h"
-#include "parser/types.h"
-#include "parser/funcs.h"
+#include "utilities/types.h"
+#include "utilities/funcs.h"
 
 static inline void generate_binary_expression(FILE *fd, struct expr_t *e);
 static inline void generate_pre_unary_expression(FILE *fd, struct expr_t *e);

@@ -1,22 +1,8 @@
 INCLUDE=../include
 include ../include/config.mk
 
-M4=m4 -I .
-
-comp.tab.c: comp.y
-	$(YACC) $^
-	mv comp.tab.h ../include/
-
-comp.y: cc.y statements.m4 expressions.m4 functions.m4 variables.m4 types.m4 ../include/*
-	$(M4) $< >$@
-
-ifdef DEBUG
-../handle.o: print-tree.o comp.tab.o consts.o
+../utilities.o: types.o funcs.o exprs.o statems.o vars.o
 	$(CMB)
-else
-../handle.o: comp.tab.o consts.o
-	$(CMB)
-endif
 
 %.o: %.c
 	$(CMP)

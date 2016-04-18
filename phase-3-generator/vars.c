@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "types.h"
 #include "generator/globals.h"
-#include "parser/types.h"
+#include "utilities/types.h"
 
 off_t get_var_offset(struct statem_t *s, off_t current_off);
 static off_t get_var_offset_expr(struct expr_t *e, off_t current_off)

@@ -1,13 +1,27 @@
 *add __complex__ and __builtin_complex keywords.
+*complex math:
+	int main() {
+	__complex__ double a;
+	a=2.0i+1.0;
+	printf("real:%F\nimag:%F\n", creal(a), cimag(a));
+	return 0; }
+
+	or
+	int main() {
+	__complex__ float a=2.0i+1.0;
+	printf("real:%f\nimag:%f\n", crealf(a), cimagf(a));
+	return 0;}
+
+	or
+	int main() {
+	__complex__ long double a = 2.0li+1.0;
+	printf("real:%lF\nimag:%lF\n", creall(a), cimagl(a));
+	return 0; }
+
+	conjf, conj, and conjl do conjugates.
 *add arrays to data structures. hint: translate a[b] to *(&a + (void*) b * sizeof(a))
 *work on setting arrays initially hint: go to phase-2-parser/variables.m4 line 139.
 *finish work on arrays.
-*size finding logic:
-	If not pointer:
-		return size;
-	if pointer:
-		return 8;
-	
 *array logic:
 	a[b]=*(a+(typeof(a)) f(a)*b);
 	int f(struct type_t *t) 
@@ -37,7 +51,7 @@
 *add static local variables.
 *add static global variables.
 *add pointer arithmetic.
-*add ptrdiff_t, off_t, __uint8_t, __uint16_t, __uint32_t, __uint64_t, __int8_t, __int16_t, __int32_t, __int64_t, _Bool, and double data types.
+*add off_t, __uint8_t, __uint16_t, __uint32_t, __uint64_t, __int8_t, __int16_t, __int32_t, __int64_t, _Bool, and double data types.
 *add type conversion.
 *add __nosideeffects keyword
 *add volatile keyword.
@@ -70,7 +84,6 @@
 *have c compiler call up assembler, and preprocessor itself.
 *add helpful command line options.
 *add array typedefs.
-*add making struct typedefs.
 *add making union typedefs.
 *add making enum typedefs.
 *add return type checking.

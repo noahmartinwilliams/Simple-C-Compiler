@@ -6,12 +6,12 @@
 #include <stdbool.h>
 #include "generator/generator.h"
 #include "globals.h"
-#include "parser/exprs.h"
-#include "parser/funcs.h"
-#include "parser/statems.h"
-#include "parser/types.h"
+#include "utilities/exprs.h"
+#include "utilities/funcs.h"
+#include "utilities/statems.h"
+#include "utilities/types.h"
 #include "parser/consts.h"
-#include "parser/vars.h"
+#include "utilities/vars.h"
 #ifdef DEBUG
 #include "printer.h"
 #include "print-tree.h"
@@ -135,9 +135,9 @@ file_entry:  function {
 	memcpy(t, $2, sizeof(struct type_t));
 	t->refcount=1;
 	t->native_type=true;
-	t->name=strdup($3);
+	t->name=$3;
 	t->body->refcount++;
-	free($3);
+	t->fake_kind=_normal;
 	add_type(t);
 } | type ';' ;
 

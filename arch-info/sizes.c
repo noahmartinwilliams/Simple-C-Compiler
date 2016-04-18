@@ -10,4 +10,5 @@ int main()
 	printf("sizeof(double): %zd\n", sizeof(double));
 	printf("sizeof(void*): %zd\n", sizeof(void*));
 	printf("sizeof(float): %zd\n", sizeof(float));
+	printf("sizeof(off_t): %zd\n", sizeof(off_t));
 }

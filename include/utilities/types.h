@@ -1,5 +1,5 @@
-#ifndef __PARSER_TYPES_H__
-#define __PARSER_TYPES_H__
+#ifndef __UTILITIES_TYPES_H__
+#define __UTILITIES_TYPES_H__
 #include <stdbool.h>
 #include <stddef.h>
 #include "../types.h"

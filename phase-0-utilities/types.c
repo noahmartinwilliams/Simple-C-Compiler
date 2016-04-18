@@ -3,9 +3,10 @@
 #include "globals.h"
 #include "generator/globals.h"
 #include "types.h"
-#include "parser/vars.h"
-#include "parser/exprs.h"
+#include "utilities/vars.h"
+#include "utilities/exprs.h"
 
+struct type_t* copy_type(struct type_t *t);
 struct type_t* add_array_dimensions(struct type_t *type, int num_dimensions, size_t *dimensions)
 {
 	struct type_t *t=copy_type(type);
@@ -17,6 +18,7 @@ struct type_t* add_array_dimensions(struct type_t *type, int num_dimensions, siz
 }
 void init_type(struct type_t *t)
 {
+	t->fake_kind=_normal;
 	t->refcount=1;
 	t->native_type=true;
 	t->array_dimensions=NULL;
@@ -93,7 +95,7 @@ struct type_t* get_type_by_name(char *name, enum type_kind kind)
 			if (bod==NULL)
 				return t;
 
-			if (kind==bod->kind)
+			if (kind==t->fake_kind)
 				return t;
 		}
 	}
