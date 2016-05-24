@@ -1,3 +1,5 @@
+*finish work on armv6l/calls.c
+*fix add_argument arguments, and get this to compile for armv6l
 *add __complex__ and __builtin_complex keywords.
 *complex math:
 	int main() {

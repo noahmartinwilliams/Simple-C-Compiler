@@ -44,10 +44,6 @@ static inline struct expr_t* postfix_expr(char *op, struct expr_t *e, struct typ
 	return prefix_or_postfix_expr(op, e, t, false);
 }
 
-static inline struct expr_t* prefix_expr(char *op, struct expr_t *e, struct type_t *t)
-{
-	return prefix_or_postfix_expr(op, e, t, true);
-}
 
 %}
 %union {

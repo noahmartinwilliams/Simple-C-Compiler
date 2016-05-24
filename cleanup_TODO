@@ -1,3 +1,4 @@
+*find out if some of the elements of structures in types.h are really necessary.
 *be more consistent with abbreviations.
 *eliminate print_tree function.
 *be more consistent with naming scheme for dimension attributes.

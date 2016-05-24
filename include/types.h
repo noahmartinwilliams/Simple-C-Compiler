@@ -11,7 +11,6 @@ enum type_kind { _normal, _enum, _struct, _union };
 struct tbody_t {
 	size_t size;
 	int refcount;
-	int base_pointer_depth;
 	bool is_func_pointer;
 	enum type_kind kind;
 

@@ -345,3 +345,27 @@ struct expr_t* prefix_or_postfix_expr(char *op, struct expr_t *e, struct type_t 
 	t->refcount++;
 	return new;
 }
+
+struct expr_t* prefix_expr(char *op, struct expr_t *e, struct type_t *t)
+{
+	return prefix_or_postfix_expr(op, e, t, true);
+}
+
+struct expr_t* struct_dot_expr(struct expr_t *e, char *name)
+{
+	struct type_t *t=increase_type_depth(e->type, 1);
+	e->type->refcount++;
+	return prefix_expr("*",
+		bin_expr("+", 
+			prefix_expr("&", 
+				e, t),
+			convert_expr(
+				const_int_expr(
+					get_offset_of_member(e->type, name),
+					get_type_by_name("int", _normal)
+				),
+				t),
+			t),
+		get_var_member(t, name)->type);
+
+}

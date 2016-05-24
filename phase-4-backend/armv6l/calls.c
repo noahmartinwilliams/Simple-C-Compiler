@@ -10,12 +10,14 @@
 #include "backend/registers.h"
 #include "backend/errors.h"
 #include "stack.h"
+#include "utilities/types.h"
 
 static struct stack_t *pushed_registers=NULL;
 
 static bool doing_inline=false;
 static struct func_t *current_func=NULL;
 static int current_arg=0;
+static int current_call_stack_offset=0;
 
 void expand_stack_space(FILE *fd, off_t off)
 {
@@ -55,7 +57,7 @@ static char* get_next_call_register(enum reg_use r)
 		for (x=0; x<6; x++) {
 			switch (x) {
 			case 0:
-				rname="%rdi";
+				rname="r0";
 				break;
 			case 1:
 				rname="%rsi";
@@ -128,7 +130,7 @@ static void push_registers(FILE *fd)
 			if (regs[x]->sizes[y].size>biggest_size)
 				biggest_size=regs[x]->sizes[y].size;
 		if (regs[x]->in_use) {
-			fprintf(fd, "\tpushq %s\n", get_reg_name(regs[x], biggest_size));
+			fprintf(fd, "\tpush {%s}\n", get_reg_name(regs[x], biggest_size));
 			push(pushed_registers, regs[x]);
 		}
 	}
@@ -150,6 +152,7 @@ void start_call(FILE *fd, struct func_t *f)
 		current_arg=0;
 		return;
 	}
+	current_call_stack_offset=0;
 	reset_used_for_call();
 	push_registers(fd);
 	if (f->num_arguments==0 && f->ret_type->body->kind==_struct) {
@@ -157,32 +160,20 @@ void start_call(FILE *fd, struct func_t *f)
 	}
 }
 
-void add_argument(FILE *fd, struct reg_t *reg, struct type_t *t )
+void add_argument(FILE *fd, struct expr_t *e, struct type_t *t )
 {
+	struct reg_t *reg=get_ret_register(get_type_size(e->type), expr_is_float(e));
+	if (e->type->body->kind==_normal)
+		generate_expression(fd, e);
+	
 	if (doing_inline) {
 		assign_var(fd, reg, current_func->arguments[current_arg]);
 		current_arg++;
 		return;
 	}
-	/*TODO: Fix this to work better. */	
-	char *next=NULL;
-	if (t->body->core_type==_FLOAT) {
-		has_float=true;
-		next=get_next_call_register(FLOAT);
-	} else
-		next=get_next_call_register(INT);
-
-	assert(next!=NULL);
-	if (t->body->core_type!=_FLOAT) {
-		char *name=get_reg_name(reg, pointer_size);
-
-		if (strcmp(name, next))
-			fprintf(fd, "\tmovq %s, %s\n", name, next);
-	} else {
-		char *name=get_reg_name(reg, word_size);
-		if (strcmp(name, next))
-			fprintf(fd, "\tmovss %s, %s\n", name, next);
-	}
+	if (e->type->body->kind==_normal) {
+		fprintf(fd, "\tmov %s, r0\n", get_next_call_register(_INT));
+	} 
 
 	current_arg++;
 }
@@ -203,7 +194,7 @@ static void pop_registers(FILE *fd)
 		for (y=0; y<r2->num_sizes; y++)
 			if (r2->sizes[y].size>biggest_size)
 				biggest_size=r2->sizes[y].size;
-		fprintf(fd, "\tpopq %s\n", get_reg_name(r2, biggest_size));
+		fprintf(fd, "\tpop {%s}\n", get_reg_name(r2, biggest_size));
 		if (pushed_registers!=NULL) 
 			r2=pop(pushed_registers);
 	} while (pushed_registers!=NULL);
@@ -220,6 +211,7 @@ void call(FILE *fd, struct func_t *f)
 {
 
 	fprintf(fd, "\tbl\t%s\n", f->name);
+	fprintf(fd, "\tadd sp, sp, #%d\n", current_call_stack_offset);
 	pop_registers(fd);
 	current_arg=0;
 }
@@ -227,6 +219,7 @@ void call(FILE *fd, struct func_t *f)
 void return_from_call(FILE *fd)
 {
 	if (calls_function) {
+		fprintf(fd, "\tmov sp, fp\n");
 		fprintf(fd, "\tsub\tsp, fp, #4\n");
 		fprintf(fd, "\tldmfd\tsp!, {fp, pc}\n");
 	} else {
@@ -239,6 +232,7 @@ void return_from_call(FILE *fd)
 void make_function(FILE *fd, struct func_t *f)
 {
 	fprintf(fd, "\t.text\n");
+	fprintf(fd, "\t.type %s, %%function\n", f->name);
 	if (f->attributes & _static)
 		fprintf(fd, "%s:\n", f->name);
 	else
@@ -247,9 +241,19 @@ void make_function(FILE *fd, struct func_t *f)
 		fprintf(fd, "\tstmfd\tsp!, {fp, lr}\n");
 	else
 		fprintf(fd, "\tstr\tfp, [sp, #-4]!\n");
-	off_t o=get_var_offset(f->statement_list, 0);
-	fprintf(fd, "\tadd\tfp, sp, #%zd\n", o);
-	fprintf(fd, "\tsub\tsp, sp, #%zd\n", o);
+	int x;
+	off_t offset_so_far=4;
+	off_t o=0;
+	for (x=0; x<f->num_arguments; x++) {
+		f->arguments[x]->is_register=true;
+		f->arguments[x]->reg=get_reg_by_name(get_next_call_register(_INT));
+	}
+	o+=get_var_offset(f->statement_list, 0);
+	if (!strcmp(f->name, "main")) 
+		fprintf(fd, "\tadd\tfp, sp, #4\n");
+	else
+		fprintf(fd, "\tadd\tfp, sp, #%zd\n", o);
+	fprintf(fd, "\tsub\tsp, sp, #%zd\n", o+12);
 	if (!strcmp("main", f->name))
 		in_main=true;
 	else

@@ -12,7 +12,6 @@
 struct reg_t **regs=NULL;
 int num_regs=0;
 
-
 bool has_size(struct reg_t *r, size_t size)
 {
 	int x;
@@ -45,6 +44,7 @@ static int num_free_regs_type(enum reg_use r)
 			
 	return num;
 }
+
 static inline int num_free_int_registers()
 {
 	return num_free_regs_type(INT);

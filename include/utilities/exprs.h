@@ -16,6 +16,8 @@ extern void free_expr(struct expr_t *e);
 extern void print_expr(char *pre, struct expr_t *e);
 extern bool evaluate_constant_expr(char *op, struct expr_t *a, struct expr_t *b, struct expr_t **e);
 extern bool is_test_op(char *op);
+extern struct expr_t* struct_dot_expr(struct expr_t *e, char *name);
+extern struct expr_t* prefix_expr(char *op, struct expr_t *e, struct type_t *t);
 static inline void print_e(struct expr_t *e)
 {
 	print_tree((__printer_function_t) &print_expr, e, "", offsetof(struct expr_t, left), offsetof(struct expr_t, right));

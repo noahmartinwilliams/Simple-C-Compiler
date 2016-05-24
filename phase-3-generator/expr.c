@@ -52,9 +52,7 @@ void generate_expression(FILE *fd, struct expr_t *e)
 			struct expr_t *current_e=e->right;
 			while (current_e!=NULL) {
 				place_comment(fd, "(");
-				generate_expression(fd, current_e->attrs.argument);
-				ret=get_ret_register(get_type_size(current_e->type), expr_is_float(current_e));
-				add_argument(fd, ret, current_e->type);
+				add_argument(fd, current_e->attrs.argument, current_e->type);
 				current_e=current_e->right;
 				place_comment(fd, ")");
 				place_comment(fd, ", ");
@@ -82,8 +80,7 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		} else {
 			struct expr_t *current_e=e->right;
 			while (current_e!=NULL) {
-				generate_expression(fd, current_e->attrs.argument);
-				add_argument(fd, ret, current_e->type);
+				add_argument(fd, current_e->attrs.argument, current_e->type);
 				current_e=current_e->right;
 			}
 			call_function_pointer(fd, holder);

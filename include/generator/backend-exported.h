@@ -40,7 +40,7 @@ extern void (*jmp_le)(FILE *fd, char *str);
 extern void (*backend_make_global_var)(FILE *fd, struct var_t *v);
 extern void (*read_var)(FILE *fd, struct var_t *v);
 extern void (*load_function_ptr)(FILE *fd, struct func_t *f, struct reg_t *r);
-extern void (*add_argument)(FILE *fd, struct reg_t *reg, struct type_t *t );
+extern void (*add_argument)(FILE *fd, struct expr_t *e, struct type_t *t );
 extern void (*return_from_call)(FILE *fd);
 extern char* (*get_reg_name)(struct reg_t *reg, size_t size);
 extern struct reg_t* (*get_ret_register)(size_t s, bool is_float);

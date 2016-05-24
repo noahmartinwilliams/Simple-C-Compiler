@@ -9,12 +9,14 @@
 #include "backend/backend.h"
 #include "backend/registers.h"
 #include "stack.h"
+#include "utilities/types.h"
 
 static struct stack_t *pushed_registers=NULL;
 
 static bool doing_inline=false;
 static struct func_t *current_func=NULL;
 static int current_arg=0;
+static struct stack_t *current_call_stack=NULL;
 
 void expand_stack_space(FILE *fd, off_t off)
 {
@@ -154,16 +156,39 @@ void start_call(FILE *fd, struct func_t *f)
 	if (f->num_arguments==0 && f->ret_type->body!=NULL && f->ret_type->body->kind==_struct) {
 		return;
 	}
+	int *i=malloc(sizeof(int));
+	*i=0;
+	push(current_call_stack, i);
 }
 
-void add_argument(FILE *fd, struct reg_t *reg, struct type_t *t )
+static void push_struct_onto_stack(FILE *fd, struct expr_t *e)
+{
+	int x;
+	for (x=0; x<e->type->body->attrs.vars.num_vars; x++) {
+		fprintf(fd, "\tpushq %ld(%%rbp)\n", e->attrs.var->offset+x);
+	}
+}
+
+void add_argument(FILE *fd, struct expr_t *e, struct type_t *t )
 {
 	if (doing_inline) {
+		generate_expression(fd, e);
+		struct reg_t *reg=get_ret_register(get_type_size(e->type), expr_is_float(e));
 		assign_var(fd, reg, current_func->arguments[current_arg]);
 		current_arg++;
 		return;
 	}
 	/*TODO: Fix this to work better. */	
+	if (get_type_size(t) > word_size && t->body->kind==_struct && t->num_arrays==0 ) {
+		push_struct_onto_stack(fd, e);
+		current_arg++;
+		int *i=pop(current_call_stack);
+		(*i)+=get_type_size(t);
+		push(current_call_stack, i);
+		return;
+	}
+	generate_expression(fd, e);
+	struct reg_t *reg=get_ret_register(get_type_size(e->type), expr_is_float(e));
 	char *next=NULL;
 	if (t->body->core_type==_FLOAT) {
 		has_float=true;
@@ -188,6 +213,11 @@ void add_argument(FILE *fd, struct reg_t *reg, struct type_t *t )
 
 static void pop_registers(FILE *fd)
 {
+	if (current_call_stack!=NULL) {
+		int *i=pop(current_call_stack);
+		fprintf(fd, "\taddq $%d, %%rsp\n", *i);
+		free(i);
+	}
 	int x;
 	for (x=0; x<num_regs; x++) {
 		regs[x]->used_for_call=false;
@@ -256,6 +286,10 @@ void make_function(FILE *fd, struct func_t *f)
 	int x, y=0;
 	for (x=0; x<f->num_arguments; x++) {
 		size_t size=get_type_size(f->arguments[x]->type);
+		if (f->arguments[x]->type->body->kind==_struct && size > word_size && f->arguments[x]->type->num_arrays==0) {
+			f->arguments[x]->offset=16+8*x*get_type_size(f->arguments[x]->type);
+		}
+
 		if (size==word_size || size==pointer_size) {
 			fprintf(fd, "\tsubq $%d, %%rsp\n", pointer_size);
 			fprintf(fd, "\tmovq %s, -%d(%%rbp)\n", get_next_call_register(INT), pointer_size);

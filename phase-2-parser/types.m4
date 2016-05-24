@@ -118,7 +118,6 @@ type: TYPE {
 
 	struct tbody_t *bod=type->body=malloc(sizeof(struct tbody_t));
 	bod->refcount=1;
-	bod->base_pointer_depth=type->num_arrays=0;
 	bod->kind=_enum;
 	bod->is_func_pointer=false;
 	bod->size=num_enums%byte_size>0 ? ((num_enums-(num_enums%byte_size))+byte_size)/byte_size : num_enums/byte_size;
@@ -154,7 +153,6 @@ type: TYPE {
 
 	struct tbody_t *bod=type->body=malloc(sizeof(struct tbody_t));
 	bod->refcount=1;
-	bod->base_pointer_depth=type->num_arrays=0;
 	bod->kind=_enum;
 	bod->is_func_pointer=false;
 	bod->size=num_enums%byte_size>0 ? ((num_enums-(num_enums%byte_size))+byte_size)/byte_size : num_enums/byte_size;

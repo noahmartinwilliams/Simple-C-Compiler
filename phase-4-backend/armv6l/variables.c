@@ -83,8 +83,10 @@ static inline void print_read_var(FILE *fd, char *operator, char *reg, struct va
 void read_var(FILE *fd, struct var_t *v)
 {
 	get_ret_register(word_size, false)->is_signed=is_signed(v->type);
-	if (v->is_register)
-			fprintf(fd, "\tmov %s, %%r0\n", reg_name(v->reg));
+	if (v->is_register) {
+		fprintf(fd, "\tmov %s, r0\n", reg_name(v->reg));
+		return;
+	}
 
 	if (v->scope_depth!=0) {
 		size_t size=get_type_size(v->type);
@@ -106,12 +108,5 @@ void dereference(FILE *fd, struct reg_t *reg, size_t size)
 void assign_dereference(FILE *fd, struct reg_t *assign_from, struct reg_t *assign_to)
 {
 
-	if (assign_from->size==char_size)
-		fprintf(fd, "\tmovb %s, (%s)\n", reg_name(assign_from), reg_name(assign_to));
-	else if (assign_from->size==word_size)
-		fprintf(fd, "\tmovl %s, (%s)\n", reg_name(assign_from), reg_name(assign_to));
-	else if (assign_from->size==pointer_size)
-		fprintf(fd, "\tmovq %s, (%s)\n", reg_name(assign_from), reg_name(assign_to));
-	else
-		error("assign_dereference", assign_from->size);
+		fprintf(fd, "\tstr %s, [%s, #0]\n", reg_name(assign_from), reg_name(assign_to));
 }

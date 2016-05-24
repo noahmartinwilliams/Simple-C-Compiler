@@ -2,9 +2,26 @@ call_arg_list: noncomma_expression {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->kind=arg;
 	e->left=e->right=NULL;
-	e->type=$1->type;
-	e->type->refcount++;
-	e->attrs.argument=$1;
+	if ($1->type->body->kind==_struct) {
+		struct expr_t *current=e;
+		int x;
+		for (x=0; x<$1->type->body->attrs.vars.num_vars; x++) {
+			current->kind=arg;
+			current->attrs.argument=struct_dot_expr($1, $1->type->body->attrs.vars.vars[x]->name);
+			current->left=current->right=NULL;
+			current->type=current->attrs.argument->type;
+			current->type->refcount++;
+			if (x!=$1->type->body->attrs.vars.num_vars-1) {
+				current->right=malloc(sizeof(struct expr_t));
+				current->right->kind=arg;
+				current=current->right;
+			}
+		}
+	} else {
+		e->type=$1->type;
+		e->type->refcount++;
+		e->attrs.argument=$1;
+	}
 	$$=e;
 } | call_arg_list ',' noncomma_expression {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
@@ -138,7 +155,9 @@ assignable_expr: IDENTIFIER {
 		if (v==NULL) {
 			struct func_t *f=get_func_by_name($1);
 			if (f==NULL) {
-				yyerror("Unkown var");
+				char *msg;
+				asprintf(&msg, "Unknown var %s", $1);
+				yyerror(msg);
 				exit(1);
 			}
 			free($1);
@@ -178,19 +197,7 @@ assignable_expr: IDENTIFIER {
 
 		struct type_t *t=increase_type_depth(type, 1);
 		type->refcount++;
-		$$=prefix_expr("*",
-			bin_expr("+", 
-				prefix_expr("&",  
-					$1, t), 
-				convert_expr(
-					const_int_expr(
-						get_offset_of_member(type, $3), 
-						get_type_by_name("int", _normal)
-					),
-					t),
-				t
-				),
-			get_var_member(type, $3)->type);
+		$$=struct_dot_expr($1, $3);
 		free($3);
 	}
 } | assignable_expr POINTER_OP IDENTIFIER {
