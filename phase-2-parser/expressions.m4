@@ -1,14 +1,10 @@
 call_arg_list: noncomma_expression {
-	struct expr_t *e=malloc(sizeof(struct expr_t));
-	e->kind=arg;
-	e->left=e->right=NULL;
+	struct expr_t *e=arg_expr();
 	if ($1->type->body->kind==_struct) {
 		struct expr_t *current=e;
 		int x;
 		for (x=0; x<$1->type->body->attrs.vars.num_vars; x++) {
-			current->kind=arg;
 			current->attrs.argument=struct_dot_expr($1, $1->type->body->attrs.vars.vars[x]->name);
-			current->left=current->right=NULL;
 			current->type=current->attrs.argument->type;
 			current->type->refcount++;
 			if (x!=$1->type->body->attrs.vars.num_vars-1) {
@@ -24,14 +20,12 @@ call_arg_list: noncomma_expression {
 	}
 	$$=e;
 } | call_arg_list ',' noncomma_expression {
-	struct expr_t *e=malloc(sizeof(struct expr_t));
+	struct expr_t *e=arg_expr();
 	struct expr_t *tmp=$1;
 	for (; tmp->right!=NULL; tmp=tmp->right) {
 	}
-	e->kind=arg;
 	e->type=$3->type;
 	e->type->refcount++;
-	e->right=e->left=NULL;
 	e->attrs.argument=$3;
 	tmp->right=e;
 	$$=$1;
@@ -82,9 +76,8 @@ noncomma_expression:  CONST_INT {
 		v->refcount++;
 		int x;
 		struct expr_t *tmp=$3;
-		for (x=0; tmp->right!=NULL; tmp=tmp->right) {
+		for (x=0; tmp->right!=NULL; tmp=tmp->right)
 			x++;
-		}
 		if (!v->type->body->attrs.func_ptr.has_var_args) {
 			if (x > v->type->body->attrs.func_ptr.num_arguments) {
 				yyerror("Too many arguments to function pointer.");
@@ -111,8 +104,7 @@ noncomma_expression:  CONST_INT {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
 	e->type=increase_type_depth(get_type_by_name("char", _normal), 1);
 	e->kind=const_str;
-	e->right=NULL;
-	e->left=NULL;
+	e->left=e->right=NULL;
 	e->attrs.cstr_val=generate_global_string(output, $1);
 	free($1);
 	$$=e;
@@ -148,9 +140,9 @@ prefix_expr: '&' assignable_expr {
 };
 
 assignable_expr: IDENTIFIER {
-	if (is_constant($1)!=NULL) {
+	if (is_constant($1)!=NULL)
 		$$=is_constant($1);
-	} else {
+	else {
 		struct var_t *v=get_var_by_name($1);
 		if (v==NULL) {
 			struct func_t *f=get_func_by_name($1);

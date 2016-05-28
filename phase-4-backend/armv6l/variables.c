@@ -11,9 +11,22 @@
 #include "backend/registers.h"
 #include "types.h"
 
+static int current_L=0;
+static struct global_var {
+	char *name;
+	int num;
+} **global_vars=NULL;
+static int num_global_vars=0;
 void backend_make_global_var(FILE *fd, struct var_t *v)
 {
-	fprintf(fd, "\t.comm %s, %d, %d\n", v->name, get_type_size(v->type), get_type_size(v->type));
+	fprintf(fd, ".comm %s, 4, 4\n", v->name);
+	fprintf(fd, ".L%d:\n\t.word\t%s\n", current_L, v->name);
+	num_global_vars++;
+	global_vars=realloc(global_vars, num_global_vars*sizeof(struct global_var*));
+	global_vars[num_global_vars-1]=malloc(sizeof(struct global_var));
+	global_vars[num_global_vars-1]->name=strdup(v->name);
+	global_vars[num_global_vars-1]->num=current_L;
+	current_L++;
 
 }
 
@@ -49,8 +62,16 @@ void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 			fprintf(fd, "\tcvtsd2ss %s, %s\n", name, name);
 			fprintf(fd, "\tmovss %s, %d(%%rbp)\n", name, dest->offset);
 		} else {
-			fprintf(fd, "cvtsd2ss %s, %s\n", name, name);
-			fprintf(fd, "\tmovss %s, %s(%%rip)\n", name, dest->name);
+			int x;
+			for (x=0; x<num_global_vars; x++)
+				if (!strcmp(global_vars[x]->name, dest->name))
+					break;
+			depth++;
+			struct reg_t *r=get_free_register(fd, get_type_size(dest->type), depth, false);
+			fprintf(fd, "\tldr %s, .L%d\n", reg_name(r), global_vars[x]->num);
+			fprintf(fd, "\tstr %s, [%s]\n", reg_name(src), reg_name(r));
+			free_register(fd, r);
+			depth--;
 		}
 		return;
 	}
@@ -68,11 +89,7 @@ void assign_var(FILE *fd, struct reg_t *src, struct var_t *dest)
 			fprintf(fd, "\tstr\tr0, [fp, #%zd]\n", dest->offset);
 		else
 			error(__func__, size);
-	} else 
-		if (size==word_size)
-			fprintf(fd, "\tmovl %s, %s(%%rip)\n", reg_name(src), dest->name);
-		else
-			size_error(size);
+	} 
 } 
 
 static inline void print_read_var(FILE *fd, char *operator, char *reg, struct var_t *var)

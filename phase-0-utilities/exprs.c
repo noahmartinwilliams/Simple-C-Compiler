@@ -73,6 +73,13 @@ void print_expr(char *pre, struct expr_t *e)
 }
 #endif
 
+struct expr_t* arg_expr()
+{
+	struct expr_t *e=malloc(sizeof(struct expr_t));
+	e->left=e->right=NULL;
+	e->kind=arg;
+}
+
 struct expr_t* var_expr(struct var_t *v)
 {
 	struct expr_t *e=malloc(sizeof(struct expr_t));
