@@ -7,31 +7,13 @@
 void shift_left(FILE *fd, struct reg_t *src, struct reg_t *dest)
 {
 	fprintf(fd, "\tmov\t%s, %s, asl %s\n", reg_name(src), reg_name(src), reg_name(dest));
-	fprintf(fd, "\tmov r0, %s\n", reg_name(src));
+	fprintf(fd, "\tmov\tr0, %s\n", reg_name(src));
 }
 
 void shift_right(FILE *fd, struct reg_t *src, struct reg_t *dest)
 {
-	if (src->size==word_size) {
-		if (!strcmp(reg_name(src), "%ecx")) {
-			fprintf(fd, "\tpushq %%rcx\n");
-			fprintf(fd, "\tpushq %%rdx\n");
-			fprintf(fd, "\tmovl %%ecx, %%edx\n");
-			fprintf(fd, "\tmovl %s, %%ecx\n", reg_name(dest));
-			fprintf(fd, "\tshr %%cl, %%edx\n");
-			fprintf(fd, "\tmovl %%edx, %%eax\n");
-			fprintf(fd, "\tmovl %%edx, %s\n", reg_name(dest));
-			fprintf(fd, "\tpopq %%rdx\n");
-			fprintf(fd, "\tpopq %%rcx\n");
-		} else {
-			fprintf(fd, "\tpushq %%rcx\n");
-			fprintf(fd, "\tmovl %s, %%ecx\n", reg_name(dest));
-			fprintf(fd, "\tshr %%cl, %s\n", reg_name(src));
-			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(src));
-			fprintf(fd, "\tmovl %s, %s\n", reg_name(src), reg_name(dest));
-			fprintf(fd, "\tpopq %%rcx\n");
-		}
-	}
+	fprintf(fd, "\tmov\t%s, %s, asr %s\n", reg_name(src), reg_name(src), reg_name(dest));
+	fprintf(fd, "\tmov\tr0, %s\n", reg_name(src));
 }
 
 void or(FILE *fd, struct reg_t *a, struct reg_t *b)
