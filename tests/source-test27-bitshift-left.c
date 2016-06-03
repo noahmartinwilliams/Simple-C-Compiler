@@ -11,7 +11,7 @@ int main()
 		return 2;
 	
 	x=2;
-	x=x<<3;
+	x=(x<<3);
 	if (x!=16)
 		return 3;
 
