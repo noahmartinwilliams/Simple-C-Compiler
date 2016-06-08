@@ -18,11 +18,8 @@ void shift_right(FILE *fd, struct reg_t *src, struct reg_t *dest)
 
 void or(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
-	if (a->size==word_size) {
-		fprintf(fd, "\torl %s, %s\n", reg_name(a), reg_name(b));
-		if (b->use!=RET)
-			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(b));
-	}
+	fprintf(fd, "\torr %s, %s, %s\n", reg_name(a), reg_name(a), reg_name(b));
+	fprintf(fd, "\tmov r0, %s\n", reg_name(a));
 }
 
 void and(FILE *fd, struct reg_t *a, struct reg_t *b)
