@@ -24,11 +24,8 @@ void or(FILE *fd, struct reg_t *a, struct reg_t *b)
 
 void and(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
-	if (a->size==word_size) {
-		fprintf(fd, "\tandl %s, %s\n", reg_name(a), reg_name(b));
-		if (b->use!=RET)
-			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(b));
-	}
+	fprintf(fd, "\tand %s, %s, %s\n", reg_name(b), reg_name(b), reg_name(a));
+	fprintf(fd, "\tmov r0, %s\n", reg_name(b));
 }
 
 void xor(FILE *fd, struct reg_t *a, struct reg_t *b)
