@@ -155,7 +155,7 @@ void start_call(FILE *fd, struct func_t *f)
 	current_call_stack_offset=0;
 	reset_used_for_call();
 	push_registers(fd);
-	if (f->num_arguments==0 && f->ret_type->body->kind==_struct) {
+	if (f!=NULL && f->num_arguments==0 && f->ret_type!=NULL && f->ret_type->body!=NULL &&  f->ret_type->body->kind==_struct) {
 		return;
 	}
 }
@@ -211,7 +211,7 @@ void call(FILE *fd, struct func_t *f)
 {
 
 	fprintf(fd, "\tbl\t%s\n", f->name);
-	fprintf(fd, "\tadd sp, sp, #%d\n", current_call_stack_offset);
+	fprintf(fd, "\tadd fp, sp, #%d\n", current_call_stack_offset);
 	pop_registers(fd);
 	current_arg=0;
 }
@@ -219,8 +219,6 @@ void call(FILE *fd, struct func_t *f)
 void return_from_call(FILE *fd)
 {
 	if (calls_function) {
-		fprintf(fd, "\tmov sp, fp\n");
-		fprintf(fd, "\tsub\tsp, fp, #4\n");
 		fprintf(fd, "\tldmfd\tsp!, {fp, pc}\n");
 	} else {
 		fprintf(fd, "\tsub\tsp, fp, #0\n");
@@ -253,7 +251,6 @@ void make_function(FILE *fd, struct func_t *f)
 		fprintf(fd, "\tadd\tfp, sp, #4\n");
 	else
 		fprintf(fd, "\tadd\tfp, sp, #%zd\n", o);
-	fprintf(fd, "\tsub\tsp, sp, #%zd\n", o+12);
 	if (!strcmp("main", f->name))
 		in_main=true;
 	else
