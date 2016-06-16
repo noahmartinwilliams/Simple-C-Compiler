@@ -58,47 +58,23 @@ void test_or(FILE *fd, struct reg_t *a, struct reg_t *b)
 void test_and(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
 	unique_num++;
-	if (a->size==word_size) {
-		fprintf(fd, "\tcmpl $0, %s\n", reg_name(a));
-		fprintf(fd, "\tje test$and$%d$false\n", unique_num);
-		fprintf(fd, "\tcmpl $0, %s\n", reg_name(b));
-		fprintf(fd, "\tje test$and$%d$false\n", unique_num);
+	char *_false, *_true;
+	asprintf(&_false, "false$%d", unique_num);
+	asprintf(&_true, "true$%d", unique_num);
 
-		fprintf(fd, "\tmovl $1, %s\n", reg_name(b));
-		if (b->use!=RET)
-			fprintf(fd, "\tmovl $1, %%eax\n");
+	compare_register_to_int(fd, a, 0);
+	jmp_eq(fd, _false);
+	compare_register_to_int(fd, b, 0);
+	jmp_eq(fd, _false);
+	fprintf(fd, "\tmov r0, #1\n");
+	jmp(fd, _true);
+	place_label(fd, _false);
+	fprintf(fd, "\tmov r0, #0\n");
+	place_label(fd, _true);
 
-		fprintf(fd, "\tjmp test$and$%d$true\n", unique_num);
+	free(_true);
+	free(_false);
 
-		fprintf(fd, "\ttest$and$%d$false:\n", unique_num);
-
-		fprintf(fd, "\tmovl $0, %s\n", reg_name(b));
-		if (b->use!=RET)
-			fprintf(fd, "\tmovl $0, %%eax\n");
-
-		fprintf(fd, "\ttest$and$%d$true:\n", unique_num);
-
-	} else if (a->size==pointer_size) {
-		fprintf(fd, "\tcmpq $0, %s\n", reg_name(a));
-		fprintf(fd, "\tje test$and$%d$false\n", unique_num);
-		fprintf(fd, "\tcmpq $0, %s\n", reg_name(b));
-		fprintf(fd, "\tje test$and$%d$false\n", unique_num);
-
-		fprintf(fd, "\tmovq $1, %s\n", reg_name(b));
-		if (b->use!=RET)
-			fprintf(fd, "\tmovq $1, %%eax\n");
-
-		fprintf(fd, "\tjmp test$and$%d$true\n", unique_num);
-
-		fprintf(fd, "\ttest$and$%d$false:\n", unique_num);
-
-		fprintf(fd, "\tmovq $0, %s\n", reg_name(b));
-		if (b->use!=RET)
-			fprintf(fd, "\tmovq $0, %%eax\n");
-
-		fprintf(fd, "\ttest$and$%d$true:\n", unique_num);
-
-	}
 }
 
 void test_invert(FILE *fd, struct reg_t *r)
