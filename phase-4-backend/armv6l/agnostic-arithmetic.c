@@ -37,23 +37,22 @@ void xor(FILE *fd, struct reg_t *a, struct reg_t *b)
 void test_or(FILE *fd, struct reg_t *a, struct reg_t *b)
 {
 	unique_num++;
-	if (a->size==word_size) {
-		/* Good GOD, this is a lot of code. -.- */
-		/*TODO: figure out how to shorten this */
-		fprintf(fd, "\tcmpl $0, %s\n", reg_name(a));
-		fprintf(fd, "\tjne test$or$%d$true\n", unique_num);
-		fprintf(fd, "\tcmpl $0, %s\n", reg_name(b));
-		fprintf(fd, "\tjne test$or$%d$true\n", unique_num);
-		fprintf(fd, "\tmovl $0, %s\n", reg_name(b));
-		if (b->use!=RET)
-			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(b));
-		fprintf(fd, "\tjmp test$or$%d$false\n", unique_num);
-		fprintf(fd, "\ttest$or$%d$true:\n", unique_num);
-		fprintf(fd, "\tmovl $1, %s\n", reg_name(b));
-		if (b->use!=RET)
-			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(b));
-		fprintf(fd, "\ttest$or$%d$false:\n", unique_num);
-	}
+	char *yes, *skip;
+	asprintf(&skip, "skip$%d", unique_num);
+	asprintf(&yes, "yes$%d", unique_num);
+
+	fprintf(fd, "\tcmp %s, #0\n", reg_name(a));
+	jmp_neq(fd, yes);
+	fprintf(fd, "\tcmp %s, #0\n", reg_name(b));
+	jmp_neq(fd, yes);
+	fprintf(fd, "\tmov r0, #0\n");
+	jmp(fd, skip);
+	place_label(fd, yes);
+	fprintf(fd, "\tmov r0, #1\n");
+	place_label(fd, skip);
+
+	free(yes);
+	free(skip);
 }
 
 void test_and(FILE *fd, struct reg_t *a, struct reg_t *b)
