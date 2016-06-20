@@ -211,7 +211,8 @@ void call(FILE *fd, struct func_t *f)
 {
 
 	fprintf(fd, "\tbl\t%s\n", f->name);
-	fprintf(fd, "\tadd fp, sp, #%d\n", current_call_stack_offset);
+	if (current_call_stack_offset!=0)
+		fprintf(fd, "\tadd fp, sp, #%d\n", current_call_stack_offset);
 	pop_registers(fd);
 	current_arg=0;
 }
@@ -251,6 +252,7 @@ void make_function(FILE *fd, struct func_t *f)
 		fprintf(fd, "\tadd\tfp, sp, #4\n");
 	else
 		fprintf(fd, "\tadd\tfp, sp, #%zd\n", o);
+	current_stack_offset+=o;
 	if (!strcmp("main", f->name))
 		in_main=true;
 	else
