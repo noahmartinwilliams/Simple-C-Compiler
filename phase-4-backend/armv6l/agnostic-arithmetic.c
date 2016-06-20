@@ -80,22 +80,20 @@ void test_and(FILE *fd, struct reg_t *a, struct reg_t *b)
 void test_invert(FILE *fd, struct reg_t *r)
 {
 	unique_num++;
-	if (r->size==word_size) {
-		fprintf(fd, "\tcmpl $0, %s\n", reg_name(r));
-		fprintf(fd, "\tje invert$%d$false\n", unique_num);
+	char *_true, *_false;
+	asprintf(&_true, "jump$true$%d", unique_num);
+	asprintf(&_false, "jump$false$%d", unique_num);
 
+	fprintf(fd, "\tcmp %s, #0\n", reg_name(r));
+	jmp_eq(fd, _false);
+	fprintf(fd, "\tmov r0, #0\n");
+	jmp(fd, _true);
+	place_label(fd, _false);
+	fprintf(fd, "\tmov r0, #1\n");
+	place_label(fd, _true);
 
-		fprintf(fd, "\tmovl $0, %s\n", reg_name(r));
-		if (r->use!=RET)
-			fprintf(fd, "\tmovl $0, %%eax\n");
-
-		fprintf(fd, "\tjmp invert$%d$true\n", unique_num);
-		fprintf(fd, "\tinvert$%d$false:\n", unique_num);
-		fprintf(fd, "\tmovl $1, %s\n", reg_name(r));
-		if (r->use!=RET)
-			fprintf(fd, "\tmovl $1, %%eax\n");
-		fprintf(fd, "\tinvert$%d$true:\n", unique_num);
-	}
+	free(_true);
+	free(_false);
 }
 
 void invert(FILE *fd, struct reg_t *r)
