@@ -90,14 +90,9 @@ void int_mul(FILE *fd, struct reg_t *a, struct reg_t *b)
 
 void int_inc(FILE *fd, struct reg_t *r)
 {
-	if (r->size==word_size) {
-		fprintf(fd, "\tincl %s\n", reg_name(r));
-		if (r->use!=RET) 
-			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(r));
-	} else {
-		fprintf(stderr, "Internal Error: unknown size: %ld passed to int_inc\n", r->size);
-		exit(1);
-	}
+	fprintf(fd, "\tadd %s, %s, #1\n", reg_name(r), reg_name(r));
+	if (strcmp("r0", reg_name(r)))
+		fprintf(fd, "\tmov r0, %s\n", reg_name(r));
 }
 
 void int_dec(FILE *fd, struct reg_t *r)
