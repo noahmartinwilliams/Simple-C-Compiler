@@ -97,14 +97,10 @@ void int_inc(FILE *fd, struct reg_t *r)
 
 void int_dec(FILE *fd, struct reg_t *r)
 {
-	if (r->size==word_size) {
-		fprintf(fd, "\tdecl %s\n", reg_name(r));
-		if (r->use!=RET) 
-			fprintf(fd, "\tmovl %s, %%eax\n", reg_name(r));
-	} else {
-		fprintf(stderr, "Internal Error: unknown size: %ld passed to int_dec\n", r->size);
-		exit(1);
-	}
+	fprintf(fd, "\tsub %s, %s, #1\n", reg_name(r), reg_name(r));
+	if (strcmp("r0", reg_name(r)))
+		fprintf(fd, "\tmov r0, %s\n", reg_name(r));
+
 }
 
 void int_neg(FILE *fd, struct reg_t *r)
