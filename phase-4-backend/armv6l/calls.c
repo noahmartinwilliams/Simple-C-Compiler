@@ -60,13 +60,13 @@ static char* get_next_call_register(enum reg_use r)
 				rname="r0";
 				break;
 			case 1:
-				rname="%rsi";
+				rname="r1";
 				break;
-			case 2:
-				rname="%rdx";
+		case 2:
+				rname="r2";
 				break;
 			case 3:
-				rname="%rcx";
+				rname="r3";
 				break;
 			case 4:
 				rname="%r8";
