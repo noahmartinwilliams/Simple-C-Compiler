@@ -171,8 +171,13 @@ void add_argument(FILE *fd, struct expr_t *e, struct type_t *t )
 		current_arg++;
 		return;
 	}
+
 	if (e->type->body->kind==_normal) {
-		fprintf(fd, "\tmov %s, r0\n", get_next_call_register(_INT));
+		char *next=get_next_call_register(_INT);
+		fprintf(fd, "\tmov %s, r0\n", next);
+		if (!strcmp(next, "r0")) {
+			fprintf(fd, "\tpush {r0}\n");
+		}
 	} 
 
 	current_arg++;
@@ -210,6 +215,8 @@ void call_function_pointer(FILE *fd, struct reg_t *r)
 void call(FILE *fd, struct func_t *f)
 {
 
+	if (f->num_arguments!=0)
+		fprintf(fd, "\tpop {r0}\n");
 	fprintf(fd, "\tbl\t%s\n", f->name);
 	if (current_call_stack_offset!=0)
 		fprintf(fd, "\tadd fp, sp, #%d\n", current_call_stack_offset);
