@@ -43,11 +43,10 @@ void generate_expression(FILE *fd, struct expr_t *e)
 		place_comment(fd, "(");
 		start_call(fd, f);
 		if (e->attrs.function->num_arguments==0) {
-			if (f->do_inline) {
+			if (f->do_inline)
 				generate_statement(fd, f->statement_list);
-			} else {
+			else
 				call(fd, f);
-			}
 		} else {
 			struct expr_t *current_e=e->right;
 			while (current_e!=NULL) {

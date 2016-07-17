@@ -18,6 +18,7 @@ static bool doing_inline=false;
 static struct func_t *current_func=NULL;
 static int current_arg=0;
 static int current_call_stack_offset=0;
+static char *returner=NULL;
 
 void expand_stack_space(FILE *fd, off_t off)
 {
@@ -148,6 +149,8 @@ void start_call(FILE *fd, struct func_t *f)
 	has_float=false;
 	current_func=f;
 	if (f->do_inline) {
+		unique_num++;
+		asprintf(&returner, "returner$%d", unique_num);
 		doing_inline=true;
 		current_arg=0;
 		return;
@@ -174,10 +177,10 @@ void add_argument(FILE *fd, struct expr_t *e, struct type_t *t )
 
 	if (e->type->body->kind==_normal) {
 		char *next=get_next_call_register(_INT);
-		fprintf(fd, "\tmov %s, r0\n", next);
-		if (!strcmp(next, "r0")) {
+		if (!strcmp(next, "r0"))
 			fprintf(fd, "\tpush {r0}\n");
-		}
+		else 
+			fprintf(fd, "\tmov %s, r0\n", next);
 	} 
 
 	current_arg++;
@@ -215,8 +218,17 @@ void call_function_pointer(FILE *fd, struct reg_t *r)
 void call(FILE *fd, struct func_t *f)
 {
 
+	if (doing_inline) {
+		generate_statement(fd, current_func->statement_list);
+		place_label(fd, returner);
+		free(returner);
+		returner=NULL;
+		doing_inline=false;
+		return;
+	}
 	if (f->num_arguments!=0)
 		fprintf(fd, "\tpop {r0}\n");
+
 	fprintf(fd, "\tbl\t%s\n", f->name);
 	if (current_call_stack_offset!=0)
 		fprintf(fd, "\tadd fp, sp, #%d\n", current_call_stack_offset);
@@ -226,9 +238,11 @@ void call(FILE *fd, struct func_t *f)
 
 void return_from_call(FILE *fd)
 {
-	if (calls_function) {
+	if (doing_inline) {
+		
+	} else if (calls_function)
 		fprintf(fd, "\tldmfd\tsp!, {fp, pc}\n");
-	} else {
+	else {
 		fprintf(fd, "\tsub\tsp, fp, #0\n");
 		fprintf(fd, "\tldr\tfp, [sp], #4\n");
 		fprintf(fd, "\tbx\tlr\n");
