@@ -99,6 +99,7 @@ statement: expression ';' {
 	$$->attrs._for.initial=$3;
 	if ($5==NULL) {
 		struct expr_t *e=malloc(sizeof(struct expr_t));
+		e->left=e->right=NULL;
 		e->kind=const_int;
 		e->attrs.cint_val=1;
 		e->type=get_type_by_name("int", _normal);
